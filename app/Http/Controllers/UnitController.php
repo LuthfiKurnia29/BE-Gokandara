@@ -12,7 +12,8 @@ class UnitController extends Controller
      */
     public function index()
     {
-        //
+        $units = Unit::paginate(10);
+        return response()->json($units);
     }
 
     /**
@@ -28,7 +29,16 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255'
+        ]);
+
+        Unit::create($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit created successfully',
+        ], 201);
     }
 
     /**
@@ -52,7 +62,16 @@ class UnitController extends Controller
      */
     public function update(Request $request, Unit $unit)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255',
+        ]);
+
+        $unit->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit updated successfully',
+        ], 201);
     }
 
     /**
@@ -60,6 +79,11 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        //
+        Unit::destroy($unit->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit deleted successfully',
+        ], 201);
     }
 }

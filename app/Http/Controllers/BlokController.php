@@ -12,7 +12,8 @@ class BlokController extends Controller
      */
     public function index()
     {
-        //
+        $bloks = Blok::paginate(10);
+        return response()->json($bloks);
     }
 
     /**
@@ -28,7 +29,16 @@ class BlokController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255'
+        ]);
+
+        Blok::create($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Blok created successfully',
+        ], 201);
     }
 
     /**
@@ -52,7 +62,16 @@ class BlokController extends Controller
      */
     public function update(Request $request, Blok $blok)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255',
+        ]);
+
+        $blok->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Blok updated successfully',
+        ], 201);
     }
 
     /**
@@ -60,6 +79,11 @@ class BlokController extends Controller
      */
     public function destroy(Blok $blok)
     {
-        //
+        Blok::destroy($blok->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Blok deleted successfully',
+        ], 201);
     }
 }

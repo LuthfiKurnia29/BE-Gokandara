@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\tipe;
+use App\Models\Tipe;
 use Illuminate\Http\Request;
 
 class TipeController extends Controller
@@ -12,7 +12,8 @@ class TipeController extends Controller
      */
     public function index()
     {
-        //
+        $tipes = Tipe::paginate(10);
+        return response()->json($tipes);
     }
 
     /**
@@ -28,7 +29,16 @@ class TipeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255'
+        ]);
+
+        Tipe::create($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tipe created successfully',
+        ], 201);
     }
 
     /**
@@ -52,7 +62,16 @@ class TipeController extends Controller
      */
     public function update(Request $request, tipe $tipe)
     {
-        //
+        $validate = $request->validate([
+            'Nama' => 'required|string|max:255',
+        ]);
+
+        $tipe->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tipe updated successfully',
+        ], 201);
     }
 
     /**
@@ -60,6 +79,11 @@ class TipeController extends Controller
      */
     public function destroy(tipe $tipe)
     {
-        //
+        Tipe::destroy($tipe->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tipe deleted successfully',
+        ], 201);
     }
 }
