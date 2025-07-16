@@ -4,16 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UnitController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $units = Unit::paginate(10);
-        return response()->json($units);
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
+        $data = Unit::where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('Nama', 'like', "%$search%");
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($data);
     }
 
     /**
