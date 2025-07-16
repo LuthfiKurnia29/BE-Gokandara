@@ -10,11 +10,11 @@ class Konsumen extends Model
 
     public function projek()
     {
-        return $this->hasMany(Projek::class, 'id', 'Projek_Id');
+        return $this->belongsTo(Projek::class, 'id', 'Projek_Id');
     }
 
     public function prospek()
     {
-        return $this->hasMany(Prospek::class, 'id', 'Prospek_Id');
+        return $this->belongsTo(Prospek::class, 'id', 'Prospek_Id');
     }
 }

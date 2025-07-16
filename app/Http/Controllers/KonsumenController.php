@@ -12,7 +12,7 @@ class KonsumenController extends Controller
      */
     public function index()
     {
-        $konsumens = Konsumen::with('projek', 'prospek')->get();
+        $konsumens = Konsumen::with('projek', 'prospek')->paginate(10);
         return response()->json($konsumens);
     }
 
