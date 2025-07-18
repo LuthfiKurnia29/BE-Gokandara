@@ -13,17 +13,16 @@ return new class extends Migration
     {
         Schema::create('konsumens', function (Blueprint $table) {
             $table->id();
-            $table->string('Nama');
-            $table->string('Alamat');
-            $table->string('No_KTP');
-            $table->string('No_HP');
-            $table->string('Email');
-            $table->float('Kesiapan_dana');
-            $table->string('Pengalaman');
-            $table->string('Materi_Fu');
-            $table->date('Tgl_Fu');
-            $table->foreignId('Prospek_Id')->reference('prospeks')->onDelete('cascade');
-            $table->foreignId('Projek_Id')->reference('projeks')->onDelete('cascade');
+            $table->string('nama');
+            $table->string('alamat');
+            $table->string('no_ktp');
+            $table->string('no_hp');
+            $table->string('email');
+            $table->string('deskripsi')->nullable();
+            $table->float('kesiapan_dana')->nullable();
+            $table->string('pengalaman')->nullable();
+            $table->string('materi_fu')->nullable();
+            $table->date('tgl_fu')->nullable();
             $table->timestamps();
         });
     }

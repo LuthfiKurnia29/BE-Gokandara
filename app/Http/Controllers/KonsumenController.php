@@ -49,17 +49,13 @@ class KonsumenController extends Controller
     public function store(Request $request)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255',
-            'Email' => 'required|email|max:255|unique:konsumens',
-            'No_HP' => 'required|string|max:15',
-            'No_KTP' => 'required|string|max:16|unique:konsumens',
-            'Alamat' => 'required|string|max:255',
-            'Kesiapan_dana' => 'required|numeric|min:0',
-            'Pengalaman' => 'required|string|max:255',
-            'Materi_Fu' => 'required|string|max:255',
-            'Tgl_Fu' => 'required|date',
-            'Prospek_Id' => 'required',
-            'Projek_Id' => 'required',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:konsumens',
+            'no_hp' => 'required|string|max:15',
+            'no_ktp' => 'required|string|max:16|unique:konsumens',
+            'alamat' => 'required|string|max:255',
+            'kesiapan_dana' => 'required|numeric|min:0',
+            'pengalaman' => 'required|string|max:255',
         ]);
 
         Konsumen::create($validate);
