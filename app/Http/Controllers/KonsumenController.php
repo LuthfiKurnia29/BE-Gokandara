@@ -4,16 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Konsumen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KonsumenController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $konsumens = Konsumen::with('projek', 'prospek')->paginate(10);
-        return response()->json($konsumens);
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
+        $data = Konsumen::with(['projek', 'prospek'])
+            ->where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('Nama', 'like', "%$search%")
+                        ->orWhere('Alamat', 'like', "%$search%")
+                        ->orWhere('No_KTP', 'like', "%$search%")
+                        ->orWhere('No_HP', 'like', "%$search%")
+                        ->orWhere('Email', 'like', "%$search%")
+                        ->orWhere('Pengalaman', 'like', "%$search%")
+                        ->orWhere('Materi_Fu', 'like', "%$search%");
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($data);
     }
 
     /**

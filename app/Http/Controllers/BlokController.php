@@ -4,16 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Blok;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BlokController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bloks = Blok::paginate(10);
-        return response()->json($bloks);
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
+        $data = Blok::where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('Nama', 'like', "%$search%");
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($data);
     }
 
     /**
