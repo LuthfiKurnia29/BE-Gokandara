@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('konsumens', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
-            $table->string('alamat');
-            $table->string('no_ktp');
-            $table->string('no_hp');
+            $table->string('name');
+            $table->string('address');
+            $table->string('ktp_number');
+            $table->string('phone');
             $table->string('email');
-            $table->string('deskripsi')->nullable();
+            $table->string('description')->nullable();
             $table->float('kesiapan_dana')->nullable();
             $table->string('pengalaman')->nullable();
             $table->string('materi_fu')->nullable();
