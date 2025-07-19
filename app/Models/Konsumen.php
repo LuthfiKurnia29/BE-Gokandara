@@ -8,13 +8,13 @@ class Konsumen extends Model
 {
     protected $guarded = ['id'];
 
-    // public function projek()
-    // {
-    //     return $this->belongsTo(Projek::class, 'Projek_Id');
-    // }
+    public function projek()
+    {
+        return $this->belongsTo(Projek::class, 'Projek_Id');
+    }
 
-    // public function prospek()
-    // {
-    //     return $this->belongsTo(Prospek::class, 'Prospek_Id');
-    // }
+    public function prospek()
+    {
+        return $this->belongsTo(Prospek::class, 'Prospek_Id');
+    }
 }
