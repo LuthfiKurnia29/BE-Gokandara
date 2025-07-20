@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('propertis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('Project_Id')->reference('projects')->onDelete('cascade');
-            $table->foreignId('Blok_Id')->reference('bloks')->onDelete('cascade');
-            $table->foreignId('Unit_Id')->reference('units')->onDelete('cascade');
-            $table->foreignId('Tipe_Id')->reference('tipes')->onDelete('cascade');
-            $table->string('Luas_Bangunan');
-            $table->string('Luas_Tanah');
-            $table->string('Kelebihan');
-            $table->string('Lokasi');
-            $table->float('Harga');
+            $table->foreignId('project_id')->reference('projects')->onDelete('cascade');
+            $table->foreignId('blok_id')->reference('bloks')->onDelete('cascade');
+            $table->foreignId('unit_id')->reference('units')->onDelete('cascade');
+            $table->foreignId('tipe_id')->reference('tipes')->onDelete('cascade');
+            $table->string('luas_bangunan');
+            $table->string('luas_tanah');
+            $table->string('kelebihan');
+            $table->string('lokasi');
+            $table->float('harga');
             $table->timestamps();
         });
     }

@@ -19,7 +19,7 @@ class TipeController extends Controller
 
         $data = Tipe::where(function ($query) use ($search) {
                 if ($search) {
-                    $query->where('Nama', 'like', "%$search%");
+                    $query->where('name', 'like', "%$search%");
                 }
             })
             ->orderBy('id', 'desc')
@@ -42,7 +42,7 @@ class TipeController extends Controller
     public function store(Request $request)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255'
+            'name' => 'required|string|max:255'
         ]);
 
         Tipe::create($validate);
@@ -75,7 +75,7 @@ class TipeController extends Controller
     public function update(Request $request, tipe $tipe)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
         ]);
 
         $tipe->update($validate);

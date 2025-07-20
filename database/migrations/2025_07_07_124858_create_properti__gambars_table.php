@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('properti__gambars', function (Blueprint $table) {
             $table->id();
+            $table->string('path');
+            $table->string('size');
+            $table->string('type');
             $table->timestamps();
         });
     }

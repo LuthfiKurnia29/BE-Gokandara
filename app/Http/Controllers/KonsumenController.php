@@ -20,7 +20,7 @@ class KonsumenController extends Controller
         $data = Konsumen::with(['projek', 'prospek'])
             ->where(function ($query) use ($search) {
                 if ($search) {
-                    $query->where('Nama', 'like', "%$search%")
+                    $query->where('name', 'like', "%$search%")
                         ->orWhere('Alamat', 'like', "%$search%")
                         ->orWhere('No_KTP', 'like', "%$search%")
                         ->orWhere('No_HP', 'like', "%$search%")
@@ -88,7 +88,7 @@ class KonsumenController extends Controller
     public function update(Request $request, Konsumen $konsuman)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'Email' => 'required|email|max:255|unique:konsumens,Email,' . $konsuman->id,
             'No_KTP' => 'required|string|max:16|unique:konsumens,No_KTP,' . $konsuman->id,
             'No_HP' => 'required|string|max:15',

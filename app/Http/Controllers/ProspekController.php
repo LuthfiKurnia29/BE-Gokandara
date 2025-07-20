@@ -10,9 +10,21 @@ class ProspekController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
+        $data = Prospek::where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('name', 'like', "%$search%");
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($data);
     }
 
     /**
@@ -29,6 +41,16 @@ class ProspekController extends Controller
     public function store(Request $request)
     {
         //
+         $validate = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        Prospek::create($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Prospek created successfully',
+        ], 201);
     }
 
     /**
@@ -53,6 +75,16 @@ class ProspekController extends Controller
     public function update(Request $request, Prospek $prospek)
     {
         //
+        $validate = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $prospek->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Prospek updated successfully',
+        ], 201);
     }
 
     /**
@@ -60,6 +92,10 @@ class ProspekController extends Controller
      */
     public function destroy(Prospek $prospek)
     {
-        //
+        Prospek::destroy($prospek->id);
+        return response()->json([
+            'success' => true,
+            'message' => 'Prospek deleted successfully',
+        ], 201);
     }
 }

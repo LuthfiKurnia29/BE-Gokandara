@@ -19,7 +19,7 @@ class UnitController extends Controller
 
         $data = Unit::where(function ($query) use ($search) {
                 if ($search) {
-                    $query->where('Nama', 'like', "%$search%");
+                    $query->where('name', 'like', "%$search%");
                 }
             })
             ->orderBy('id', 'desc')
@@ -42,7 +42,7 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255'
+            'name' => 'required|string|max:255'
         ]);
 
         Unit::create($validate);
@@ -75,7 +75,7 @@ class UnitController extends Controller
     public function update(Request $request, Unit $unit)
     {
         $validate = $request->validate([
-            'Nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
         ]);
 
         $unit->update($validate);
