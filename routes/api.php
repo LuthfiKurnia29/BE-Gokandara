@@ -7,6 +7,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TipeController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserRoleController;
 
 Route::post('login', [LoginController::class, 'authenticate']);
 Route::resource('user', UserController::class);
@@ -14,3 +15,4 @@ Route::resource('konsumen', KonsumenController::class);
 Route::resource('blok', BlokController::class);
 Route::resource('tipe', TipeController::class);
 Route::resource('unit', UnitController::class);
+Route::post('user-role', [UserRoleController::class, 'getRoleByUserId']);
