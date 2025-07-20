@@ -101,9 +101,9 @@ class ProjekController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Projek $projek)
+    public function destroy(string $id)
     {
-        Projek::destroy($projek->id);
+        Projek::destroy($id);
         return response()->json([
             'success' => true,
             'message' => 'Project deleted successfully',

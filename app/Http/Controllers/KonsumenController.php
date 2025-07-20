@@ -112,9 +112,9 @@ class KonsumenController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Konsumen $konsuman)
+    public function destroy(string $id)
     {
-        Konsumen::destroy($konsuman->id);
+        Konsumen::destroy($id);
 
         return response()->json([
             'success' => true,

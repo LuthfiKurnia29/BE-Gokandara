@@ -89,9 +89,9 @@ class UnitController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Unit $unit)
+    public function destroy(string $id)
     {
-        Unit::destroy($unit->id);
+        Unit::destroy($id);
 
         return response()->json([
             'success' => true,
