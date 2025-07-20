@@ -7,4 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class UserMenuAccess extends Model
 {
     //
+    protected $guarded = ['id'];
 }
