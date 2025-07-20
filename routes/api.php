@@ -24,3 +24,4 @@ Route::middleware('auth:sanctum')->post('user-role', [UserRoleController::class,
 Route::get('role', [RoleController::class, 'getAllRole']);
 Route::middleware('auth:sanctum')->post('me', [UserController::class, 'me']);
 Route::get('referensi', [RefrensiController::class, 'getAllRefrence']);
+Route::get('all-projek', [ProjekController::class, 'allProject']);

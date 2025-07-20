@@ -27,6 +27,18 @@ class ProjekController extends Controller
         return response()->json($data);
     }
 
+    public function allProject(Request $request){
+        $search = $request->search;
+        $data = Projek::select('id', 'nama')
+                ->when($search, function ($query) use ($search) {
+                    $query->where('nama', 'like', "%$search%");
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+        return response()->json($data);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
