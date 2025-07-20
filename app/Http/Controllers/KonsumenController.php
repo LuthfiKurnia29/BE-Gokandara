@@ -54,8 +54,14 @@ class KonsumenController extends Controller
             'phone' => 'required|string|max:15',
             'ktp_number' => 'required|string|max:16|unique:konsumens',
             'address' => 'required|string|max:255',
-            // 'kesiapan_dana' => 'required|numeric|min:0',
-            // 'pengalaman' => 'required|string|max:255',
+            'project_id' => 'required',
+            'refrensi_id' => 'required',
+            'prospek_id' => 'required',
+            'kesiapan_dana' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'pengalaman' => 'nullable|string|max:255',
+            'materi_fu' => 'nullable|string',
+            'tgl_fu' => 'nullable|string',
         ]);
 
         Konsumen::create($validate);
