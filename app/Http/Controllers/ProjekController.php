@@ -10,9 +10,21 @@ class ProjekController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
+        $data = Projek::where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('nama', 'like', "%$search%");
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($data);
     }
 
     /**
@@ -29,6 +41,16 @@ class ProjekController extends Controller
     public function store(Request $request)
     {
         //
+        $validate = $request->validate([
+            'nama' => 'required|string|max:255'
+        ]);
+
+        Projek::create($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project created successfully',
+        ], 201);
     }
 
     /**
@@ -52,7 +74,16 @@ class ProjekController extends Controller
      */
     public function update(Request $request, Projek $projek)
     {
-        //
+        $validate = $request->validate([
+            'nama' => 'required|string|max:255',
+        ]);
+
+        $projek->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project updated successfully',
+        ], 201);
     }
 
     /**
@@ -60,6 +91,10 @@ class ProjekController extends Controller
      */
     public function destroy(Projek $projek)
     {
-        //
+        Projek::destroy($projek->id);
+        return response()->json([
+            'success' => true,
+            'message' => 'Project deleted successfully',
+        ], 201);
     }
 }

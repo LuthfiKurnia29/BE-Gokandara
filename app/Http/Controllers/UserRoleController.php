@@ -7,17 +7,16 @@ use App\Models\User;
 use App\Models\UserMenuAccess;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserRoleController extends Controller
 {
     //
-    public function getRoleByUserId(Request $request)
+    public function getRoleByUserId()
     {
-        // var_dump($request);
-        $user = User::where('id', $request->user_id)->first();
+        $user = Auth::user();
         if($user != null){
             $userRole = UserRole::where('user_id', $user->id)->first();
-            // $role_ids = $userRole->pluck('roleid');
             $akses = UserMenuAccess::where('user_role_id', $userRole->role_id)->get();
             return response()->json([
                 'status' => true,
