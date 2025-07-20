@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserMenuAccess;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -13,6 +15,27 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function me(Request $request){
+        $user = Auth::user(); // Ambil user dari access token
+        // var_dump($user); die;
+        // Ambil semua role user
+        $roles = UserRole::with('role') // join ke tabel role jika ada
+                    ->where('user_id', $user->id)
+                    ->get();
+
+        $roleIds = $roles->pluck('role_id');
+
+        // Ambil akses menu berdasarkan role
+        $menuAccesses = UserMenuAccess::whereIn('user_role_id', $roleIds)->get();
+
+        return response()->json([
+            'user' => $user,
+            'roles' => $roles,
+            'access' => $menuAccesses
+        ]);
+    }
+
     public function index(Request $request)
     {
         $per = $request->per ?? 10;

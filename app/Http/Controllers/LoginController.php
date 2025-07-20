@@ -14,10 +14,6 @@ class LoginController extends Controller
      */
     public function authenticate(Request $request)
     {
-        // $credentials = $request->validate([
-        //     'email' => ['required', 'email'],
-        //     'password' => ['required'],
-        // ]); 
         $user = \App\Models\User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -32,6 +28,10 @@ class LoginController extends Controller
             'token_type' => 'Bearer',
             'user' => $user,
         ]);
+    }
+
+    public function getUserLogin(Request $request){
+        
     }
 
     public function logout(Request $request)
