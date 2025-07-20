@@ -23,7 +23,8 @@ return new class extends Migration
             $table->string('pengalaman')->nullable();
             $table->string('materi_fu')->nullable();
             $table->date('tgl_fu')->nullable();
-            $table->foreignId('project_id')->nullable()->constrained('projeks')->nullOnDelete();
+            $table->foreignId('project_id')->constrained('projeks')->onDelete('cascade');
+            $table->foreignId('refrensi_id')->constrained('refrensis')->onDelete('cascade');
             $table->timestamps();
         });
     }
