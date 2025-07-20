@@ -89,9 +89,9 @@ class BlokController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Blok $blok)
+    public function destroy(string $id)
     {
-        Blok::destroy($blok->id);
+        Blok::destroy($id);
 
         return response()->json([
             'success' => true,

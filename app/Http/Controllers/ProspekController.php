@@ -90,9 +90,9 @@ class ProspekController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Prospek $prospek)
+    public function destroy(string $id)
     {
-        Prospek::destroy($prospek->id);
+        Prospek::destroy($id);
         return response()->json([
             'success' => true,
             'message' => 'Prospek deleted successfully',
