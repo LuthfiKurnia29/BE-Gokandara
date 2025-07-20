@@ -27,7 +27,7 @@ class UserController extends Controller
         $roleIds = $roles->pluck('role_id');
 
         // Ambil akses menu berdasarkan role
-        $menuAccesses = UserMenuAccess::whereIn('user_role_id', $roleIds)->get();
+        $menuAccesses = UserMenuAccess::with('menu')->whereIn('user_role_id', $roleIds)->get();
 
         return response()->json([
             'user' => $user,
