@@ -7,4 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class Prospek extends Model
 {
     //
+    protected $guarded = ['id'];
 }

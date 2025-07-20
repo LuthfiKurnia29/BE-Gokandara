@@ -31,7 +31,8 @@ class DatabaseSeeder extends Seeder
             UserRoleSeeder::class,
             MenuSeeder::class,
             MenuAccessSeeder::class,
-            RefrensiSeeder::class
+            RefrensiSeeder::class,
+            ProspekSeeder::class
         ]);
     }
 }

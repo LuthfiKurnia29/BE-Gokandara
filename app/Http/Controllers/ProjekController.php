@@ -18,7 +18,7 @@ class ProjekController extends Controller
 
         $data = Projek::where(function ($query) use ($search) {
                 if ($search) {
-                    $query->where('nama', 'like', "%$search%");
+                    $query->where('name', 'like', "%$search%");
                 }
             })
             ->orderBy('id', 'desc')
@@ -29,7 +29,7 @@ class ProjekController extends Controller
 
     public function allProject(Request $request){
         $search = $request->search;
-        $data = Projek::select('id', 'nama')
+        $data = Projek::select('id', 'name')
                 ->when($search, function ($query) use ($search) {
                     $query->where('nama', 'like', "%$search%");
                 })
@@ -54,7 +54,7 @@ class ProjekController extends Controller
     {
         //
         $validate = $request->validate([
-            'nama' => 'required|string|max:255'
+            'name' => 'required|string|max:255'
         ]);
 
         Projek::create($validate);
@@ -87,7 +87,7 @@ class ProjekController extends Controller
     public function update(Request $request, Projek $projek)
     {
         $validate = $request->validate([
-            'nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
         ]);
 
         $projek->update($validate);

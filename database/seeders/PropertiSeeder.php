@@ -14,39 +14,39 @@ class PropertiSeeder extends Seeder
     public function run(): void
     {
         Properti::create([
-            'Project_Id' => 1,
-            'Blok_Id' => 1,
-            'Unit_Id' => 1,
-            'Tipe_Id' => 1,
-            'Luas_Bangunan' => '5x6',
-            'Luas_Tanah' => '6x10',
-            'Kelebihan' => 'Dekat dengan fasilitas umum',
-            'Lokasi' => 'Jalan Mawar Merah No. 10, Bandung',
-            'Harga' => 500000000,
+            'project_id' => 1,
+            'blok_id' => 1,
+            'unit_id' => 1,
+            'tipe_id' => 1,
+            'luas_bangunan' => '5x6',
+            'luas_tanah' => '6x10',
+            'kelebihan' => 'Dekat dengan fasilitas umum',
+            'lokasi' => 'Jalan Mawar Merah No. 10, Bandung',
+            'harga' => 500000000,
         ]);
 
         Properti::create([
-            'Project_Id' => 2,
-            'Blok_Id' => 2,
-            'Unit_Id' => 2,
-            'Tipe_Id' => 2,
-            'Luas_Bangunan' => '6x7',
-            'Luas_Tanah' => '7x12',
-            'Kelebihan' => 'Akses mudah ke jalan raya',
-            'Lokasi' => 'Jalan Melati Putih No. 20, Jakarta',
-            'Harga' => 750000000,
+            'project_id' => 2,
+            'blok_id' => 2,
+            'unit_id' => 2,
+            'tipe_id' => 2,
+            'luas_bangunan' => '6x7',
+            'luas_tanah' => '7x12',
+            'kelebihan' => 'Akses mudah ke jalan raya',
+            'lokasi' => 'Jalan Melati Putih No. 20, Jakarta',
+            'harga' => 750000000,
         ]);
 
         Properti::create([
-            'Project_Id' => 3,
-            'Blok_Id' => 3,
-            'Unit_Id' => 3,
-            'Tipe_Id' => 3,
-            'Luas_Bangunan' => '7x8',
-            'Luas_Tanah' => '8x14',
-            'Kelebihan' => 'Lingkungan asri dan tenang',
-            'Lokasi' => 'Jalan Anggrek Biru No. 30, Surabaya',
-            'Harga' => 1000000000,
+            'project_id' => 3,
+            'blok_id' => 3,
+            'unit_id' => 3,
+            'tipe_id' => 3,
+            'luas_bangunan' => '7x8',
+            'luas_tanah' => '8x14',
+            'kelebihan' => 'Lingkungan asri dan tenang',
+            'lokasi' => 'Jalan Anggrek Biru No. 30, Surabaya',
+            'harga' => 1000000000,
         ]);
     }
 }

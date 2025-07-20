@@ -2,25 +2,25 @@
 
 namespace Database\Seeders;
 
+use App\Models\Prospek;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Unit;
 
-class UnitSeeder extends Seeder
+class ProspekSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Unit::create([
-            'name' => 'Unit 11',
+        Prospek::create([
+            'name' => 'Cold'
         ]);
-        Unit::create([
-            'name' => 'Unit 12',
+        Prospek::create([
+            'name' => 'Warm'
         ]);
-        Unit::create([
-            'name' => 'Unit 13',
+        Prospek::create([
+            'name' => 'Hot'
         ]);
     }
 }

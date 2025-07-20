@@ -15,13 +15,13 @@ class BlokSeeder extends Seeder
     public function run(): void
     {
         Blok::create([
-            'Nama' => 'Blok A',
+            'name' => 'Blok A',
         ]);
         Blok::create([
-            'Nama' => 'Blok B',
+            'name' => 'Blok B',
         ]);
         Blok::create([
-            'Nama' => 'Blok C',
+            'name' => 'Blok C',
         ]);
     }
 }
