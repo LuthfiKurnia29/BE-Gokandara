@@ -25,6 +25,7 @@ return new class extends Migration
             $table->date('tgl_fu')->nullable();
             $table->foreignId('project_id')->constrained('projeks')->onDelete('cascade');
             $table->foreignId('refrensi_id')->constrained('refrensis')->onDelete('cascade');
+            $table->foreignId('prospek_id')->constrained('prospeks')->onDelete('cascade');
             $table->timestamps();
         });
     }
