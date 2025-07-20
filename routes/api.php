@@ -15,7 +15,17 @@ use App\Http\Controllers\UserRoleController;
 
 Route::post('login', [LoginController::class, 'authenticate']);
 Route::middleware('auth:sanctum')->post('logout', [LoginController::class, 'logout']);
-Route::resource('user', UserController::class);
+// Route::resource('user', UserController::class);
+
+// User 
+Route::get('user', [UserController::class, 'index']);
+Route::post('user', [UserController::class, 'store']);
+Route::patch('user', [UserController::class, 'update']);
+Route::delete('user', [UserController::class, 'destroy']);
+Route::middleware('auth:sanctum')->post('me', [UserController::class, 'me']);
+
+
+
 Route::resource('konsumen', KonsumenController::class);
 Route::resource('projek', ProjekController::class);
 Route::resource('blok', BlokController::class);
@@ -24,6 +34,6 @@ Route::resource('unit', UnitController::class);
 Route::resource('prospek', ProspekController::class);
 Route::middleware('auth:sanctum')->post('user-role', [UserRoleController::class, 'getRoleByUserId']);
 Route::get('role', [RoleController::class, 'getAllRole']);
-Route::middleware('auth:sanctum')->post('me', [UserController::class, 'me']);
+
 Route::get('referensi', [RefrensiController::class, 'getAllRefrence']);
 Route::get('all-projek', [ProjekController::class, 'allProject']);

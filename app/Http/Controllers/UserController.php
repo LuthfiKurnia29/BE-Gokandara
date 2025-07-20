@@ -112,9 +112,20 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $validate = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:konsumens',
+            'role_id' => 'required'
+        ]);
+
+        $user->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully',
+        ], 201);
     }
 
     /**
@@ -123,5 +134,10 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         //
+        User::destroy($id);
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully',
+        ], 201);
     }
 }
