@@ -18,18 +18,21 @@ class UserSeeder extends Seeder
             'id' => 1,
             'name' => 'Administrator',
             'email' => 'admin@gmail.com',
+            'nip' => '12345678',
             'password' => 'password123'
         ]);
         User::create([
             'id' => 2,
             'name' => 'Supervisor',
             'email' => 'spv@gmail.com',
+            'nip' => '87654321',
             'password' => 'password123spv'
         ]);
         User::create([
             'id' => 3,
             'name' => 'Sales',
             'email' => 'sales@gmail.com',
+            'nip' => '12348765',
             'password' => 'password123sales'
         ]);
     }

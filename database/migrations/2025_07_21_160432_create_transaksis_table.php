@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tipes', function (Blueprint $table) {
+        Schema::create('transaksis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->reference('projects')->onDelete('cascade');
-            $table->string('name');
+            $table->foreignId('konsumen_id')->reference('konsumens')->onDelete('cascade');
+            $table->foreignId('properti_id')->reference('propertis')->onDelete('cascade');
+            $table->double('diskon')->nullable();
+            $table->integer('grand_total');
+            $table->string('status');
             $table->timestamps();
         });
     }
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tipes');
+        Schema::dropIfExists('transaksis');
     }
 };
