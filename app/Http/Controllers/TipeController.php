@@ -73,8 +73,9 @@ class TipeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, tipe $tipe)
+    public function update(Request $request, $id)
     {
+        $tipe = Tipe::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
         ]);

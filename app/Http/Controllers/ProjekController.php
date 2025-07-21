@@ -86,8 +86,9 @@ class ProjekController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Projek $projek)
+    public function update(Request $request, $id)
     {
+        $projek = Projek::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
         ]);

@@ -74,8 +74,9 @@ class BlokController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Blok $blok)
+    public function update(Request $request, $id)
     {
+        $blok = Blok::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
         ]);

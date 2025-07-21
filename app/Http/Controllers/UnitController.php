@@ -73,8 +73,9 @@ class UnitController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Unit $unit)
+    public function update(Request $request, $id)
     {
+        $unit = Unit::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
         ]);
