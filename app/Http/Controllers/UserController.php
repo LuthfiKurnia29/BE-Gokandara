@@ -18,7 +18,6 @@ class UserController extends Controller
 
     public function me(Request $request){
         $user = Auth::user(); // Ambil user dari access token
-        // var_dump($user); die;
         // Ambil semua role user
         $roles = UserRole::with('role') // join ke tabel role jika ada
                     ->where('user_id', $user->id)
@@ -66,14 +65,17 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
-            'role_id' => 'required'
+            'role_id' => 'required',
+            // 'parent_id' => $user->id
             // 'password' => 'required|string|max:15',
             // 'kesiapan_dana' => 'required|numeric|min:0',
             // 'pengalaman' => 'required|string|max:255',
         ]);
+        // $validate['parent_id'] = $request['parent_id'] ?? $user->id;
         if($request['password']){
             $hashedPass = Hash::make($request['password']);
             $validate['password'] = $hashedPass;

@@ -62,6 +62,9 @@ Route::middleware('auth:sanctum')->post('prospek', [prospekController::class, 's
 Route::middleware('auth:sanctum')->put('prospek', [prospekController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('prospek/{id}', [prospekController::class, 'destroy']);
 
+// Chatting
+
+
 // Referensi
 Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 'getAllRefrence']);
 
