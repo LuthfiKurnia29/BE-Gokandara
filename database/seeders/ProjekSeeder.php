@@ -14,13 +14,19 @@ class ProjekSeeder extends Seeder
     public function run(): void
     {
         Projek::create([
-            'name' => 'Hoonian',
+            'name' => 'Hoonian Brawijaya',
         ]);
         Projek::create([
-            'name' => 'Roomah',
+            'name' => 'Hoonian Kosmea',
         ]);
         Projek::create([
-            'name' => 'Residence',
+            'name' => 'Hoonian Bumi Palapa',
+        ]);
+        Projek::create([
+            'name' => 'Rhuma Arumba',
+        ]);
+        Projek::create([
+            'name' => 'Kandara Residence',
         ]);
     }
 }

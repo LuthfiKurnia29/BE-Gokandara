@@ -19,16 +19,32 @@ class RefrensiSeeder extends Seeder
             'code' => 'ig'
         ]);
         Refrensi::create([
-            'name' => 'Whatsapp',
-            'code' => 'wa'
+            'name' => 'Facebook',
+            'code' => 'fb'
         ]);
         Refrensi::create([
-            'name' => 'Internet',
-            'code' => 'inet'
+            'name' => 'Website',
+            'code' => 'web'
         ]);
         Refrensi::create([
-            'name' => 'Majalah/Koran',
-            'code' => 'mk'
+            'name' => 'Referensi',
+            'code' => 'ref'
+        ]);
+        Refrensi::create([
+            'name' => 'Expo',
+            'code' => 'ex'
+        ]);
+        Refrensi::create([
+            'name' => 'Telemarketing',
+            'code' => 'tm'
+        ]);
+        Refrensi::create([
+            'name' => 'Canvasing',
+            'code' => 'canvas'
+        ]);
+        Refrensi::create([
+            'name' => 'Agent',
+            'code' => 'agent'
         ]);
         Refrensi::create([
             'name' => 'Lainnya',
