@@ -68,9 +68,11 @@ class ProjekController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Projek $projek)
+    public function show(string $id)
     {
-        //
+        $data = Projek::where('id', $id)->first();
+
+        return response()->json($data);
     }
 
     /**

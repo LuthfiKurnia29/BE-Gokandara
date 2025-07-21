@@ -56,9 +56,10 @@ class UnitController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Unit $unit)
+    public function show(string $id)
     {
-        //
+        $data = Unit::where('id', $id)->first();
+        return response()->json($data);
     }
 
     /**
