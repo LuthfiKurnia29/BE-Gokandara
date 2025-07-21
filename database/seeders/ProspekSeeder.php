@@ -22,5 +22,8 @@ class ProspekSeeder extends Seeder
         Prospek::create([
             'name' => 'Hot'
         ]);
+        Prospek::create([
+            'name' => 'Suspect'
+        ]);
     }
 }
