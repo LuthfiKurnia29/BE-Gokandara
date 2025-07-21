@@ -56,9 +56,11 @@ class BlokController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Blok $blok)
+    public function show($id)
     {
-        //
+        $data = Blok::where('id', $id)->first();
+
+        return response()->json($data);
     }
 
     /**

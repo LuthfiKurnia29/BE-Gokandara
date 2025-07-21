@@ -43,24 +43,28 @@ Route::middleware('auth:sanctum')->delete('projek/{id}', [ProjekController::clas
 
 // Blok
 Route::middleware('auth:sanctum')->get('blok', [BlokController::class, 'index']);
+Route::middleware('auth:sanctum')->get('blok/{id}', [BlokController::class, 'show']);
 Route::middleware('auth:sanctum')->post('blok', [BlokController::class, 'store']);
 Route::middleware('auth:sanctum')->put('blok', [BlokController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('blok/{id}', [BlokController::class, 'destroy']);
 
 // Tipe
 Route::middleware('auth:sanctum')->get('tipe', [TipeController::class, 'index']);
+Route::middleware('auth:sanctum')->get('tipe/{id}', [TipeController::class, 'show']);
 Route::middleware('auth:sanctum')->post('tipe', [TipeController::class, 'store']);
 Route::middleware('auth:sanctum')->put('tipe', [TipeController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('tipe/{id}', [TipeController::class, 'destroy']);
 
 // Unit
 Route::middleware('auth:sanctum')->get('unit', [UnitController::class, 'index']);
+Route::middleware('auth:sanctum')->get('unit/{id}', [UnitController::class, 'show']);
 Route::middleware('auth:sanctum')->post('unit', [UnitController::class, 'store']);
 Route::middleware('auth:sanctum')->put('unit', [UnitController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('unit/{id}', [UnitController::class, 'destroy']);
 
 // Prospek
 Route::middleware('auth:sanctum')->get('prospek', [prospekController::class, 'index']);
+Route::middleware('auth:sanctum')->get('prospek/{id}', [prospekController::class, 'show']);
 Route::middleware('auth:sanctum')->post('prospek', [prospekController::class, 'store']);
 Route::middleware('auth:sanctum')->put('prospek', [prospekController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('prospek/{id}', [prospekController::class, 'destroy']);

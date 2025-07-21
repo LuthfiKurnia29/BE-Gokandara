@@ -56,9 +56,10 @@ class TipeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(tipe $tipe)
+    public function show(string $id)
     {
-        //
+        $data = Tipe::where('id', $id)->first();
+        return response()->json($data);
     }
 
     /**

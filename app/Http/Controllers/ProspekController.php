@@ -56,9 +56,10 @@ class ProspekController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Prospek $prospek)
+    public function show(string $id)
     {
-        //
+        $data = Prospek::where('id', $id)->first();
+        return response()->json($data);
     }
 
     /**
