@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Konsumen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class KonsumenController extends Controller
@@ -48,6 +49,8 @@ class KonsumenController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        // var_dump($user); die;
         $validate = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
@@ -58,12 +61,13 @@ class KonsumenController extends Controller
             'refrensi_id' => 'required',
             'prospek_id' => 'required',
             'kesiapan_dana' => 'required|numeric|min:0',
+            // 'added_by' => $user->id,
             'description' => 'nullable|string',
             'pengalaman' => 'nullable|string|max:255',
             'materi_fu' => 'nullable|string',
             'tgl_fu' => 'nullable|string',
         ]);
-
+        $validate['added_by'] = $user->id;
         Konsumen::create($validate);
 
         return response()->json([

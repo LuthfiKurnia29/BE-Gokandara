@@ -26,6 +26,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projeks')->onDelete('cascade');
             $table->foreignId('refrensi_id')->constrained('refrensis')->onDelete('cascade');
             $table->foreignId('prospek_id')->constrained('prospeks')->onDelete('cascade');
+            $table->string('added_by')->nullable();
             $table->timestamps();
         });
     }
