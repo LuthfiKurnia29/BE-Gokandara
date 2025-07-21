@@ -22,18 +22,21 @@ Route::middleware('auth:sanctum')->get('role', [RoleController::class, 'getAllRo
 
 // User 
 Route::middleware('auth:sanctum')->get('user', [UserController::class, 'index']);
+Route::middleware('auth:sanctum')->get('user/{id}', [UserController::class, 'show']);
 Route::middleware('auth:sanctum')->post('user', [UserController::class, 'store']);
 Route::middleware('auth:sanctum')->put('user', [UserController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('user/{id}', [UserController::class, 'destroy']);
 
 // Konsumen
 Route::middleware('auth:sanctum')->get('konsumen', [KonsumenController::class, 'index']);
+Route::middleware('auth:sanctum')->get('konsumen/{id}', [KonsumenController::class, 'show']);
 Route::middleware('auth:sanctum')->post('konsumen', [KonsumenController::class, 'store']);
 Route::middleware('auth:sanctum')->put('konsumen', [KonsumenController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('konsumen/{id}', [KonsumenController::class, 'destroy']);
 
 // Projek
 Route::middleware('auth:sanctum')->get('projek', [ProjekController::class, 'index']);
+Route::middleware('auth:sanctum')->get('projek/{id}', [ProjekController::class, 'show']);
 Route::middleware('auth:sanctum')->post('projek', [ProjekController::class, 'store']);
 Route::middleware('auth:sanctum')->put('projek', [ProjekController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('projek/{id}', [ProjekController::class, 'destroy']);

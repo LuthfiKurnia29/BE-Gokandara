@@ -79,9 +79,10 @@ class KonsumenController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Konsumen $konsumen)
+    public function show(string $id)
     {
-        //
+        $data = Konsumen::with(['projek', 'prospek'])->where('id', $id)->first();
+        return response()->json($data);   
     }
 
     /**
