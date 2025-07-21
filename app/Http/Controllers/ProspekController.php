@@ -73,9 +73,10 @@ class ProspekController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Prospek $prospek)
+    public function update(Request $request, $id)
     {
         //
+        $prospek = Prospek::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
         ]);

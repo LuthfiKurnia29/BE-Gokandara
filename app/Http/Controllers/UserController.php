@@ -100,7 +100,7 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $data = User::where('id', $id)->first();
+        $data = User::with('roles')->where('id', $id)->first();
         return response()->json($data);
     }
 
@@ -115,8 +115,9 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
+        $user = User::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:konsumens',

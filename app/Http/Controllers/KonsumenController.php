@@ -22,12 +22,12 @@ class KonsumenController extends Controller
             ->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('name', 'like', "%$search%")
-                        ->orWhere('Alamat', 'like', "%$search%")
-                        ->orWhere('No_KTP', 'like', "%$search%")
-                        ->orWhere('No_HP', 'like', "%$search%")
-                        ->orWhere('Email', 'like', "%$search%")
-                        ->orWhere('Pengalaman', 'like', "%$search%")
-                        ->orWhere('Materi_Fu', 'like', "%$search%");
+                        ->orWhere('address', 'like', "%$search%")
+                        ->orWhere('ktp_number', 'like', "%$search%")
+                        ->orWhere('phone', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%")
+                        ->orWhere('pengalaman', 'like', "%$search%")
+                        ->orWhere('materi_fu', 'like', "%$search%");
                 }
             })
             ->orderBy('id', 'desc')
@@ -96,28 +96,33 @@ class KonsumenController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Konsumen $konsuman)
+    public function update(Request $request, $id)
     {
+        $user = Auth::user();
+        $konsumen = Konsumen::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
-            'Email' => 'required|email|max:255|unique:konsumens,Email,' . $konsuman->id,
-            'No_KTP' => 'required|string|max:16|unique:konsumens,No_KTP,' . $konsuman->id,
-            'No_HP' => 'required|string|max:15',
-            'Alamat' => 'required|string|max:255',
-            'Kesiapan_dana' => 'required|numeric|min:0',
-            'Pengalaman' => 'required|string|max:255',
-            'Materi_Fu' => 'required|string|max:255',
-            'Tgl_Fu' => 'required|date',
-            'Prospek_Id' => 'required',
-            'Projek_Id' => 'required',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:15',
+            'ktp_number' => 'required|string|max:16',
+            'address' => 'required|string|max:255',
+            'project_id' => 'required',
+            'refrensi_id' => 'required',
+            'prospek_id' => 'required',
+            'kesiapan_dana' => 'required|numeric|min:0',
+            // 'added_by' => $user->id,
+            'description' => 'nullable|string',
+            'pengalaman' => 'nullable|string|max:255',
+            'materi_fu' => 'nullable|string',
+            'tgl_fu' => 'nullable|string',
         ]);
-
-        $konsuman->update($validate);
+        $validate['added_by'] = $user->id;
+        $konsumen->update($validate);
 
         return response()->json([
             'success' => true,
             'message' => 'Konsumen updated successfully',
-        ], 201);
+        ], 200);
     }
 
     /**
