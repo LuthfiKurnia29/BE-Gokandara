@@ -12,6 +12,7 @@ use App\Http\Controllers\TipeController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\ChattingController;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -70,7 +71,10 @@ Route::middleware('auth:sanctum')->put('prospek/{id}', [prospekController::class
 Route::middleware('auth:sanctum')->delete('prospek/{id}', [prospekController::class, 'destroy']);
 
 // Chatting
-
+Route::middleware('auth:sanctum')->get('chatting', [ChattingController::class, 'index']);
+Route::middleware('auth:sanctum')->post('chatting', [ChattingController::class, 'store']);
+Route::middleware('auth:sanctum')->put('chatting/{id}', [ChattingController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('chatting/{id}', [ChattingController::class, 'destroy']);
 
 // Referensi
 Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 'getAllRefrence']);

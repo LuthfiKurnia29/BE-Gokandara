@@ -25,10 +25,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     /**
      * Get the attributes that should be cast.
@@ -45,5 +42,15 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->hasMany(UserRole::class);
+    }
+
+    public function chatDikirim()
+    {
+        return $this->hasMany(Chat::class, 'user_pengirim_id');
+    }
+
+    public function chatDiterima()
+    {
+        return $this->hasMany(Chat::class, 'user_penerima_id');
     }
 }
