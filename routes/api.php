@@ -84,4 +84,8 @@ Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 
 Route::middleware('auth:sanctum')->get('all-projek', [ProjekController::class, 'allProject']);
 
 // transaksi
+Route::middleware('auth:sanctum')->get('list-transaksi', [TransaksiController::class, 'listTransaksi']);
 Route::middleware('auth:sanctum')->post('create-transaksi', [TransaksiController::class, 'createTransaksi']);
+Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
+Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
+Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);

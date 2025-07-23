@@ -19,7 +19,7 @@ class ChattingController extends Controller
                 $query->where('pesan', 'like', "%$search%");
             })
             ->when($request->id_pengirim, function ($query) use ($request) {
-                $query->where('user_pengirim_id', $request->id_pengirim);
+                $query->where('user_pengirim_id', auth()->user()->id);
             })
             ->when($request->id_penerima, function ($query) use ($request) {
                 $query->orWhere('user_penerima_id', $request->id_penerima);
@@ -33,10 +33,11 @@ class ChattingController extends Controller
     public function store(Request $request) 
     {
         $validate = $request->validate([
-            'user_pengirim_id' => 'required',
             'user_penerima_id' => 'required',
             'pesan' => 'required',
         ]);
+
+        $validate['user_pengirim_id'] = auth()->user()->id;
 
         Chatting::create($validate);
 
