@@ -14,12 +14,15 @@ class TipeSeeder extends Seeder
     public function run(): void
     {
         Tipe::create([
+            'project_id' => 2,
             'name' => 'Rumah',
         ]);
         Tipe::create([
+            'project_id' => 1,
             'name' => 'Hotel',
         ]);
         Tipe::create([
+            'project_id' => 3,
             'name' => 'Apartemen',
         ]);
     }

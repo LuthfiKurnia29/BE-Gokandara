@@ -11,6 +11,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TipeController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UserRoleController;
 
 // Authentication & Authorization
@@ -77,3 +78,6 @@ Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 
 
 // Projek-all
 Route::middleware('auth:sanctum')->get('all-projek', [ProjekController::class, 'allProject']);
+
+// transaksi
+Route::middleware('auth:sanctum')->post('create-transaksi', [TransaksiController::class, 'createTransaksi']);
