@@ -62,10 +62,10 @@ class KonsumenController extends Controller
             'prospek_id' => 'required',
             'kesiapan_dana' => 'required|numeric|min:0',
             // 'added_by' => $user->id,
-            'description' => 'nullable|string',
-            'pengalaman' => 'nullable|string|max:255',
-            'materi_fu' => 'nullable|string',
-            'tgl_fu' => 'nullable|string',
+            'description' => 'required|string',
+            'pengalaman' => 'required|string|max:255',
+            'materi_fu' => 'required|string',
+            'tgl_fu' => 'required|string',
         ]);
         $validate['added_by'] = $user->id;
         Konsumen::create($validate);
