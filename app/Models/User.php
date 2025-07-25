@@ -46,11 +46,11 @@ class User extends Authenticatable
 
     public function chatDikirim()
     {
-        return $this->hasMany(Chat::class, 'user_pengirim_id');
+        return $this->hasMany(Chatting::class, 'user_pengirim_id');
     }
 
     public function chatDiterima()
     {
-        return $this->hasMany(Chat::class, 'user_penerima_id');
+        return $this->hasMany(Chatting::class, 'user_penerima_id');
     }
 }

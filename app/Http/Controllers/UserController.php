@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserMenuAccess;
 use App\Models\UserRole;
@@ -70,12 +71,13 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
             'role_id' => 'required',
+            'nip' => 'required'
             // 'parent_id' => $user->id
             // 'password' => 'required|string|max:15',
             // 'kesiapan_dana' => 'required|numeric|min:0',
             // 'pengalaman' => 'required|string|max:255',
         ]);
-        // $validate['parent_id'] = $request['parent_id'] ?? $user->id;
+        $validate['parent_id'] = $request['parent_id'];
         if($request['password']){
             $hashedPass = Hash::make($request['password']);
             $validate['password'] = $hashedPass;
@@ -121,9 +123,10 @@ class UserController extends Controller
         $validate = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:konsumens',
-            'role_id' => 'required'
+            'role_id' => 'required',
+            'nip' => 'required'
         ]);
-
+        $validate['parent_id'] = $request['parent_id'];        
         $user->update($validate);
 
         return response()->json([
@@ -142,5 +145,19 @@ class UserController extends Controller
             'success' => true,
             'message' => 'User deleted successfully',
         ], 201);
+    }
+
+    public function getUserSpvRole()
+    {
+        $roleSpv = Role::where("code", "spv")->first();
+        $users = User::whereHas('roles', function ($q) use ($roleSpv) {
+            $q->where('role_id', $roleSpv->id);
+        })->select('id', 'name')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get Supervisor',
+            'data' => $users
+        ], 200);
     }
 }
