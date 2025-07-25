@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chatting;
+use App\Models\User;
 
 class ChattingController extends Controller
 {
@@ -14,15 +15,21 @@ class ChattingController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
+        $authUserId = auth()->user()->id;
+        $lawanBicaraId = $request->id_user;
+
         $data = Chatting::with(['penerima', 'pengirim'])
             ->when($search, function ($query) use ($search) {
                 $query->where('pesan', 'like', "%$search%");
             })
-            ->when($request->id_pengirim, function ($query) use ($request) {
-                $query->where('user_pengirim_id', auth()->user()->id);
-            })
-            ->when($request->id_penerima, function ($query) use ($request) {
-                $query->orWhere('user_penerima_id', $request->id_penerima);
+            ->where(function ($query) use ($authUserId, $lawanBicaraId) {
+                $query
+                    ->where(function ($q) use ($authUserId, $lawanBicaraId) {
+                        $q->where('user_pengirim_id', $authUserId)->where('user_penerima_id', $lawanBicaraId);
+                    })
+                    ->orWhere(function ($q) use ($authUserId, $lawanBicaraId) {
+                        $q->where('user_pengirim_id', $lawanBicaraId)->where('user_penerima_id', $authUserId);
+                    });
             })
             ->orderBy('id', 'desc')
             ->paginate($per);
@@ -30,7 +37,29 @@ class ChattingController extends Controller
         return response()->json($data);
     }
 
-    public function store(Request $request) 
+    public function lastChatting(Request $request)
+    {
+        $per = $request->per ?? 10;
+        $search = $request->search;
+
+        $users = User::with([
+            'chatDikirim' => function ($q) {
+                $q->latest()->limit(1);
+            },
+            'chatDiterima' => function ($q) {
+                $q->latest()->limit(1);
+            },
+        ])
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->paginate($per);
+
+        return response()->json($users);
+    }
+
+    public function store(Request $request)
     {
         $validate = $request->validate([
             'user_penerima_id' => 'required',
@@ -41,10 +70,13 @@ class ChattingController extends Controller
 
         Chatting::create($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Message sent successfully',
+            ],
+            201,
+        );
     }
 
     public function update(Request $request, $id)
@@ -56,10 +88,13 @@ class ChattingController extends Controller
 
         $chat->update($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Chat updated successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Chat updated successfully',
+            ],
+            201,
+        );
     }
 
     public function destroy($id)
@@ -67,9 +102,12 @@ class ChattingController extends Controller
         $chat = Chatting::findOrFail($id);
         $chat->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Chat deleted successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Chat deleted successfully',
+            ],
+            201,
+        );
     }
 }
