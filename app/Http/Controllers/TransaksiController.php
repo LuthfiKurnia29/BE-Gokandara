@@ -14,7 +14,7 @@ class TransaksiController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Transaksi::with(['konsumen', 'properti'])
+        $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit'])
             ->where(function ($query) use ($search) {
                 if ($search) {
                     $query
@@ -48,6 +48,9 @@ class TransaksiController extends Controller
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'properti_id' => 'required',
+            'blok_id' => 'required',
+            'tipe_id' => 'required',
+            'unit_id' => 'required',
             'diskon' => 'nullable',
         ]);
 
@@ -74,6 +77,9 @@ class TransaksiController extends Controller
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'properti_id' => 'required',
+            'blok_id' => 'required',
+            'tipe_id' => 'required',
+            'unit_id' => 'required',
             'diskon' => 'nullable',
         ]);
 
