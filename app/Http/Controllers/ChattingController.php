@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chatting;
+use App\Models\User;
 
 class ChattingController extends Controller
 {
@@ -41,21 +42,21 @@ class ChattingController extends Controller
         $per = $request->per ?? 10;
         $search = $request->search;
 
-        // Ambil ID chat terakhir dari setiap user_pengirim_id
-        $latestMessageIds = Chatting::selectRaw('MAX(id) as id')->groupBy('user_pengirim_id');
-
-        // Ambil chat dengan relasi user, lalu filter berdasarkan user (searchable)
-        $data = Chatting::with('pengirim')
-            ->whereIn('id', $latestMessageIds)
-            ->whereHas('pengirim', function ($query) use ($search) {
-                if ($search) {
-                    $query->where('pesan', 'like', "%$search%");
-                }
+        $users = User::with([
+            'chatDikirim' => function ($q) {
+                $q->latest()->limit(1);
+            },
+            'chatDiterima' => function ($q) {
+                $q->latest()->limit(1);
+            },
+        ])
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%");
             })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
-        return response()->json($data);
+        return response()->json($users);
     }
 
     public function store(Request $request)

@@ -15,9 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('konsumen_id')->reference('konsumens')->onDelete('cascade');
             $table->foreignId('properti_id')->reference('propertis')->onDelete('cascade');
-            $table->foreignId('blok_id')->reference('bloks')->onDelete('cascade');
-            $table->foreignId('unit_id')->reference('units')->onDelete('cascade');
-            $table->foreignId('tipe_id')->reference('tipes')->onDelete('cascade');
             $table->double('diskon')->nullable();
             $table->integer('grand_total');
             $table->string('status');
