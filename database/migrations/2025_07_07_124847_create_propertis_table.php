@@ -14,9 +14,6 @@ return new class extends Migration
         Schema::create('propertis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->reference('projects')->onDelete('cascade');
-            $table->foreignId('blok_id')->reference('bloks')->onDelete('cascade');
-            $table->foreignId('unit_id')->reference('units')->onDelete('cascade');
-            $table->foreignId('tipe_id')->reference('tipes')->onDelete('cascade');
             $table->string('luas_bangunan');
             $table->string('luas_tanah');
             $table->string('kelebihan');

@@ -15,9 +15,6 @@ class PropertiSeeder extends Seeder
     {
         Properti::create([
             'project_id' => 1,
-            'blok_id' => 1,
-            'unit_id' => 1,
-            'tipe_id' => 1,
             'luas_bangunan' => '5x6',
             'luas_tanah' => '6x10',
             'kelebihan' => 'Dekat dengan fasilitas umum',
@@ -27,9 +24,6 @@ class PropertiSeeder extends Seeder
 
         Properti::create([
             'project_id' => 2,
-            'blok_id' => 2,
-            'unit_id' => 2,
-            'tipe_id' => 2,
             'luas_bangunan' => '6x7',
             'luas_tanah' => '7x12',
             'kelebihan' => 'Akses mudah ke jalan raya',
@@ -39,9 +33,6 @@ class PropertiSeeder extends Seeder
 
         Properti::create([
             'project_id' => 3,
-            'blok_id' => 3,
-            'unit_id' => 3,
-            'tipe_id' => 3,
             'luas_bangunan' => '7x8',
             'luas_tanah' => '8x14',
             'kelebihan' => 'Lingkungan asri dan tenang',
