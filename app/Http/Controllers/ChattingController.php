@@ -56,6 +56,26 @@ class ChattingController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($per);
 
+        $users->getCollection()->transform(function ($user) {
+            $lastSent = $user->chatDikirim->first();
+            $lastReceived = $user->chatDiterima->first();
+
+            if ($lastSent && $lastReceived) {
+                $user->last_message = $lastSent->created_at > $lastReceived->created_at ? $lastSent : $lastReceived;
+            } elseif ($lastSent) {
+                $user->last_message = $lastSent;
+            } elseif ($lastReceived) {
+                $user->last_message = $lastReceived;
+            } else {
+                $user->last_message = null;
+            }
+
+            $userArray = $user->toArray();
+            unset($userArray['chat_dikirim'], $userArray['chat_diterima']);
+
+            return $userArray;
+        });
+
         return response()->json($users);
     }
 
