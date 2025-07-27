@@ -63,8 +63,8 @@ class PropertiController extends Controller
     {
         $validate = $request->validate([
             'project_id' => 'required',
-            'luas_bangunan' => 'required|numeric',
-            'luas_tanah' => 'required|numeric',
+            'luas_bangunan' => 'required|string',
+            'luas_tanah' => 'required|string',
             'kelebihan' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'harga' => 'required|numeric',
