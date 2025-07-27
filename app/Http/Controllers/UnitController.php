@@ -28,6 +28,19 @@ class UnitController extends Controller
         return response()->json($data);
     }
 
+    public function allUnit(Request $request)
+    {
+        $search = $request->search;
+        $data = Unit::select('id', 'name')
+                ->when($search, function ($query) use ($search) {
+                    $query->where('name', 'like', "%$search%");
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+        return response()->json($data);
+    }
+
     /**
      * Show the form for creating a new resource.
      */

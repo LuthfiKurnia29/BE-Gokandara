@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\ChattingController;
+use App\Http\Controllers\PropertiController;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -79,11 +80,33 @@ Route::middleware('auth:sanctum')->put('chatting/{id}', [ChattingController::cla
 Route::middleware('auth:sanctum')->delete('chatting/{id}', [ChattingController::class, 'destroy']);
 Route::middleware('auth:sanctum')->get('chatting-last', [ChattingController::class, 'lastChatting']);
 
+// Properti
+Route::middleware('auth:sanctum')->post('properti', [PropertiController::class, 'store']);
+Route::middleware('auth:sanctum')->get('properti', [PropertiController::class, 'index']);
+Route::middleware('auth:sanctum')->get('properti/{id}', [PropertiController::class, 'show']);
+Route::middleware('auth:sanctum')->put('properti/{id}', [PropertiController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('properti/{id}', [PropertiController::class, 'destroy']);
+
 // Referensi
 Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 'getAllRefrence']);
 
 // Projek-all
 Route::middleware('auth:sanctum')->get('all-projek', [ProjekController::class, 'allProject']);
+
+// Blok-all
+Route::middleware('auth:sanctum')->get('all-blok', [BlokController::class, 'allBlok']);
+
+// Tipe-all
+Route::middleware('auth:sanctum')->get('all-tipe', [TipeController::class, 'allTipe']);
+
+// Unit-all
+Route::middleware('auth:sanctum')->get('all-unit', [UnitController::class, 'allUnit']);
+
+// Konsumen-all
+Route::middleware('auth:sanctum')->get('all-konsumen', [KonsumenController::class, 'allKonsumen']);
+
+// Properti-all
+Route::middleware('auth:sanctum')->get('all-properti', [PropertiController::class, 'allProperti']);
 
 // transaksi
 Route::middleware('auth:sanctum')->get('list-transaksi', [TransaksiController::class, 'listTransaksi']);
