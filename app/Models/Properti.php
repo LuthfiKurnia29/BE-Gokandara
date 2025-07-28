@@ -12,4 +12,9 @@ class Properti extends Model
     {
         return $this->belongsTo(Projek::class, 'project_id');
     }
+
+    public function propertiGambar()
+    {
+        return $this->hasMany(Properti_Gambar::class, 'properti_id');
+    }
 }

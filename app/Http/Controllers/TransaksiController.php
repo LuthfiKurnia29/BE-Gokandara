@@ -55,6 +55,7 @@ class TransaksiController extends Controller
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
+        $validate['created_id'] = auth()->user()->id;
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
@@ -84,6 +85,7 @@ class TransaksiController extends Controller
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
+        $validate['updated_id'] = auth()->user()->id;
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
         $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
