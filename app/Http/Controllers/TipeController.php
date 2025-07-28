@@ -28,6 +28,19 @@ class TipeController extends Controller
         return response()->json($data);
     }
 
+    public function allTipe(Request $request)
+    {
+        $search = $request->search;
+        $data = Tipe::select('id', 'name')
+                ->when($search, function ($query) use ($search) {
+                    $query->where('name', 'like', "%$search%");
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+        return response()->json($data);
+    }
+
     /**
      * Show the form for creating a new resource.
      */

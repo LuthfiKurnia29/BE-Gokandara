@@ -49,7 +49,9 @@ class ChattingController extends Controller
             'chatDiterima' => function ($q) {
                 $q->latest()->limit(1);
             },
+            'roles'
         ])
+            ->whereNot('id', auth()->user()->id)
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'like', "%$search%")->orWhere('email', 'like', "%$search%");
             })

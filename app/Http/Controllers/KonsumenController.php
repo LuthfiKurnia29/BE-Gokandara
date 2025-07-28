@@ -76,6 +76,19 @@ class KonsumenController extends Controller
         ], 201);
     }
 
+    public function allKonsumen(Request $request)
+    {
+        $search = $request->search;
+        $data = Konsumen::select('id', 'name')
+                ->when($search, function ($query) use ($search) {
+                    $query->where('name', 'like', "%$search%");
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+        return response()->json($data);
+    }
+
     /**
      * Display the specified resource.
      */
