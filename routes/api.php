@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KonsumenController;
 use App\Http\Controllers\BlokController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProjekController;
 use App\Http\Controllers\ProspekController;
@@ -114,3 +115,6 @@ Route::middleware('auth:sanctum')->post('create-transaksi', [TransaksiController
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
+
+// Calendar
+Route::middleware('auth:sanctum')->get('get-calendar', [CalendarController::class, 'getCalendar']);
