@@ -75,8 +75,9 @@ class PropertiController extends Controller
         $properti = Properti::create($validate);
 
         foreach ($validate['properti__gambars'] as $gambar) {
-            $gambar['properti_id'] = $properti->id;
-            $gambar['image'] = $request->file('image') ? $request->file('image')->store('public', 'properti_images') : null;
+            $gambarData = [];
+            $gambarData['properti_id'] = $properti->id;
+            $gambarData['image'] = $gambar->store('public', 'properti_images');
             Properti_Gambar::create($gambar);
         }
 
