@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Properti_Gambar extends Model
 {
-    //
+    protected $guarded = ['id'];
 }

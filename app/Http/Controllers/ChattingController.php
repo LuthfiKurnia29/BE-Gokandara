@@ -84,13 +84,18 @@ class ChattingController extends Controller
     public function store(Request $request)
     {
         $validate = $request->validate([
-            'user_penerima_id' => 'required',
+            'user_penerima_id' => 'required|array',
             'pesan' => 'required',
+            'file' => 'nullable',
         ]);
 
         $validate['user_pengirim_id'] = auth()->user()->id;
 
-        Chatting::create($validate);
+        foreach ($validate['user_penerima_id'] as $penerimaId) {
+            $validate['user_penerima_id'] = $penerimaId;
+            $validate['file'] = $request->file('file') ? $request->file('file')->store('public', 'chat_files') : null;
+            Chatting::create($validate);
+        }
 
         return response()->json(
             [
@@ -122,6 +127,9 @@ class ChattingController extends Controller
     public function destroy($id)
     {
         $chat = Chatting::findOrFail($id);
+        if ($chat->file) {
+            unlink(storage_path('chat_files/' . $chat->file));
+        }
         $chat->delete();
 
         return response()->json(

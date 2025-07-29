@@ -68,6 +68,7 @@ class KonsumenController extends Controller
             'tgl_fu' => 'required|string',
         ]);
         $validate['added_by'] = $user->id;
+        $validate['created_id'] = auth()->user()->id;
         Konsumen::create($validate);
 
         return response()->json([
@@ -130,6 +131,7 @@ class KonsumenController extends Controller
             'tgl_fu' => 'nullable|string',
         ]);
         $validate['added_by'] = $user->id;
+        $validate['updated_id'] = auth()->user()->id;
         $konsumen->update($validate);
 
         return response()->json([

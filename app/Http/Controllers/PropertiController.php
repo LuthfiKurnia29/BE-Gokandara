@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Properti;
+use App\Models\Properti_Gambar;
 use Illuminate\Http\Request;
 
 class PropertiController extends Controller
@@ -16,7 +17,7 @@ class PropertiController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Properti::where(function ($query) use ($search) {
+        $data = Properti::with('propertiGambar')->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('luas_bangunan', 'like', "%$search%")
                           ->orWhere('luas_tanah', 'like', "%$search%")
@@ -68,9 +69,16 @@ class PropertiController extends Controller
             'kelebihan' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'harga' => 'required|numeric',
+            'properti__gambars' => 'required|array',
         ]);
 
-        Properti::create($validate);
+        $properti = Properti::create($validate);
+
+        foreach ($validate['properti__gambars'] as $gambar) {
+            $gambar['properti_id'] = $properti->id;
+            $gambar['image'] = $request->file('image') ? $request->file('image')->store('public', 'properti_images') : null;
+            Properti_Gambar::create($gambar);
+        }
 
         return response()->json([
             'success' => true,
@@ -109,9 +117,22 @@ class PropertiController extends Controller
             'kelebihan' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'harga' => 'required|numeric',
+            'properti__gambars' => 'nullable|array',
         ]);
 
         $properti->update($validate);
+
+        if ($request->hasFile('properti__gambars')) {
+            Properti_Gambar::where('properti_id', $properti->id)->delete();
+
+            foreach ($request->file('properti__gambars') as $gambar) {
+            $gambarData = [
+                'properti_id' => $properti->id,
+                'image' => $gambar->store('public', 'properti_images'),
+            ];
+            Properti_Gambar::create($gambarData);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -125,6 +146,14 @@ class PropertiController extends Controller
     public function destroy($id)
     {
         $properti = Properti::findOrFail($id);
+        if ($properti->propertiGambar) {
+            foreach ($properti->propertiGambar as $gambar) {
+                if ($gambar->image) {
+                    unlink(storage_path('properti_images/' . $gambar->image));
+                }
+            }
+        }
+        Properti_Gambar::where('properti_id', $properti->id)->delete();
         $properti->delete();
 
         return response()->json([
