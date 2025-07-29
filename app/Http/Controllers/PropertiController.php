@@ -17,7 +17,7 @@ class PropertiController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Properti::with('propertiGambar')->where(function ($query) use ($search) {
+        $data = Properti::with(['propertiGambar', 'projek'])->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('luas_bangunan', 'like', "%$search%")
                           ->orWhere('luas_tanah', 'like', "%$search%")
