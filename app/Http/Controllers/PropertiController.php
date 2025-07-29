@@ -35,7 +35,7 @@ class PropertiController extends Controller
     public function allProperti(Request $request)
     {
         $search = $request->search;
-        $data = Properti::select('id', 'luas_bangunan', 'luas_tanah', 'kelebihan', 'lokasi', 'harga')
+        $data = Properti::with('projek')->select('id', 'luas_bangunan', 'luas_tanah', 'kelebihan', 'lokasi', 'harga', '')
                 ->when($search, function ($query) use ($search) {
                     $query->where('luas_bangunan', 'like', "%$search%")
                           ->orWhere('luas_tanah', 'like', "%$search%")
