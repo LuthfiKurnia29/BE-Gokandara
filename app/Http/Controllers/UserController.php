@@ -41,7 +41,7 @@ class UserController extends Controller
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
-        $data = User::where(function ($query) use ($search) {
+        $data = User::with('roles.role')->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('name', 'like', "%$search%")
                         ->orWhere('email', 'like', "%$search%");
