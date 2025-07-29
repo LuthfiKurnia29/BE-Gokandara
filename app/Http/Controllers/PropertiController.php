@@ -123,7 +123,7 @@ class PropertiController extends Controller
 
         $properti->update($validate);
 
-        if ($request->hasFile('properti__gambars')) {
+        if (count($request->properti__gambars)) {
             Properti_Gambar::where('properti_id', $properti->id)->delete();
 
             foreach ($request->file('properti__gambars') as $gambar) {
