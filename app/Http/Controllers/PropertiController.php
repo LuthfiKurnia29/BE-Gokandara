@@ -77,7 +77,7 @@ class PropertiController extends Controller
         foreach ($validate['properti__gambars'] as $gambar) {
             $gambarData = [];
             $gambarData['properti_id'] = $properti->id;
-            $gambarData['image'] = $gambar->store('public', 'properti_images');
+            $gambarData['image'] = $gambar->store('properti_images', 'public');
             Properti_Gambar::create($gambar);
         }
 
@@ -129,7 +129,7 @@ class PropertiController extends Controller
             foreach ($request->file('properti__gambars') as $gambar) {
             $gambarData = [
                 'properti_id' => $properti->id,
-                'image' => $gambar->store('public', 'properti_images'),
+                'image' => $gambar->store('properti_images', 'public'),
             ];
             Properti_Gambar::create($gambarData);
             }
@@ -150,7 +150,7 @@ class PropertiController extends Controller
         if ($properti->propertiGambar) {
             foreach ($properti->propertiGambar as $gambar) {
                 if ($gambar->image) {
-                    unlink(storage_path('properti_images/' . $gambar->image));
+                    unlink(storage_path($gambar->image));
                 }
             }
         }
