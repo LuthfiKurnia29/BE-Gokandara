@@ -78,7 +78,7 @@ class PropertiController extends Controller
             $gambarData = [];
             $gambarData['properti_id'] = $properti->id;
             $gambarData['image'] = $gambar->store('properti_images', 'public');
-            Properti_Gambar::create($gambar);
+            Properti_Gambar::create($gambarData);
         }
 
         return response()->json([
@@ -127,11 +127,11 @@ class PropertiController extends Controller
             Properti_Gambar::where('properti_id', $properti->id)->delete();
 
             foreach ($request->file('properti__gambars') as $gambar) {
-            $gambarData = [
-                'properti_id' => $properti->id,
-                'image' => $gambar->store('properti_images', 'public'),
-            ];
-            Properti_Gambar::create($gambarData);
+                $gambarData = [
+                    'properti_id' => $properti->id,
+                    'image' => $gambar->store('properti_images', 'public'),
+                ];
+                Properti_Gambar::create($gambarData);
             }
         }
 
