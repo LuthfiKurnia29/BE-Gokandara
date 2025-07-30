@@ -16,7 +16,7 @@ class ChattingController extends Controller
         $search = $request->search;
 
         $authUser = auth()->user();
-        $roles = $authUser->roles->pluck('id_role')->toArray();
+        $roles = $authUser->roles->pluck('role_id')->toArray();
 
         $data = Chatting::with(['penerima', 'pengirim'])
             ->when($search, function ($query) use ($search) {
@@ -31,17 +31,17 @@ class ChattingController extends Controller
                     $query
                         ->where(function ($q) use ($authUserId) {
                             $q->whereHas('pengirim.roles', function ($r) {
-                                $r->where('id_role', 1);
+                                $r->where('role_id', 1);
                             })->where('user_penerima_id', $authUserId);
                         })
                         ->orWhere(function ($q) use ($authUserId) {
                             $q->where('user_pengirim_id', $authUserId)->whereHas('penerima.roles', function ($r) {
-                                $r->where('id_role', 3);
+                                $r->where('role_id', 3);
                             });
                         });
                 } elseif (in_array(3, $roles)) {
                     $query->where('user_penerima_id', $authUserId)->whereHas('pengirim.roles', function ($r) {
-                        $r->whereIn('id_role', [1, 2]);
+                        $r->whereIn('role_id', [1, 2]);
                     });
                 }
             })
