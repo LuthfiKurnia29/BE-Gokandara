@@ -15,21 +15,35 @@ class ChattingController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $authUserId = auth()->user()->id;
-        $lawanBicaraId = $request->id_user;
+        $authUser = auth()->user();
+        $roles = $authUser->roles->pluck('id_role')->toArray();
 
         $data = Chatting::with(['penerima', 'pengirim'])
             ->when($search, function ($query) use ($search) {
                 $query->where('pesan', 'like', "%$search%");
             })
-            ->where(function ($query) use ($authUserId, $lawanBicaraId) {
-                $query
-                    ->where(function ($q) use ($authUserId, $lawanBicaraId) {
-                        $q->where('user_pengirim_id', $authUserId)->where('user_penerima_id', $lawanBicaraId);
-                    })
-                    ->orWhere(function ($q) use ($authUserId, $lawanBicaraId) {
-                        $q->where('user_pengirim_id', $lawanBicaraId)->where('user_penerima_id', $authUserId);
+            ->where(function ($query) use ($authUser, $roles) {
+                $authUserId = $authUser->id;
+
+                if (in_array(1, $roles)) {
+                    $query->where('user_pengirim_id', $authUserId);
+                } elseif (in_array(2, $roles)) {
+                    $query
+                        ->where(function ($q) use ($authUserId) {
+                            $q->whereHas('pengirim.roles', function ($r) {
+                                $r->where('id_role', 1);
+                            })->where('user_penerima_id', $authUserId);
+                        })
+                        ->orWhere(function ($q) use ($authUserId) {
+                            $q->where('user_pengirim_id', $authUserId)->whereHas('penerima.roles', function ($r) {
+                                $r->where('id_role', 3);
+                            });
+                        });
+                } elseif (in_array(3, $roles)) {
+                    $query->where('user_penerima_id', $authUserId)->whereHas('pengirim.roles', function ($r) {
+                        $r->whereIn('id_role', [1, 2]);
                     });
+                }
             })
             ->orderBy('id', 'desc')
             ->paginate($per);
@@ -49,7 +63,7 @@ class ChattingController extends Controller
             'chatDiterima' => function ($q) {
                 $q->latest()->limit(1);
             },
-            'roles'
+            'roles',
         ])
             ->whereNot('id', auth()->user()->id)
             ->when($search, function ($query) use ($search) {
