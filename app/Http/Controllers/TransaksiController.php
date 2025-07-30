@@ -13,9 +13,13 @@ class TransaksiController extends Controller
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
+        $created_id = $request->created_id;
 
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit'])
-            ->where(function ($query) use ($search) {
+            ->where(function ($query) use ($search, $created_id) {
+                if ($created_id) {
+                    $query->where('created_id', $created_id);
+                }
                 if ($search) {
                     $query
                         ->where('status', 'like', "%$search%")
