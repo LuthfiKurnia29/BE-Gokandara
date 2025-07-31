@@ -47,9 +47,9 @@ class UserController extends Controller
                         ->orWhere('email', 'like', "%$search%");
                 }
             })
-            ->when(isset($request->role), function ($query) use ($request) {
+            ->when(isset($request->roles), function ($query) use ($request) {
                 $query->whereHas('roles.role', function ($query) use ($request) {
-                    $query->where('name', $request->role);
+                    $query->whereIn('name', [$request->roles]);
                 });
             })
             ->orderBy('id', 'desc')
