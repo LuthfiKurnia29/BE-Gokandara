@@ -74,8 +74,10 @@ class KonsumenController extends Controller
             // 'added_by' => $user->id,
             'description' => 'required|string',
             'pengalaman' => 'required|string|max:255',
-            'materi_fu' => 'required|string',
-            'tgl_fu' => 'required|string',
+            'materi_fu_1' => 'required|string',
+            'tgl_fu_1' => 'required|string',
+            'materi_fu_2' => 'required|string',
+            'tgl_fu_2' => 'required|string',
         ]);
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
@@ -150,8 +152,10 @@ class KonsumenController extends Controller
             // 'added_by' => $user->id,
             'description' => 'nullable|string',
             'pengalaman' => 'nullable|string|max:255',
-            'materi_fu' => 'nullable|string',
-            'tgl_fu' => 'nullable|string',
+            'materi_fu_1' => 'required|string',
+            'tgl_fu_1' => 'required|string',
+            'materi_fu_2' => 'required|string',
+            'tgl_fu_2' => 'required|string',
         ]);
         $validate['added_by'] = $user->id;
         $validate['updated_id'] = auth()->user()->id;
