@@ -65,7 +65,7 @@ class TransaksiController extends Controller
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
         $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
-        $validate['status'] = 'Pending';
+        $validate['status'] = 'Negotiation';
 
         Transaksi::create($validate);
 
