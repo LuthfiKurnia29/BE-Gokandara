@@ -73,6 +73,7 @@ class KonsumenController extends Controller
         ]);
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
+        $validate['updated_id'] = auth()->user()->id;
         Konsumen::create($validate);
 
         return response()->json([
@@ -99,7 +100,7 @@ class KonsumenController extends Controller
         $user = Auth::user();
         // Get all konsumen created by the authenticated user
         $search = $request->search;
-        $data = Konsumen::where('added_by', $user->id)
+        $data = Konsumen::where('added_by', auth()->user()->id)
                         ->orderBy('id', 'desc')
                         ->get();
 
