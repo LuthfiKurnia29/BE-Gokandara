@@ -17,6 +17,7 @@ class FollowupMonitoringController extends Controller
             'followup_date' => 'required|date',
             'followup_note' => 'nullable|string|max:255',
             'followup_result' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:20',
             // 'sales_id' => 'required',
             'konsumen_id' => 'required',
             'followup_last_day' => 'nullable|date'

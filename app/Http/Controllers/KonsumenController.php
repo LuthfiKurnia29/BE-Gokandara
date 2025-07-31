@@ -94,6 +94,18 @@ class KonsumenController extends Controller
         return response()->json($data);
     }
 
+    public function allKonsumenBySales(Request $request)
+    {
+        $user = Auth::user();
+        // Get all konsumen created by the authenticated user
+        $search = $request->search;
+        $data = Konsumen::where('added_by', $user->id)
+                        ->orderBy('id', 'desc')
+                        ->get();
+
+        return response()->json($data);
+    }
+
     /**
      * Display the specified resource.
      */
