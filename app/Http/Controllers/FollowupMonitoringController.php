@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class FollowupMonitoringController extends Controller
 {
+    public function getAllFollowUps()
+    {
+        $followUps = FollowupMonitoring::with('konsumen')->get();
+        return response()->json([
+            'message' => 'successfully retrieved all follow-ups',
+            'status' => 'success',
+            'data' => $followUps,
+            'count' => $followUps->count()
+        ], 200);
+    }
     //
     public function CreateFollowUp(Request $request)
     {

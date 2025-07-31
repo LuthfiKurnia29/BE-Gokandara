@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+
     public function getFollowUpToday()
     {
         $today = Carbon::today()->format('d-m-Y');
