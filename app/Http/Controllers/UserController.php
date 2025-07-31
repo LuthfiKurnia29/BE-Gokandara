@@ -48,7 +48,7 @@ class UserController extends Controller
                 }
             })
             ->when(isset($request->role), function ($query) use ($request) {
-                $query->whereHas('roles.role', function ($query), use ($request) {
+                $query->whereHas('roles.role', function ($query) use ($request) {
                     $query->where('name', $request->role);
                 });
             })
