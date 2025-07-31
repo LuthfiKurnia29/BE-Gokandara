@@ -18,7 +18,7 @@ class ChattingController extends Controller
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
 
-        $data = Chatting::with(['penerima', 'pengirim'])
+        $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
             ->when($search, function ($query) use ($search) {
                 $query->where('pesan', 'like', "%$search%");
             })
