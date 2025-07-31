@@ -49,7 +49,7 @@ class UserController extends Controller
             })
             ->when(isset($request->roles), function ($query) use ($request) {
                 $query->whereHas('roles.role', function ($query) use ($request) {
-                    $query->whereIn('name', [$request->roles]);
+                    $query->whereIn('name', $request->roles);
                 });
             })
             ->orderBy('id', 'desc')
