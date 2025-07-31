@@ -9,19 +9,15 @@ use Illuminate\Http\Request;
 class CalendarController extends Controller
 {
     //
-    public function getCalendar($month = null, $year = null)
+    public function getCalendar(Request $request)
     {
         $query = FollowupMonitoring::query();
 
-        // Filter bulan jika parameter ada
-        if ($month) {
-            $query->whereMonth('first_date', $month);
+        // Filter by tanggal
+        if ($request) {
+            $query->whereBetween(FollowupMonitoring::raw('DAY(followup_date)'), [$request->startDay, $request->endDay]);
         }
 
-        // Filter tahun jika parameter ada
-        if ($year) {
-            $query->whereYear('first_date', $year);
-        }
         $result = $query->get();
 
         return response()->json([

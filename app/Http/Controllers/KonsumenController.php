@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Konsumen;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,11 @@ class KonsumenController extends Controller
 
         $data = Konsumen::with(['projek', 'prospek'])
             ->where(function ($query) use ($search, $created_id) {
+                if (Auth::user()->hasRole('supervisor')) {
+                    $query->where('added_by', Auth::user()->id);
+                } elseif (Auth::user()->hasRole('sales')) {
+                    $query->where('added_by', Auth::user()->id);
+                }
                 if ($created_id) {
                     $query->where('created_id', $created_id);
                 }
@@ -168,5 +174,40 @@ class KonsumenController extends Controller
             'success' => true,
             'message' => 'Konsumen deleted successfully',
         ], 201);
+    }
+
+    public function konsumenBySales(Request $request)
+    {
+        $user = Auth::user();
+        $data = Konsumen::where('added_by', $user->id)
+                        ->with(['projek', 'prospek'])
+                        ->orderBy('id', 'desc')
+                        ->get();
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'message' => 'Konsumen retrieved successfully',
+        ]);
+    }
+
+    public function konsumenBySupervisor(Request $request)
+    {
+        $user = Auth::user();
+        $sales = User::where('parent_id', $user->id)
+                    ->pluck('id');
+
+        $data = Konsumen::where(function($q) use ($user, $sales) {
+                        $q->where('added_by', $user->id)
+                        ->orWhereIn('added_by', $sales);
+                    })
+                    ->with(['projek', 'prospek'])
+                    ->orderBy('id', 'desc')
+                    ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'message' => 'Konsumen retrieved successfully',
+        ]);
     }
 }

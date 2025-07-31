@@ -16,6 +16,7 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\ChattingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FollowupMonitoringController;
 use App\Http\Controllers\PropertiController;
 
 // Authentication & Authorization
@@ -107,6 +108,7 @@ Route::middleware('auth:sanctum')->get('all-unit', [UnitController::class, 'allU
 // Konsumen
 Route::middleware('auth:sanctum')->get('all-konsumen', [KonsumenController::class, 'allKonsumen']);
 Route::middleware('auth:sanctum')->get('all-konsumen-by-sales', [KonsumenController::class, 'allKonsumenBySales']);
+Route::middleware('auth:sanctum')->get('konsumen-by-supervisor', [KonsumenController::class, 'konsumenBySupervisor']);
 
 // Properti-all
 Route::middleware('auth:sanctum')->get('all-properti', [PropertiController::class, 'allProperti']);
@@ -122,6 +124,7 @@ Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [Transak
 Route::middleware('auth:sanctum')->get('get-calendar', [CalendarController::class, 'getCalendar']);
 
 // Dashboard
+Route::middleware('auth:sanctum')->get('followup', [FollowupMonitoringController::class, 'getAllFollowUps']);
 Route::middleware('auth:sanctum')->get('followup-today', [DashboardController::class, 'getFollowUpToday']);
 Route::middleware('auth:sanctum')->get('followup-tomorrow', [DashboardController::class, 'getFollowUpTomorrow']);
 Route::middleware('auth:sanctum')->get('new-konsumens', [DashboardController::class, 'getNewKonsumens']);
