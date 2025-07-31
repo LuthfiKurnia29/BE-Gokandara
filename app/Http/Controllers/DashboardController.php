@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     public function getFollowUpToday()
     {
-        $today = Carbon::today()->format('dd-mm-yyyy');
+        $today = Carbon::today()->format('d-m-Y');
         $followUps = FollowupMonitoring::whereDate('followup_date', $today)
             ->with('konsumen')
             ->get();
@@ -27,8 +27,8 @@ class DashboardController extends Controller
 
     public function getFollowUpTomorrow()
     {
-        $startOfWeek = Carbon::now()->addDay()->format('dd-mm-yyyy');
-        $followUps = FollowupMonitoring::whereBetween('followup_date', $startOfWeek)
+        $tomorrow = Carbon::now()->addDay()->format('d-m-Y');
+        $followUps = FollowupMonitoring::where('followup_date', $tomorrow)
             ->with('konsumen')
             ->get();
         return response()->json([
