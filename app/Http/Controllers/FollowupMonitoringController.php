@@ -33,6 +33,6 @@ class FollowupMonitoringController extends Controller
 
     public function UpdateFollowUp(Request $request)
     {
-
+        
     }
 }

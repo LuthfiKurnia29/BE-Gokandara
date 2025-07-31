@@ -60,6 +60,7 @@ class TransaksiController extends Controller
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
         $validate['created_id'] = auth()->user()->id;
+        $validate['updated_id'] = auth()->user()->id;
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
