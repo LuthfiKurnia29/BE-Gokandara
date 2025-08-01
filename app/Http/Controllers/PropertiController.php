@@ -70,6 +70,7 @@ class PropertiController extends Controller
             'lokasi' => 'required|string|max:255',
             'harga' => 'required|numeric',
             'properti__gambars' => 'required|array',
+            'name' => 'nullable|string|max:255',
         ]);
 
         $properti = Properti::create($validate);
@@ -119,6 +120,7 @@ class PropertiController extends Controller
             'lokasi' => 'required|string|max:255',
             'harga' => 'required|numeric',
             'properti__gambars' => 'nullable|array',
+            'name' => 'nullable|string|max:255',
         ]);
 
         $properti->update($validate);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Konsumen;
 use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,16 +16,24 @@ class KonsumenController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        // var_dump($user); die;
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
         $created_id = $request->created_id;
+        $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek'])
-            ->where(function ($query) use ($search, $created_id) {
-                if (Auth::user()->hasRole('supervisor')) {
-                    $query->where('added_by', Auth::user()->id);
-                } elseif (Auth::user()->hasRole('sales')) {
+            ->where(function ($query) use ($search, $created_id, $user, $userRole) {
+                if ($userRole->role->name === 'supervisor') {
+                    // Get All Sales under Supervisor
+                    $sales = User::where('parent_id', $user->id)->pluck('id');
+                    $query->where(function ($q) use ($user, $sales) {
+                        $q->where('added_by', $user->id)
+                          ->orWhereIn('added_by', $sales);
+                    });
+                } elseif ($userRole->role->name === 'sales') {
                     $query->where('added_by', Auth::user()->id);
                 }
                 if ($created_id) {
