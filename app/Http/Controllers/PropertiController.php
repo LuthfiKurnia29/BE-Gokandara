@@ -151,7 +151,7 @@ class PropertiController extends Controller
         $properti = Properti::findOrFail($id);
         if ($properti->propertiGambar) {
             foreach ($properti->propertiGambar as $gambar) {
-                if ($gambar->image) {
+                if ($gambar->image && file_exists(storage_path($gambar->image))) {
                     unlink(storage_path($gambar->image));
                 }
             }
