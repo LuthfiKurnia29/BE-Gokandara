@@ -17,8 +17,8 @@ return new class extends Migration
         // });
 
          Schema::table('konsumens', function (Blueprint $table) {
-            $table->string('materi_fu_1');
-            $table->string('materi_fu_2');
+            // $table->string('materi_fu_1');
+            // $table->string('materi_fu_2');
             $table->dateTime('tgl_fu_1');
             $table->dateTime('tgl_fu_2');
         });
