@@ -10,13 +10,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class KonsumenController extends Controller
-{
+class KonsumenController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $user = Auth::user();
         // var_dump($user); die;
         $per = $request->per ?? 10;
@@ -32,7 +30,7 @@ class KonsumenController extends Controller
                     $sales = User::where('parent_id', $user->id)->pluck('id');
                     $query->where(function ($q) use ($user, $sales) {
                         $q->where('added_by', $user->id)
-                          ->orWhereIn('added_by', $sales);
+                            ->orWhereIn('added_by', $sales);
                     });
                 } elseif ($userRole->role->name === 'sales') {
                     $query->where('added_by', Auth::user()->id);
@@ -59,16 +57,14 @@ class KonsumenController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $user = Auth::user();
         // var_dump($user); die;
         $validate = $request->validate([
@@ -82,14 +78,14 @@ class KonsumenController extends Controller
             'prospek_id' => 'required',
             'kesiapan_dana' => 'required|numeric|min:0',
             // 'added_by' => $user->id,
-            'description' => 'required|string',
-            'pengalaman' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'pengalaman' => 'nullable|string|max:255',
             'materi_fu_1' => 'required|string',
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
         ]);
-        
+
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
@@ -103,27 +99,25 @@ class KonsumenController extends Controller
         ], 201);
     }
 
-    public function allKonsumen(Request $request)
-    {
+    public function allKonsumen(Request $request) {
         $search = $request->search;
         $data = Konsumen::select('id', 'name')
-                ->when($search, function ($query) use ($search) {
-                    $query->where('name', 'like', "%$search%");
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
 
-    public function allKonsumenBySales(Request $request)
-    {
+    public function allKonsumenBySales(Request $request) {
         $user = Auth::user();
         // Get all konsumen created by the authenticated user
         $search = $request->search;
         $data = Konsumen::where('added_by', auth()->user()->id)
-                        ->orderBy('id', 'desc')
-                        ->get();
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
@@ -131,25 +125,22 @@ class KonsumenController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id) {
         $data = Konsumen::with(['projek', 'prospek'])->where('id', $id)->first();
-        return response()->json($data);   
+        return response()->json($data);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Konsumen $konsumen)
-    {
+    public function edit(Konsumen $konsumen) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
         $validate = $request->validate([
@@ -183,8 +174,7 @@ class KonsumenController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    public function destroy(string $id) {
         Konsumen::destroy($id);
 
         return response()->json([
@@ -193,13 +183,12 @@ class KonsumenController extends Controller
         ], 201);
     }
 
-    public function konsumenBySales(Request $request)
-    {
+    public function konsumenBySales(Request $request) {
         $user = Auth::user();
         $data = Konsumen::where('added_by', $user->id)
-                        ->with(['projek', 'prospek'])
-                        ->orderBy('id', 'desc')
-                        ->get();
+            ->with(['projek', 'prospek'])
+            ->orderBy('id', 'desc')
+            ->get();
         return response()->json([
             'success' => true,
             'data' => $data,
@@ -207,19 +196,18 @@ class KonsumenController extends Controller
         ]);
     }
 
-    public function konsumenBySupervisor(Request $request)
-    {
+    public function konsumenBySupervisor(Request $request) {
         $user = Auth::user();
         $sales = User::where('parent_id', $user->id)
-                    ->pluck('id');
+            ->pluck('id');
 
-        $data = Konsumen::where(function($q) use ($user, $sales) {
-                        $q->where('added_by', $user->id)
-                        ->orWhereIn('added_by', $sales);
-                    })
-                    ->with(['projek', 'prospek'])
-                    ->orderBy('id', 'desc')
-                    ->get();
+        $data = Konsumen::where(function ($q) use ($user, $sales) {
+            $q->where('added_by', $user->id)
+                ->orWhereIn('added_by', $sales);
+        })
+            ->with(['projek', 'prospek'])
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
