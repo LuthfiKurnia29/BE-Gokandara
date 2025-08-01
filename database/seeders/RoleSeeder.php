@@ -6,13 +6,11 @@ use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class RoleSeeder extends Seeder
-{
+class RoleSeeder extends Seeder {
     /**
      * Run the database seeds.
      */
-    public function run(): void
-    {
+    public function run(): void {
         //
         Role::create([
             'id' => 1,
@@ -28,6 +26,11 @@ class RoleSeeder extends Seeder
             'id' => 3,
             'name' => 'Sales',
             'code' => 'sls'
+        ]);
+        Role::create([
+            'id' => 3,
+            'name' => 'Mitra',
+            'code' => 'mtr'
         ]);
     }
 }

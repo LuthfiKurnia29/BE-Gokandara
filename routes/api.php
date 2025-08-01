@@ -18,6 +18,7 @@ use App\Http\Controllers\ChattingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowupMonitoringController;
 use App\Http\Controllers\PropertiController;
+use App\Http\Controllers\TargetController;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -116,6 +117,7 @@ Route::middleware('auth:sanctum')->get('all-properti', [PropertiController::clas
 // transaksi
 Route::middleware('auth:sanctum')->get('list-transaksi', [TransaksiController::class, 'listTransaksi']);
 Route::middleware('auth:sanctum')->post('create-transaksi', [TransaksiController::class, 'createTransaksi']);
+Route::middleware('auth:sanctum')->get('get-transaksi/{id}', [TransaksiController::class, 'getTransaksi']);
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
@@ -128,3 +130,13 @@ Route::middleware('auth:sanctum')->get('followup', [FollowupMonitoringController
 Route::middleware('auth:sanctum')->get('followup-today', [DashboardController::class, 'getFollowUpToday']);
 Route::middleware('auth:sanctum')->get('followup-tomorrow', [DashboardController::class, 'getFollowUpTomorrow']);
 Route::middleware('auth:sanctum')->get('new-konsumens', [DashboardController::class, 'getNewKonsumens']);
+
+// Target
+Route::middleware('auth:sanctum')->prefix('target')->group(function () {
+    Route::post('', [TransaksiController::class, 'store']);
+    Route::get('', [TransaksiController::class, 'index']);
+    Route::get('{id}', [TransaksiController::class, 'show']);
+    Route::put('{id}', [TransaksiController::class, 'update']);
+    Route::delete('{id}', [TransaksiController::class, 'destroy']);
+    Route::get('{id}/achieved', [TransaksiController::class, 'getAchievedUser']);
+});

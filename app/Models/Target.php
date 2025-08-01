@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model {
-    //
+class Target extends Model {
     protected $guarded = ['id'];
 
-    public function target() {
-        return $this->hasMany(Target::class);
+    public function role() {
+        return $this->belongsTo(Role::class);
     }
 }

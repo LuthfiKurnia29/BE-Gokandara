@@ -6,10 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Properti;
 use App\Models\Transaksi;
 
-class TransaksiController extends Controller
-{
-    public function listTransaksi(Request $request)
-    {
+class TransaksiController extends Controller {
+    public function listTransaksi(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
@@ -47,8 +45,7 @@ class TransaksiController extends Controller
         return response()->json($data);
     }
 
-    public function createTransaksi(Request $request)
-    {
+    public function createTransaksi(Request $request) {
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'properti_id' => 'required',
@@ -56,6 +53,7 @@ class TransaksiController extends Controller
             'tipe_id' => 'required',
             'unit_id' => 'required',
             'diskon' => 'nullable',
+            'tipe_diskon' => 'nullable|in:percent,fixed'
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -64,8 +62,23 @@ class TransaksiController extends Controller
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
-        $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
-        $validate['status'] = 'Negotiation';
+        if ($request->diskon) {
+            if ($request->tipe_diskon == 'percent') {
+                $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
+            } else if ($request->tipe_diskon == 'fixed') {
+                $validate['grand_total'] = $properti->harga - $request->diskon;
+            } else {
+                $validate['grand_total'] = $properti->harga;
+            }
+        } else {
+            $validate['grand_total'] = $properti->harga;
+        }
+
+        if (auth()->user()->hasRole('Mitra')) {
+            $validate['status'] = 'Negotiation';
+        } else {
+            $validate['status'] = 'Pending';
+        }
 
         Transaksi::create($validate);
 
@@ -78,8 +91,16 @@ class TransaksiController extends Controller
         );
     }
 
-    public function updateTransaksi(Request $request, $id)
-    {
+    /**
+     * Display the specified resource.
+     */
+    public function getTransaksi(string $id) {
+        $data = Transaksi::where('id', $id)->first();
+        return response()->json($data);
+    }
+
+
+    public function updateTransaksi(Request $request, $id) {
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'properti_id' => 'required',
@@ -93,7 +114,17 @@ class TransaksiController extends Controller
         $validate['updated_id'] = auth()->user()->id;
         $properti = Properti::where('id', $validate['properti_id'])->first();
 
-        $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
+        if ($request->diskon) {
+            if ($request->tipe_diskon == 'percent') {
+                $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
+            } else if ($request->tipe_diskon == 'fixed') {
+                $validate['grand_total'] = $properti->harga - $request->diskon;
+            } else {
+                $validate['grand_total'] = $properti->harga;
+            }
+        } else {
+            $validate['grand_total'] = $properti->harga;
+        }
 
         $transaksi = Transaksi::where('id', $id)->first();
         $transaksi->update($validate);
@@ -107,8 +138,7 @@ class TransaksiController extends Controller
         );
     }
 
-    public function deleteTransaksi($id)
-    {
+    public function deleteTransaksi($id) {
         $transaksi = Transaksi::findOrFail($id);
         $transaksi->delete();
 
@@ -121,8 +151,7 @@ class TransaksiController extends Controller
         );
     }
 
-    public function updateStatusTransaksi(Request $request, $id)
-    {
+    public function updateStatusTransaksi(Request $request, $id) {
         $validate = $request->validate([
             'status' => 'required'
         ]);

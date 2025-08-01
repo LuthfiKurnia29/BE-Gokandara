@@ -6,13 +6,11 @@ use App\Models\Menu;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class MenuSeeder extends Seeder
-{
+class MenuSeeder extends Seeder {
     /**
      * Run the database seeds.
      */
-    public function run(): void
-    {
+    public function run(): void {
         //
         Menu::create([
             'id' => 1,
@@ -53,6 +51,11 @@ class MenuSeeder extends Seeder
             'id' => 8,
             'name' => 'Pengaturan',
             'code' => 'Setting'
+        ]);
+        Menu::create([
+            'id' => 9,
+            'name' => 'Target',
+            'code' => 'Target'
         ]);
     }
 }

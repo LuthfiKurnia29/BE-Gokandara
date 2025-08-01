@@ -9,8 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 
-class User extends Authenticatable
-{
+class User extends Authenticatable {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -33,25 +32,32 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
+    protected function casts(): array {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
-    public function roles()
-    {
+    public function roles() {
         return $this->hasMany(UserRole::class);
     }
 
-    public function chatDikirim()
-    {
+    public function chatDikirim() {
         return $this->hasMany(Chatting::class, 'user_pengirim_id');
     }
 
-    public function chatDiterima()
-    {
+    public function chatDiterima() {
         return $this->hasMany(Chatting::class, 'user_penerima_id');
+    }
+
+    public function hasRole($role) {
+        if (is_array($role)) {
+            return $this->roles()->whereHas('role', function ($q) use ($role) {
+                $q->whereIn('name', $role);
+            })->exists();
+        }
+        return $this->roles()->whereHas('role', function ($q) use ($role) {
+            $q->where('name', $role);
+        })->exists();
     }
 }

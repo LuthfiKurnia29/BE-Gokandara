@@ -11,18 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-class UserController extends Controller
-{
+class UserController extends Controller {
     /**
      * Display a listing of the resource.
      */
 
-    public function me(Request $request){
+    public function me(Request $request) {
         $user = Auth::user(); // Ambil user dari access token
         // Ambil semua role user
         $roles = UserRole::with('role') // join ke tabel role jika ada
-                    ->where('user_id', $user->id)
-                    ->get();
+            ->where('user_id', $user->id)
+            ->get();
 
         $roleIds = $roles->pluck('role_id');
 
@@ -36,17 +35,16 @@ class UserController extends Controller
         ]);
     }
 
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
         $data = User::with('roles.role')->where(function ($query) use ($search) {
-                if ($search) {
-                    $query->where('name', 'like', "%$search%")
-                        ->orWhere('email', 'like', "%$search%");
-                }
-            })
+            if ($search) {
+                $query->where('name', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            }
+        })
             ->when(isset($request->roles), function ($query) use ($request) {
                 $query->whereHas('roles.role', function ($query) use ($request) {
                     $query->whereIn('name', $request->roles);
@@ -61,16 +59,14 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $user = Auth::user();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
@@ -83,18 +79,28 @@ class UserController extends Controller
             // 'pengalaman' => 'required|string|max:255',
         ]);
         $validate['parent_id'] = $request['parent_id'];
-        if($request['password']){
+        if ($request['password']) {
             $hashedPass = Hash::make($request['password']);
             $validate['password'] = $hashedPass;
         }
 
         $user = User::create($validate);
-        if($request['role_id']){
-            UserRole::create([
+        if ($request['role_id']) {
+            $userRole = UserRole::create([
                 'user_id' => $user->id,
                 'role_id' => $request['role_id'],
                 'is_allowed' => true,
             ]);
+
+            if ($request['role_id'] == 1) {
+                $this->syncAccessMenuAdmin($userRole);
+            } else if ($request['role_id'] == 2) {
+                $this->syncAccessMenuSpv($userRole);
+            } else if ($request['role_id'] == 3) {
+                $this->syncAccessMenuSales($userRole);
+            } else if ($request['role_id'] == 4) {
+                $this->syncAccessMenuMitra($userRole);
+            }
         }
         return response()->json([
             'success' => true,
@@ -105,8 +111,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id) {
         $data = User::with('roles')->where('id', $id)->first();
         return response()->json($data);
     }
@@ -114,16 +119,14 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
+    public function edit(string $id) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $user = User::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
@@ -131,7 +134,7 @@ class UserController extends Controller
             'role_id' => 'required',
             // 'nip' => 'required'
         ]);
-        $validate['parent_id'] = $request['parent_id'];        
+        $validate['parent_id'] = $request['parent_id'];
         $user->update($validate);
 
         return response()->json([
@@ -143,8 +146,7 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    public function destroy(string $id) {
         User::destroy($id);
         return response()->json([
             'success' => true,
@@ -152,8 +154,7 @@ class UserController extends Controller
         ], 201);
     }
 
-    public function getUserSpvRole()
-    {
+    public function getUserSpvRole() {
         $roleSpv = Role::where("code", "spv")->first();
         $users = User::whereHas('roles', function ($q) use ($roleSpv) {
             $q->where('role_id', $roleSpv->id);
@@ -164,5 +165,162 @@ class UserController extends Controller
             'message' => 'success get Supervisor',
             'data' => $users
         ], 200);
+    }
+
+    private function syncAccessMenuAdmin(UserRole $userRole) {
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 3,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 8,
+            'is_allowed' => true
+        ]);
+    }
+
+    private function syncAccessMenuSpv(UserRole $userRole) {
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 3,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
+    }
+
+    private function syncAccessMenuSales(UserRole $userRole) {
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 3,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
+    }
+
+    private function syncAccessMenuMitra(UserRole $userRole) {
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 3,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
     }
 }
