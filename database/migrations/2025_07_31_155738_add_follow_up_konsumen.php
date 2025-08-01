@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::table('konsumens', function (Blueprint $table) {
-        //     $table->dropColumn('materi_fu');
-        //     $table->dropColumn('tgl_fu');
-        // });
+        Schema::table('konsumens', function (Blueprint $table) {
+            $table->dropColumn('materi_fu');
+            $table->dropColumn('tgl_fu');
+        });
 
          Schema::table('konsumens', function (Blueprint $table) {
-            // $table->string('materi_fu_1');
-            // $table->string('materi_fu_2');
+            $table->string('materi_fu_1');
+            $table->string('materi_fu_2');
             $table->dateTime('tgl_fu_1')->default(now());
             $table->dateTime('tgl_fu_2')->default(now());
         });
