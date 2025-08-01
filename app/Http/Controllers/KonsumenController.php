@@ -90,8 +90,8 @@ class KonsumenController extends Controller
             'tgl_fu_2' => 'required|string',
         ]);
         
-        $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d');
-        $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d');
+        $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
+        $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
         $validate['updated_id'] = auth()->user()->id;
