@@ -8,6 +8,7 @@ use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class KonsumenController extends Controller
 {
@@ -89,8 +90,8 @@ class KonsumenController extends Controller
             'tgl_fu_2' => 'required|string',
         ]);
         
-        $validate['tgl_fu_1'] = Carbon\Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d');
-        $validate['tgl_fu_2'] = Carbon\Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d');
+        $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d');
+        $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d');
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
         $validate['updated_id'] = auth()->user()->id;
