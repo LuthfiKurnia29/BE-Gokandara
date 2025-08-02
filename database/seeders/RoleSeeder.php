@@ -28,7 +28,7 @@ class RoleSeeder extends Seeder {
             'code' => 'sls'
         ]);
         Role::create([
-            'id' => 3,
+            'id' => 4,
             'name' => 'Mitra',
             'code' => 'mtr'
         ]);
