@@ -133,10 +133,10 @@ Route::middleware('auth:sanctum')->get('new-konsumens', [DashboardController::cl
 
 // Target
 Route::middleware('auth:sanctum')->prefix('target')->group(function () {
-    Route::post('', [TransaksiController::class, 'store']);
-    Route::get('', [TransaksiController::class, 'index']);
-    Route::get('{id}', [TransaksiController::class, 'show']);
-    Route::put('{id}', [TransaksiController::class, 'update']);
-    Route::delete('{id}', [TransaksiController::class, 'destroy']);
-    Route::get('{id}/achieved', [TransaksiController::class, 'getAchievedUser']);
+    Route::post('', [TargetController::class, 'store']);
+    Route::get('', [TargetController::class, 'index']);
+    Route::get('{id}', [TargetController::class, 'show']);
+    Route::put('{id}', [TargetController::class, 'update']);
+    Route::delete('{id}', [TargetController::class, 'destroy']);
+    Route::get('{id}/achieved', [TargetController::class, 'getAchievedUser']);
 });
