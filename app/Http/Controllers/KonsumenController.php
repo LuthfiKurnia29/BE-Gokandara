@@ -84,6 +84,7 @@ class KonsumenController extends Controller {
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
+            'gambar' => 'required|image|max:2048',
         ]);
 
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
@@ -91,6 +92,7 @@ class KonsumenController extends Controller {
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
         $validate['updated_id'] = auth()->user()->id;
+        $validate['gambar'] = $request->file('gambar')->store('gambarKonsumen', 'public');
         Konsumen::create($validate);
 
         return response()->json([
@@ -163,6 +165,16 @@ class KonsumenController extends Controller {
         ]);
         $validate['added_by'] = $user->id;
         $validate['updated_id'] = auth()->user()->id;
+
+        if($request->gambar) {
+            if($konsumen->gambar) {
+                unlink(storage_path($konsumen->gambar));
+            }
+            $validate['gambar'] = $request->file('gambar')->store('gambarKonsumen', 'public');
+        } else {
+            $validate['gambar'] = $konsumen->gambar;
+        }
+
         $konsumen->update($validate);
 
         return response()->json([
@@ -175,6 +187,10 @@ class KonsumenController extends Controller {
      * Remove the specified resource from storage.
      */
     public function destroy(string $id) {
+        $konsumen = Konsumen::findOrFail($id);
+        if($konsumen->gambar) {
+            unlink(storage_path($konsumen->gambar));
+        }
         Konsumen::destroy($id);
 
         return response()->json([

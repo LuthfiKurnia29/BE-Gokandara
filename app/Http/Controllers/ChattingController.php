@@ -17,38 +17,157 @@ class ChattingController extends Controller
 
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
+        $authUserId = $authUser->id;
 
-        $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
-            ->when($search, function ($query) use ($search) {
-                $query->where('pesan', 'like', "%$search%");
-            })
-            ->where(function ($query) use ($authUser, $roles) {
-                $authUserId = $authUser->id;
+        if (in_array(1, $roles)) {
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->where('user_pengirim_id', $authUserId)
+                ->when($search, function ($query) use ($search) {
+                    $query->where('pesan', 'like', "%$search%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate($per);
 
-                if (in_array(1, $roles)) {
-                    $query->where('user_pengirim_id', $authUserId);
-                } elseif (in_array(2, $roles)) {
-                    $query
-                        ->where(function ($q) use ($authUserId) {
-                            $q->whereHas('pengirim.roles', function ($r) {
-                                $r->where('role_id', 1);
-                            })->where('user_penerima_id', $authUserId);
-                        })
-                        ->orWhere(function ($q) use ($authUserId) {
-                            $q->where('user_pengirim_id', $authUserId)->whereHas('penerima.roles', function ($r) {
-                                $r->where('role_id', 3);
-                            });
+            $grouped = $data
+                ->getCollection()
+                ->groupBy(function ($item) {
+                    return $item->created_at->format('Y-m-d H:i:s');
+                })
+                ->map(function ($items, $createdAt) {
+                    return [
+                        'created_at' => $createdAt,
+                        'pesan_list' => $items
+                            ->map(function ($chat) {
+                                return [
+                                    'id' => $chat->id,
+                                    'penerima' => $chat->penerima->name ?? '-',
+                                    'pesan' => $chat->pesan,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })
+                ->values();
+
+            // Set data yang sudah di-group ke dalam pagination
+            $data->setCollection(collect($grouped));
+
+            return response()->json($data);
+        } elseif (in_array(2, $roles)) {
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->where(function ($q) use ($authUserId) {
+                    $q->where(function ($sub) use ($authUserId) {
+                        $sub->whereHas('pengirim.roles', function ($r) {
+                            $r->where('role_id', 1);
+                        })->where('user_penerima_id', $authUserId);
+                    })->orWhere(function ($sub) use ($authUserId) {
+                        $sub->where('user_pengirim_id', $authUserId)->whereHas('penerima.roles', function ($r) {
+                            $r->where('role_id', 3);
                         });
-                } elseif (in_array(3, $roles)) {
-                    $query->where('user_penerima_id', $authUserId)->whereHas('pengirim.roles', function ($r) {
-                        $r->whereIn('role_id', [1, 2]);
                     });
-                }
-            })
-            ->orderBy('id', 'desc')
-            ->paginate($per);
+                })
+                ->when($search, function ($query) use ($search) {
+                    $query->where('pesan', 'like', "%$search%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate($per);
 
-        return response()->json($data);
+            $pesanDiterima = $data
+                ->getCollection()
+                ->where('user_penerima_id', $authUserId)
+                ->groupBy(function ($item) {
+                    return $item->user_pengirim_id . '_' . $item->created_at->format('Y-m-d H:i:s');
+                })
+                ->map(function ($items, $key) {
+                    $firstItem = $items->first();
+                    return [
+                        'pengirim' => $firstItem->pengirim->name ?? '-',
+                        'created_at' => $firstItem->created_at->format('Y-m-d H:i:s'),
+                        'pesan_list' => $items
+                            ->map(function ($chat) {
+                                return [
+                                    'id' => $chat->id,
+                                    'pesan' => $chat->pesan,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })
+                ->values();
+
+            $pesanDikirim = $data
+                ->getCollection()
+                ->where('user_pengirim_id', $authUserId)
+                ->groupBy(function ($item) {
+                    return $item->created_at->format('Y-m-d H:i:s');
+                })
+                ->map(function ($items, $createdAt) {
+                    return [
+                        'created_at' => $createdAt,
+                        'pesan_list' => $items
+                            ->map(function ($chat) {
+                                return [
+                                    'id' => $chat->id,
+                                    'penerima' => $chat->penerima->name ?? '-',
+                                    'pesan' => $chat->pesan,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })
+                ->values();
+
+            // Set data yang sudah di-group ke dalam pagination
+            $data->setCollection(
+                collect([
+                    'pesan_diterima' => $pesanDiterima,
+                    'pesan_dikirim' => $pesanDikirim,
+                ]),
+            );
+
+            return response()->json($data);
+        } elseif (in_array(3, $roles)) {
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->where('user_penerima_id', $authUserId)
+                ->whereHas('pengirim.roles', function ($r) {
+                    $r->whereIn('role_id', [1, 2]);
+                })
+                ->when($search, function ($query) use ($search) {
+                    $query->where('pesan', 'like', "%$search%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate($per);
+
+            $pesanDiterima = $data
+                ->getCollection()
+                ->groupBy(function ($item) {
+                    return $item->user_pengirim_id . '_' . $item->created_at->format('Y-m-d H:i:s');
+                })
+                ->map(function ($items, $key) {
+                    $firstItem = $items->first();
+                    return [
+                        'pengirim' => $firstItem->pengirim->name ?? '-',
+                        'pengirim_role' => $firstItem->pengirim->roles->first()->role->name ?? '-',
+                        'created_at' => $firstItem->created_at->format('Y-m-d H:i:s'),
+                        'pesan_list' => $items
+                            ->map(function ($chat) {
+                                return [
+                                    'id' => $chat->id,
+                                    'pesan' => $chat->pesan,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })
+                ->values();
+
+            // Set data yang sudah di-group ke dalam pagination
+            $data->setCollection(collect($pesanDiterima));
+
+            return response()->json($data);
+        }
+
+        return response()->json(['message' => 'Unauthorized or role not recognized.'], 403);
     }
 
     public function lastChatting(Request $request)
@@ -138,13 +257,15 @@ class ChattingController extends Controller
         );
     }
 
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $chat = Chatting::findOrFail($id);
-        if ($chat->file) {
-            unlink(storage_path('chat_files/' . $chat->file));
+        foreach ($request->id as $id) {
+            $chat = Chatting::findOrFail($id);
+            if ($chat->file && file_exists(storage_path($chat->file))) {
+                unlink(storage_path('chat_files/' . $chat->file));
+            }
+            $chat->delete();
         }
-        $chat->delete();
 
         return response()->json(
             [

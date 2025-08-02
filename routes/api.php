@@ -81,7 +81,7 @@ Route::middleware('auth:sanctum')->delete('prospek/{id}', [prospekController::cl
 Route::middleware('auth:sanctum')->get('chatting', [ChattingController::class, 'index']);
 Route::middleware('auth:sanctum')->post('chatting', [ChattingController::class, 'store']);
 Route::middleware('auth:sanctum')->put('chatting/{id}', [ChattingController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('chatting/{id}', [ChattingController::class, 'destroy']);
+Route::middleware('auth:sanctum')->delete('chatting', [ChattingController::class, 'destroy']);
 Route::middleware('auth:sanctum')->get('chatting-last', [ChattingController::class, 'lastChatting']);
 
 // Properti
