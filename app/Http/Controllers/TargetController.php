@@ -18,7 +18,7 @@ class TargetController extends Controller {
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Target::where(function ($query) use ($search) {
+        $data = Target::with(['role'])->where(function ($query) use ($search) {
             if ($search) {
                 $query->whereHas('role', function ($query) use ($search) {
                     $query->where('name', 'like', "%$search%");
