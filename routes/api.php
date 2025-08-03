@@ -81,7 +81,7 @@ Route::middleware('auth:sanctum')->delete('prospek/{id}', [prospekController::cl
 Route::middleware('auth:sanctum')->get('chatting', [ChattingController::class, 'index']);
 Route::middleware('auth:sanctum')->post('chatting', [ChattingController::class, 'store']);
 Route::middleware('auth:sanctum')->put('chatting/{id}', [ChattingController::class, 'update']);
-Route::middleware('auth:sanctum')->delete('chatting/{id}', [ChattingController::class, 'destroy']);
+Route::middleware('auth:sanctum')->delete('chatting', [ChattingController::class, 'destroy']);
 Route::middleware('auth:sanctum')->get('chatting-last', [ChattingController::class, 'lastChatting']);
 
 // Properti
@@ -121,6 +121,12 @@ Route::middleware('auth:sanctum')->get('get-transaksi/{id}', [TransaksiControlle
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
+
+// Follow-Up Monitoring
+Route::middleware('auth:sanctum')->get('list-follow-up', [FollowupMonitoringController::class, 'ListFollowUp']);
+Route::middleware('auth:sanctum')->post('create-follow-up', [FollowupMonitoringController::class, 'CreateFollowUp']);
+Route::middleware('auth:sanctum')->put('update-follow-up/{id}', [FollowupMonitoringController::class, 'UpdateFollowUp']);
+Route::middleware('auth:sanctum')->delete('delete-follow-up/{id}', [FollowupMonitoringController::class, 'DeleteFollowUp']);
 
 // Calendar
 Route::middleware('auth:sanctum')->get('get-calendar', [CalendarController::class, 'getCalendar']);

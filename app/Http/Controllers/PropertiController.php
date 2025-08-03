@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Properti;
 use App\Models\Properti_Gambar;
+use App\Models\DaftarHarga;
 use Illuminate\Http\Request;
 
 class PropertiController extends Controller
@@ -71,9 +72,23 @@ class PropertiController extends Controller
             'harga' => 'required|numeric',
             'properti__gambars' => 'required|array',
             'name' => 'nullable|string|max:255',
+            'daftar_harga' => 'required|array',
+            'daftar_harga.*.unit_id' => 'required|integer',
+            'daftar_harga.*.tipe_id' => 'required|integer',
+            'daftar_harga.*.harga' => 'required|numeric',
         ]);
 
         $properti = Properti::create($validate);
+
+        foreach ($validate['daftar_harga'] as $harga) {
+            $hargaData = [
+                'properti_id' => $properti->id,
+                'unit_id' => $harga['unit_id'],
+                'tipe_id' => $harga['tipe_id'],
+                'harga' => $harga['harga'],
+            ];
+            DaftarHarga::create($hargaData);
+        }
 
         foreach ($validate['properti__gambars'] as $gambar) {
             $gambarData = [];
@@ -121,9 +136,24 @@ class PropertiController extends Controller
             'harga' => 'required|numeric',
             'properti__gambars' => 'nullable|array',
             'name' => 'nullable|string|max:255',
+            'daftar_harga' => 'required|array',
+            'daftar_harga.*.unit_id' => 'required|integer',
+            'daftar_harga.*.tipe_id' => 'required|integer',
+            'daftar_harga.*.harga' => 'required|numeric',
         ]);
 
         $properti->update($validate);
+
+        DaftarHarga::where('properti_id', $properti->id)->delete();
+        foreach ($validate['daftar_harga'] as $harga) {
+            $hargaData = [
+                'properti_id' => $properti->id,
+                'unit_id' => $harga['unit_id'],
+                'tipe_id' => $harga['tipe_id'],
+                'harga' => $harga['harga'],
+            ];
+            DaftarHarga::create($hargaData);
+        }   
 
         if (count($request->properti__gambars)) {
             Properti_Gambar::where('properti_id', $properti->id)->delete();
