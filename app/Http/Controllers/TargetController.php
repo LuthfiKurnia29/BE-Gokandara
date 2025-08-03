@@ -100,7 +100,7 @@ class TargetController extends Controller {
      * Remove the specified resource from storage.
      */
     public function destroy(id) {
-        Target::destroy(id);
+        Target::find(id)->delete();
 
         return response()->json([
             'success' => true,
