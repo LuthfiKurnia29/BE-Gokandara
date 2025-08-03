@@ -31,11 +31,11 @@ class ChattingController extends Controller
             $grouped = $data
                 ->getCollection()
                 ->groupBy(function ($item) {
-                    return $item->created_at->format('Y-m-d H:i:s');
+                    return $item->code;
                 })
-                ->map(function ($items, $createdAt) {
+                ->map(function ($items, $code) {
                     return [
-                        'created_at' => $createdAt,
+                        'code' => $code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -76,13 +76,13 @@ class ChattingController extends Controller
                 ->getCollection()
                 ->where('user_penerima_id', $authUserId)
                 ->groupBy(function ($item) {
-                    return $item->user_pengirim_id . '_' . $item->created_at->format('Y-m-d H:i:s');
+                    return $item->user_pengirim_id . '_' . $item->code;
                 })
                 ->map(function ($items, $key) {
                     $firstItem = $items->first();
                     return [
                         'pengirim' => $firstItem->pengirim->name ?? '-',
-                        'created_at' => $firstItem->created_at->format('Y-m-d H:i:s'),
+                        'code' => $firstItem->code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -99,11 +99,11 @@ class ChattingController extends Controller
                 ->getCollection()
                 ->where('user_pengirim_id', $authUserId)
                 ->groupBy(function ($item) {
-                    return $item->created_at->format('Y-m-d H:i:s');
+                    return $item->code;
                 })
-                ->map(function ($items, $createdAt) {
+                ->map(function ($items, $code) {
                     return [
-                        'created_at' => $createdAt,
+                        'code' => $code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -141,14 +141,14 @@ class ChattingController extends Controller
             $pesanDiterima = $data
                 ->getCollection()
                 ->groupBy(function ($item) {
-                    return $item->user_pengirim_id . '_' . $item->created_at->format('Y-m-d H:i:s');
+                    return $item->user_pengirim_id . '_' . $item->code;
                 })
                 ->map(function ($items, $key) {
                     $firstItem = $items->first();
                     return [
                         'pengirim' => $firstItem->pengirim->name ?? '-',
                         'pengirim_role' => $firstItem->pengirim->roles->first()->role->name ?? '-',
-                        'created_at' => $firstItem->created_at->format('Y-m-d H:i:s'),
+                        'code' => $firstItem->code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -223,7 +223,8 @@ class ChattingController extends Controller
         ]);
 
         $validate['user_pengirim_id'] = auth()->user()->id;
-
+        $validate['code'] = bin2hex(random_bytes(8));
+        
         foreach ($validate['user_penerima_id'] as $penerimaId) {
             $validate['user_penerima_id'] = $penerimaId;
             $validate['file'] = $request->file('file') ? $request->file('file')->store('public', 'chat_files') : null;

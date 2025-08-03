@@ -9,12 +9,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
-class KonsumenController extends Controller {
+class KonsumenController extends Controller
+{
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $user = Auth::user();
         // var_dump($user); die;
         $per = $request->per ?? 10;
@@ -29,8 +33,7 @@ class KonsumenController extends Controller {
                     // Get All Sales under Supervisor
                     $sales = User::where('parent_id', $user->id)->pluck('id');
                     $query->where(function ($q) use ($user, $sales) {
-                        $q->where('added_by', $user->id)
-                            ->orWhereIn('added_by', $sales);
+                        $q->where('added_by', $user->id)->orWhereIn('added_by', $sales);
                     });
                 } elseif ($userRole->role->name === 'sales') {
                     $query->where('added_by', Auth::user()->id);
@@ -39,7 +42,8 @@ class KonsumenController extends Controller {
                     $query->where('created_id', $created_id);
                 }
                 if ($search) {
-                    $query->where('name', 'like', "%$search%")
+                    $query
+                        ->where('name', 'like', "%$search%")
                         ->orWhere('address', 'like', "%$search%")
                         ->orWhere('ktp_number', 'like', "%$search%")
                         ->orWhere('phone', 'like', "%$search%")
@@ -57,17 +61,21 @@ class KonsumenController extends Controller {
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {
+    public function create()
+    {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $user = Auth::user();
-        // var_dump($user); die;
-        $validate = $request->validate([
+        $userRoles = $user->roles->pluck('id')->toArray();
+        $isMitra = in_array(4, $userRoles);
+
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
             'phone' => 'required|string|max:15',
@@ -77,31 +85,47 @@ class KonsumenController extends Controller {
             'refrensi_id' => 'required',
             'prospek_id' => 'required',
             'kesiapan_dana' => 'required|numeric|min:0',
-            // 'added_by' => $user->id,
             'description' => 'nullable|string',
             'pengalaman' => 'nullable|string|max:255',
             'materi_fu_1' => 'required|string',
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
-            'gambar' => 'required|image|max:2048',
-        ]);
+        ];
+
+        if ($isMitra) {
+            $rules['gambar'] = 'required|image|max:2048';
+        } else {
+            $rules['gambar'] = 'nullable|image|max:2048';
+        }
+
+        $validate = $request->validate($rules);
 
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
         $validate['created_id'] = auth()->user()->id;
         $validate['updated_id'] = auth()->user()->id;
-        $validate['gambar'] = $request->file('gambar')->store('gambarKonsumen', 'public');
+
+        if ($request->hasFile('gambar')) {
+            $validate['gambar'] = $request->file('gambar')->store('gambarKonsumen', 'public');
+        } else {
+            unset($validate['gambar']);
+        }
+
         Konsumen::create($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Konsumen created successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Konsumen created successfully',
+            ],
+            201,
+        );
     }
 
-    public function allKonsumen(Request $request) {
+    public function allKonsumen(Request $request)
+    {
         $search = $request->search;
         $data = Konsumen::select('id', 'name')
             ->when($search, function ($query) use ($search) {
@@ -113,7 +137,8 @@ class KonsumenController extends Controller {
         return response()->json($data);
     }
 
-    public function allKonsumenBySales(Request $request) {
+    public function allKonsumenBySales(Request $request)
+    {
         $user = Auth::user();
         // Get all konsumen created by the authenticated user
         $search = $request->search;
@@ -127,48 +152,60 @@ class KonsumenController extends Controller {
     /**
      * Display the specified resource.
      */
-    public function show(string $id) {
-        $data = Konsumen::with(['projek', 'prospek'])->where('id', $id)->first();
+    public function show(string $id)
+    {
+        $data = Konsumen::with(['projek', 'prospek'])
+            ->where('id', $id)
+            ->first();
         return response()->json($data);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Konsumen $konsumen) {
+    public function edit(Konsumen $konsumen)
+    {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
+
+        $userRoles = $user->roles->pluck('id')->toArray();
+        $isMitra = in_array(4, $userRoles);
+
         $validate = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('konsumens')->ignore($konsumen->id)],
             'phone' => 'required|string|max:15',
-            'ktp_number' => 'required|string|max:16',
+            'ktp_number' => ['required', 'string', 'max:16', Rule::unique('konsumens')->ignore($konsumen->id)],
             'address' => 'required|string|max:255',
             'project_id' => 'required',
             'refrensi_id' => 'required',
             'prospek_id' => 'required',
             'kesiapan_dana' => 'required|numeric|min:0',
-            // 'added_by' => $user->id,
             'description' => 'nullable|string',
             'pengalaman' => 'nullable|string|max:255',
             'materi_fu_1' => 'required|string',
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
+            'gambar' => [Rule::when($isMitra && !$konsumen->gambar, ['required', 'image', 'max:2048'], ['nullable', 'image', 'max:2048'])],
         ]);
+
+        $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
+        $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
         $validate['updated_id'] = auth()->user()->id;
 
-        if($request->gambar) {
-            if($konsumen->gambar) {
-                unlink(storage_path($konsumen->gambar));
+        if ($request->hasFile('gambar')) {
+            if ($konsumen->gambar && Storage::disk('public')->exists($konsumen->gambar)) {
+                Storage::disk('public')->delete($konsumen->gambar);
             }
             $validate['gambar'] = $request->file('gambar')->store('gambarKonsumen', 'public');
         } else {
@@ -177,29 +214,37 @@ class KonsumenController extends Controller {
 
         $konsumen->update($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Konsumen updated successfully',
-        ], 200);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Konsumen updated successfully',
+            ],
+            200,
+        );
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id) {
+    public function destroy(string $id)
+    {
         $konsumen = Konsumen::findOrFail($id);
-        if($konsumen->gambar) {
+        if ($konsumen->gambar) {
             unlink(storage_path($konsumen->gambar));
         }
         Konsumen::destroy($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Konsumen deleted successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Konsumen deleted successfully',
+            ],
+            201,
+        );
     }
 
-    public function konsumenBySales(Request $request) {
+    public function konsumenBySales(Request $request)
+    {
         $user = Auth::user();
         $data = Konsumen::where('added_by', $user->id)
             ->with(['projek', 'prospek'])
@@ -212,14 +257,13 @@ class KonsumenController extends Controller {
         ]);
     }
 
-    public function konsumenBySupervisor(Request $request) {
+    public function konsumenBySupervisor(Request $request)
+    {
         $user = Auth::user();
-        $sales = User::where('parent_id', $user->id)
-            ->pluck('id');
+        $sales = User::where('parent_id', $user->id)->pluck('id');
 
         $data = Konsumen::where(function ($q) use ($user, $sales) {
-            $q->where('added_by', $user->id)
-                ->orWhereIn('added_by', $sales);
+            $q->where('added_by', $user->id)->orWhereIn('added_by', $sales);
         })
             ->with(['projek', 'prospek'])
             ->orderBy('id', 'desc')

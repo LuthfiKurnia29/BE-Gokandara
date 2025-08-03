@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,14 +14,10 @@ return new class extends Migration
             $table->dateTime('followup_date')->nullable();
             $table->string('followup_note')->nullable();
             $table->string('followup_result')->nullable();
-            
-            $table->foreignId('sales_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
 
-            $table->foreignId('konsumen_id')
-                  ->constrained('konsumens')
-                  ->onDelete('cascade');
+            $table->foreignId('sales_id')->constrained('users')->onDelete('cascade');
+
+            $table->foreignId('konsumen_id')->constrained('konsumens')->onDelete('cascade');
             $table->dateTime('followup_last_day')->nullable();
         });
     }
@@ -38,15 +33,7 @@ return new class extends Migration
             $table->dropForeign(['konsumen_id']);
 
             // Hapus kolom
-            $table->dropColumn([
-                'first_date',
-                'last_date',
-                'followup_date',
-                'followup_note',
-                'followup_result',
-                'sales_id',
-                'konsumen_id'
-            ]);
+            $table->dropColumn(['first_date', 'last_date', 'followup_date', 'followup_note', 'followup_result', 'sales_id', 'konsumen_id']);
         });
     }
 };
