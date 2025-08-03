@@ -99,8 +99,8 @@ class TargetController extends Controller {
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Target $target) {
-        Target::destroy($target->id);
+    public function destroy(id) {
+        Target::destroy(id);
 
         return response()->json([
             'success' => true,
