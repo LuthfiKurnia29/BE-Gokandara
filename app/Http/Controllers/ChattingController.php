@@ -35,7 +35,6 @@ class ChattingController extends Controller
                 })
                 ->map(function ($items, $code) {
                     return [
-                        'code' => $code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -81,8 +80,6 @@ class ChattingController extends Controller
                 ->map(function ($items, $key) {
                     $firstItem = $items->first();
                     return [
-                        'pengirim' => $firstItem->pengirim->name ?? '-',
-                        'code' => $firstItem->code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -103,7 +100,6 @@ class ChattingController extends Controller
                 })
                 ->map(function ($items, $code) {
                     return [
-                        'code' => $code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [
@@ -146,9 +142,6 @@ class ChattingController extends Controller
                 ->map(function ($items, $key) {
                     $firstItem = $items->first();
                     return [
-                        'pengirim' => $firstItem->pengirim->name ?? '-',
-                        'pengirim_role' => $firstItem->pengirim->roles->first()->role->name ?? '-',
-                        'code' => $firstItem->code,
                         'pesan_list' => $items
                             ->map(function ($chat) {
                                 return [

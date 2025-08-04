@@ -9,9 +9,19 @@ use Illuminate\Support\Facades\Auth;
 
 class FollowupMonitoringController extends Controller
 {
-    public function getAllFollowUps()
+    public function getAllFollowUps(Request $request)
     {
-        $followUps = FollowupMonitoring::with('konsumen')->get();
+        $startDate = $request->tanggal_awal;
+        $endDate = $request->tanggal_akhir;
+
+        $query = FollowupMonitoring::with('konsumen');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('followup_date', [$startDate, $endDate]);
+        }
+
+        $followUps = $query->get();
+
         return response()->json(
             [
                 'message' => 'successfully retrieved all follow-ups',
@@ -65,13 +75,17 @@ class FollowupMonitoringController extends Controller
         $validate['sales_id'] = $user->id;
         $followup = FollowupMonitoring::create($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'FollowUp created successfully',
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'FollowUp created successfully',
+            ],
+            201,
+        );
     }
 
-    public function UpdateFollowUp(Request $request, $id) {
+    public function UpdateFollowUp(Request $request, $id)
+    {
         $user = Auth::user();
         $validate = $request->validate([
             'followup_date' => 'required|date',
@@ -86,10 +100,13 @@ class FollowupMonitoringController extends Controller
         $followup = FollowupMonitoring::findOrFail($request->id);
         $followup->update($validate);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'FollowUp updated successfully',
-        ], 200);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'FollowUp updated successfully',
+            ],
+            200,
+        );
     }
 
     public function DeleteFollowUp($id)
@@ -97,9 +114,12 @@ class FollowupMonitoringController extends Controller
         $followup = FollowupMonitoring::findOrFail($id);
         $followup->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'FollowUp deleted successfully',
-        ], 200);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'FollowUp deleted successfully',
+            ],
+            200,
+        );
     }
 }
