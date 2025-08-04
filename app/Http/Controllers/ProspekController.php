@@ -42,7 +42,8 @@ class ProspekController extends Controller
     {
         //
          $validate = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'color' => 'required'
         ]);
 
         Prospek::create($validate);

@@ -54,7 +54,7 @@ class CalendarController extends Controller
             'followup_date' => 'required|date',
             'followup_note' => 'required',
             'followup_result' => 'required',
-
+            'prospek_id' => 'required',
         ]);
 
         if($request['konsumen_id']) {
@@ -63,11 +63,11 @@ class CalendarController extends Controller
         
         $calendar = FollowupMonitoring::create($data);
 
-        $konsumen = Konsumen::find($data['konsumen_id']);
-        if($konsumen && $request['prospek_id']) {
-            $konsumen->prospek_id = $request['prospek_id'] ?? $konsumen->prospek_id;
-            $konsumen->save();
-        }
+        // $konsumen = Konsumen::find($data['konsumen_id']);
+        // if($konsumen && $request['prospek_id']) {
+        //     $konsumen->prospek_id = $request['prospek_id'] ?? $konsumen->prospek_id;
+        //     $konsumen->save();
+        // }
 
         return response()->json([
             'success' => true,
