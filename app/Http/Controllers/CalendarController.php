@@ -57,11 +57,11 @@ class CalendarController extends Controller
         
         $calendar = FollowupMonitoring::create($data);
 
-        // $konsumen = Konsumen::find($data['konsumen_id']);
-        // if($konsumen && $request['prospek_id']) {
-        //     $konsumen->prospek_id = $request['prospek_id'] ?? $konsumen->prospek_id;
-        //     $konsumen->save();
-        // }
+        $konsumen = Konsumen::find($data['konsumen_id']);
+        if($konsumen && $request['prospek_id']) {
+            $konsumen->prospek_id = $request['prospek_id'] ?? $konsumen->prospek_id;
+            $konsumen->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -70,4 +70,49 @@ class CalendarController extends Controller
         ], 201);
     }
 
+    public function updateDataCalendar(Request $request, $id){
+        $user = Auth::user();
+        $data = $request->validate([
+            'followup_date' => 'required|date',
+            'followup_note' => 'required',
+            'prospek_id' => 'required',
+        ]);
+        $data['sales_id'] = $user->id;
+        if($request['konsumen_id']) {
+            $data['konsumen_id'] = $request['konsumen_id'];
+        }
+        
+        $calendar = FollowupMonitoring::findOrFail($id);
+
+        if($calendar != null){
+            $calendar->update($data);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => 'Followup monitoring not found'
+            ], 400);
+        }
+
+        $konsumen = Konsumen::find($data['konsumen_id']);
+        if($konsumen && $request['prospek_id']) {
+            $konsumen->prospek_id = $request['prospek_id'] ?? $konsumen->prospek_id;
+            $konsumen->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated calendar data",
+        ], 204);
+    }
+
+    public function deleteDataCalendar($id){
+        $user = Auth::user();
+        $calendar = FollowupMonitoring::destroy($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted calendar data",
+        ], 200);
+        
+    }
 }

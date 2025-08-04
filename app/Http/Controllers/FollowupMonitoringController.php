@@ -66,11 +66,10 @@ class FollowupMonitoringController extends Controller
         $validate = $request->validate([
             'followup_date' => 'required|date',
             'followup_note' => 'required|string|max:255',
-            'followup_result' => 'required|string|max:255',
             'konsumen_id' => 'required',
-            'followup_last_day' => 'required|date',
-            'color' => 'required|string',
             'prospek_id' => 'required'
+            // 'followup_result' => 'required|string|max:255',
+            // 'followup_last_day' => 'required|date',
         ]);
         $validate['sales_id'] = $user->id;
         $followup = FollowupMonitoring::create($validate);
@@ -93,8 +92,10 @@ class FollowupMonitoringController extends Controller
             'followup_result' => 'required|string|max:255',
             'konsumen_id' => 'required',
             'followup_last_day' => 'required|date',
-            'color' => 'required|string',
+            'prospek_id' => 'required'
+            // 'color' => 'required|string',
         ]);
+
         $validate['sales_id'] = $user->id;
 
         $followup = FollowupMonitoring::findOrFail($request->id);
