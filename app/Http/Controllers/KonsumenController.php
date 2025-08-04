@@ -122,7 +122,8 @@ class KonsumenController extends Controller
             'followup_note' => $validate['materi_fu_1'],
             'followup_result' => null, 
             'konsumen_id' => $validate['id'], 
-            'sales_id' => $user->id, 
+            'sales_id' => $user->id,
+            'prospek_id' => $validate['prospek_id'] 
         ];
         FollowupMonitoring::create($followupData1);
 
@@ -132,6 +133,7 @@ class KonsumenController extends Controller
             'followup_result' => null, 
             'konsumen_id' => $validate['id'], 
             'sales_id' => $user->id, 
+            'prospek_id' => $validate['prospek_id']
         ];
         FollowupMonitoring::create($followupData2);
 

@@ -60,6 +60,7 @@ class FollowupMonitoringController extends Controller
             'konsumen_id' => 'required',
             'followup_last_day' => 'required|date',
             'color' => 'required|string',
+            'prospek_id' => 'required'
         ]);
         $validate['sales_id'] = $user->id;
         $followup = FollowupMonitoring::create($validate);
