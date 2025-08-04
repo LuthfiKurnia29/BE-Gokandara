@@ -7,4 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class FollowupMonitoring extends Model
 {
     //
+    protected $id = ['id'];
 }
