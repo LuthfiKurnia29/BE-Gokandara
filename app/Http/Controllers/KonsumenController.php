@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FollowupMonitoring;
 use App\Models\Konsumen;
 use App\Models\User;
 use App\Models\UserRole;
@@ -114,6 +115,25 @@ class KonsumenController extends Controller
         }
 
         Konsumen::create($validate);
+
+        // Create a follow-up entry for the new konsumen
+        $followupData1 = [
+            'followup_date' => $validate['tgl_fu_1'],
+            'followup_note' => $validate['materi_fu_1'],
+            'followup_result' => null, 
+            'konsumen_id' => $validate['id'], 
+            'sales_id' => $user->id, 
+        ];
+        FollowupMonitoring::create($followupData1);
+
+        $followupData2 = [
+            'followup_date' => $validate['tgl_fu_2'],
+            'followup_note' => $validate['materi_fu_2'],
+            'followup_result' => null, 
+            'konsumen_id' => $validate['id'], 
+            'sales_id' => $user->id, 
+        ];
+        FollowupMonitoring::create($followupData2);
 
         return response()->json(
             [

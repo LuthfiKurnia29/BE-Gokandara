@@ -31,12 +31,7 @@ class CalendarController extends Controller
 
     public function getCalendarById(Request $request, $id)
     {
-        $query = FollowupMonitoring::query();
-
-        // Filter by id
-        if ($request) {
-            $query->where('id', $id);
-        }
+        $query = FollowupMonitoring::Find($id);
 
         $result = $query->get();
 
@@ -53,10 +48,9 @@ class CalendarController extends Controller
         $data = $request->validate([
             'followup_date' => 'required|date',
             'followup_note' => 'required',
-            'followup_result' => 'required',
             'prospek_id' => 'required',
         ]);
-
+        $data['sales_id'] = $user->id;
         if($request['konsumen_id']) {
             $data['konsumen_id'] = $request['konsumen_id'];
         }
