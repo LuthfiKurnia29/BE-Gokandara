@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Chatting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ChattingController extends Controller
 {
@@ -28,15 +29,33 @@ class ChattingController extends Controller
                 ->where('user_pengirim_id', $authUserId)
                 ->groupBy('code');
 
-            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+            $chattingPaginated = Chatting::with(['pengirim.roles.role'])
                 ->joinSub($latestPerCode, 'latest_chat', function ($join) {
                     $join->on('chattings.id', '=', 'latest_chat.latest_id');
                 })
                 ->orderByDesc('chattings.created_at')
-                ->select('chattings.*') // pastikan ambil semua kolom dari Chatting
+                ->select('chattings.*')
                 ->paginate($per);
 
-            return response()->json($data);
+            $codes = $chattingPaginated->pluck('code')->toArray();
+
+            $penerimas = Chatting::whereIn('code', $codes)
+                ->with('penerima.roles.role')
+                ->get()
+                ->groupBy('code')
+                ->map(function ($chats) {
+                    return $chats->pluck('penerima')->unique('id')->values();
+                });
+
+            $data = $chattingPaginated->getCollection()->map(function ($item) use ($penerimas) {
+                $item->penerima = $penerimas[$item->code] ?? collect();
+                unset($item->user_penerima_id);
+                return $item;
+            });
+
+            $chattingPaginated->setCollection($data);
+
+            return response()->json($chattingPaginated);
         } elseif (in_array(2, $roles)) {
             $latestPerCode = Chatting::select('code', DB::raw('MAX(id) as latest_id'))
                 ->where(function ($q) use ($authUserId) {
@@ -61,9 +80,54 @@ class ChattingController extends Controller
                 })
                 ->orderByDesc('chattings.created_at')
                 ->select('chattings.*')
-                ->paginate($per);
+                ->get();
 
-            return response()->json($data);
+            $allChats = Chatting::with(['pengirim.roles.role', 'penerima.roles.role'])
+                ->whereIn('code', $data->pluck('code'))
+                ->get()
+                ->groupBy('code');
+
+            $data->transform(function ($item) use ($allChats) {
+                $allGrouped = $allChats[$item->code] ?? collect();
+
+                $item->penerima_group = $allGrouped
+                    ->map(function ($chat) {
+                        return optional($chat->penerima->roles->first()->role)->name;
+                    })
+                    ->unique()
+                    ->values();
+
+                $item->penerima = $allGrouped
+                    ->map(function ($chat) {
+                        return $chat->penerima;
+                    })
+                    ->unique('id')
+                    ->values();
+
+                $item->pengirim_group = $allGrouped
+                    ->map(function ($chat) {
+                        return optional($chat->pengirim->roles->first()->role)->name;
+                    })
+                    ->unique()
+                    ->values();
+
+                $item->pengirim = $allGrouped
+                    ->map(function ($chat) {
+                        return $chat->pengirim;
+                    })
+                    ->unique('id')
+                    ->values();
+
+                return $item;
+            });
+
+            $currentPage = LengthAwarePaginator::resolveCurrentPage();
+            $perPage = $per ?? 10;
+            $currentItems = $data->forPage($currentPage, $perPage)->values();
+
+            $paginated = new LengthAwarePaginator($currentItems, $data->count(), $perPage, $currentPage, ['path' => request()->url(), 'query' => request()->query()]);
+
+            return response()->json($paginated);
         } elseif (in_array(3, $roles)) {
             $latestPerSenderCode = Chatting::select(DB::raw('CONCAT(user_pengirim_id, "_", code) as sender_code'), DB::raw('MAX(id) as latest_id'))
                 ->where('user_penerima_id', $authUserId)
