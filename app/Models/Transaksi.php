@@ -33,7 +33,7 @@ class Transaksi extends Model
         return $this->belongsTo(Unit::class, 'unit_id');
     }
     
-    public function created()
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_id');
     }
