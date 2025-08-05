@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chatting;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class ChattingController extends Controller
 {
@@ -20,40 +21,24 @@ class ChattingController extends Controller
         $authUserId = $authUser->id;
 
         if (in_array(1, $roles)) {
-            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
-                ->where('user_pengirim_id', $authUserId)
+            $latestPerCode = Chatting::select('code', DB::raw('MAX(id) as latest_id'))
                 ->when($search, function ($query) use ($search) {
                     $query->where('pesan', 'like', "%$search%");
                 })
-                ->orderBy('created_at', 'desc')
+                ->where('user_pengirim_id', $authUserId)
+                ->groupBy('code');
+
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->joinSub($latestPerCode, 'latest_chat', function ($join) {
+                    $join->on('chattings.id', '=', 'latest_chat.latest_id');
+                })
+                ->orderByDesc('chattings.created_at')
+                ->select('chattings.*') // pastikan ambil semua kolom dari Chatting
                 ->paginate($per);
-
-            $grouped = $data
-                ->getCollection()
-                ->groupBy(function ($item) {
-                    return $item->code;
-                })
-                ->map(function ($items, $code) {
-                    return [
-                        'pesan_list' => $items
-                            ->map(function ($chat) {
-                                return [
-                                    'id' => $chat->id,
-                                    'penerima' => $chat->penerima->name ?? '-',
-                                    'pesan' => $chat->pesan,
-                                ];
-                            })
-                            ->values(),
-                    ];
-                })
-                ->values();
-
-            // Set data yang sudah di-group ke dalam pagination
-            $data->setCollection(collect($grouped));
 
             return response()->json($data);
         } elseif (in_array(2, $roles)) {
-            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+            $latestPerCode = Chatting::select('code', DB::raw('MAX(id) as latest_id'))
                 ->where(function ($q) use ($authUserId) {
                     $q->where(function ($sub) use ($authUserId) {
                         $sub->whereHas('pengirim.roles', function ($r) {
@@ -68,62 +53,19 @@ class ChattingController extends Controller
                 ->when($search, function ($query) use ($search) {
                     $query->where('pesan', 'like', "%$search%");
                 })
-                ->orderBy('created_at', 'desc')
+                ->groupBy('code');
+
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->joinSub($latestPerCode, 'latest_chat', function ($join) {
+                    $join->on('chattings.id', '=', 'latest_chat.latest_id');
+                })
+                ->orderByDesc('chattings.created_at')
+                ->select('chattings.*')
                 ->paginate($per);
-
-            $pesanDiterima = $data
-                ->getCollection()
-                ->where('user_penerima_id', $authUserId)
-                ->groupBy(function ($item) {
-                    return $item->user_pengirim_id . '_' . $item->code;
-                })
-                ->map(function ($items, $key) {
-                    $firstItem = $items->first();
-                    return [
-                        'pesan_list' => $items
-                            ->map(function ($chat) {
-                                return [
-                                    'id' => $chat->id,
-                                    'pesan' => $chat->pesan,
-                                ];
-                            })
-                            ->values(),
-                    ];
-                })
-                ->values();
-
-            $pesanDikirim = $data
-                ->getCollection()
-                ->where('user_pengirim_id', $authUserId)
-                ->groupBy(function ($item) {
-                    return $item->code;
-                })
-                ->map(function ($items, $code) {
-                    return [
-                        'pesan_list' => $items
-                            ->map(function ($chat) {
-                                return [
-                                    'id' => $chat->id,
-                                    'penerima' => $chat->penerima->name ?? '-',
-                                    'pesan' => $chat->pesan,
-                                ];
-                            })
-                            ->values(),
-                    ];
-                })
-                ->values();
-
-            // Set data yang sudah di-group ke dalam pagination
-            $data->setCollection(
-                collect([
-                    'pesan_diterima' => $pesanDiterima,
-                    'pesan_dikirim' => $pesanDikirim,
-                ]),
-            );
 
             return response()->json($data);
         } elseif (in_array(3, $roles)) {
-            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+            $latestPerSenderCode = Chatting::select(DB::raw('CONCAT(user_pengirim_id, "_", code) as sender_code'), DB::raw('MAX(id) as latest_id'))
                 ->where('user_penerima_id', $authUserId)
                 ->whereHas('pengirim.roles', function ($r) {
                     $r->whereIn('role_id', [1, 2]);
@@ -131,31 +73,15 @@ class ChattingController extends Controller
                 ->when($search, function ($query) use ($search) {
                     $query->where('pesan', 'like', "%$search%");
                 })
-                ->orderBy('created_at', 'desc')
+                ->groupBy('sender_code');
+
+            $data = Chatting::with(['penerima.roles.role', 'pengirim.roles.role'])
+                ->joinSub($latestPerSenderCode, 'latest_chat', function ($join) {
+                    $join->on('chattings.id', '=', 'latest_chat.latest_id');
+                })
+                ->orderByDesc('chattings.created_at')
+                ->select('chattings.*')
                 ->paginate($per);
-
-            $pesanDiterima = $data
-                ->getCollection()
-                ->groupBy(function ($item) {
-                    return $item->user_pengirim_id . '_' . $item->code;
-                })
-                ->map(function ($items, $key) {
-                    $firstItem = $items->first();
-                    return [
-                        'pesan_list' => $items
-                            ->map(function ($chat) {
-                                return [
-                                    'id' => $chat->id,
-                                    'pesan' => $chat->pesan,
-                                ];
-                            })
-                            ->values(),
-                    ];
-                })
-                ->values();
-
-            // Set data yang sudah di-group ke dalam pagination
-            $data->setCollection(collect($pesanDiterima));
 
             return response()->json($data);
         }
@@ -217,7 +143,7 @@ class ChattingController extends Controller
 
         $validate['user_pengirim_id'] = auth()->user()->id;
         $validate['code'] = bin2hex(random_bytes(8));
-        
+
         foreach ($validate['user_penerima_id'] as $penerimaId) {
             $validate['user_penerima_id'] = $penerimaId;
             $validate['file'] = $request->file('file') ? $request->file('file')->store('public', 'chat_files') : null;
