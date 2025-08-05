@@ -64,8 +64,8 @@ class TransaksiController extends Controller {
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
             'properti_id' => $properti->id,
-            'tipe_id' => $tipe->id,
-            'unit_id' => $unit->id,
+            'tipe_id' => $request->tipe_id,
+            'unit_id' => $request->unit_id,
         ])->first();
 
         if (!$harga) {
@@ -127,8 +127,8 @@ class TransaksiController extends Controller {
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
             'properti_id' => $properti->id,
-            'tipe_id' => $tipe->id,
-            'unit_id' => $unit->id,
+            'tipe_id' => $request->tipe_id,
+            'unit_id' => $request->unit_id,
         ])->first();
 
         if (!$harga) {
