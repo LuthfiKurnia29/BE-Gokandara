@@ -210,7 +210,7 @@ class ChattingController extends Controller
 
         foreach ($validate['user_penerima_id'] as $penerimaId) {
             $validate['user_penerima_id'] = $penerimaId;
-            $validate['file'] = $request->file('file') ? $request->file('file')->store('public', 'chat_files') : null;
+            $validate['file'] = $request->file('file') ? $request->file('file')->store('chat_files', 'public') : null;
             Chatting::create($validate);
         }
 
