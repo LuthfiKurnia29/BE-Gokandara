@@ -61,17 +61,28 @@ class TransaksiController extends Controller {
         $validate['updated_id'] = auth()->user()->id;
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
+        $harga = DaftarHarga::where([
+            'properti_id' => $properti->id,
+            'tipe_id' => $tipe->id,
+            'unit_id' => $unit->id,
+        ])->first();
+
+        if (!$harga) {
+            return response()->json([
+                'message' => 'Daftar Harga tidak tersedia untuk opsi transaksi ini.'
+            ], 400);
+        }
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
+                $validate['grand_total'] = $harga->harga - ($validate['diskon'] / 100) * $harga->harga;
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $properti->harga - $request->diskon;
+                $validate['grand_total'] = $harga->harga - $request->diskon;
             } else {
-                $validate['grand_total'] = $properti->harga;
+                $validate['grand_total'] = $harga->harga;
             }
         } else {
-            $validate['grand_total'] = $properti->harga;
+            $validate['grand_total'] = $harga->harga;
         }
 
         if (auth()->user()->hasRole('Mitra')) {
@@ -113,17 +124,28 @@ class TransaksiController extends Controller {
         $validate['diskon'] = $validate['diskon'] ?? 0;
         $validate['updated_id'] = auth()->user()->id;
         $properti = Properti::where('id', $validate['properti_id'])->first();
+        $harga = DaftarHarga::where([
+            'properti_id' => $properti->id,
+            'tipe_id' => $tipe->id,
+            'unit_id' => $unit->id,
+        ])->first();
+
+        if (!$harga) {
+            return response()->json([
+                'message' => 'Daftar Harga tidak tersedia untuk opsi transaksi ini.'
+            ], 400);
+        }
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $properti->harga - ($validate['diskon'] / 100) * $properti->harga;
+                $validate['grand_total'] = $harga->harga - ($validate['diskon'] / 100) * $harga->harga;
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $properti->harga - $request->diskon;
+                $validate['grand_total'] = $harga->harga - $request->diskon;
             } else {
-                $validate['grand_total'] = $properti->harga;
+                $validate['grand_total'] = $harga->harga;
             }
         } else {
-            $validate['grand_total'] = $properti->harga;
+            $validate['grand_total'] = $harga->harga;
         }
 
         $transaksi = Transaksi::where('id', $id)->first();
