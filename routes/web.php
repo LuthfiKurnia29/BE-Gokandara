@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/storage/{path}', function ($path) {
+Route::get('/files/{path}', function ($path) {
     $fullPath = storage_path("app/public/{$path}");
 
     if (!file_exists($fullPath)) {
