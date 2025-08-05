@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Properti;
+use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 
 class TransaksiController extends Controller {
