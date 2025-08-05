@@ -10,6 +10,11 @@ class Chatting extends Model
     use SoftDeletes;
 
     protected $guarded = ['id'];
+    protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute() {
+        return asset('storage/' . $this->file);
+    }
 
     public function pengirim()
     {
