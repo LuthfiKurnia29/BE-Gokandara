@@ -80,6 +80,7 @@ class ProspekController extends Controller
         $prospek = Prospek::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
+            'color' => 'required'
         ]);
 
         $prospek->update($validate);
