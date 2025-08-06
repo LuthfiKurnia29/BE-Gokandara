@@ -57,6 +57,8 @@ class TransaksiController extends Controller {
             'tipe_diskon' => 'nullable|in:percent,fixed'
         ]);
 
+        
+
         $validate['diskon'] = $validate['diskon'] ?? 0;
         $validate['created_id'] = auth()->user()->id;
         $validate['updated_id'] = auth()->user()->id;
