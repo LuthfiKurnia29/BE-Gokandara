@@ -251,7 +251,7 @@ class KonsumenController extends Controller
     public function destroy(string $id)
     {
         $konsumen = Konsumen::findOrFail($id);
-        if ($konsumen->gambar) {
+        if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
             unlink(storage_path($konsumen->gambar));
         }
         Konsumen::destroy($id);
