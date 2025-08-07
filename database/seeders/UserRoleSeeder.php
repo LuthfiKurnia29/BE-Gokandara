@@ -29,5 +29,12 @@ class UserRoleSeeder extends Seeder
             'role_id' => 3,
             'is_allowed' => true
         ]);
+
+        // Mitra
+        UserRole::create([
+            'user_id' => 7,
+            'role_id' => 4,
+            'is_allowed' => true
+        ]);
     }
 }
