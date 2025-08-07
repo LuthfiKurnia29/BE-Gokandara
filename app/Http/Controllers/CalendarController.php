@@ -46,14 +46,14 @@ class CalendarController extends Controller
     {
         $user = Auth::user();
         $data = $request->validate([
-            'followup_date' => 'required|date',
+            'followup_date' => 'required',
             'followup_note' => 'required',
-            'prospek_id' => 'required',
+            'followup_result' => 'required|string|max:255',
+            'konsumen_id' => 'required',
+            'followup_last_day' => 'required',
+            'prospek_id' => 'required'
         ]);
         $data['sales_id'] = $user->id;
-        if($request['konsumen_id']) {
-            $data['konsumen_id'] = $request['konsumen_id'];
-        }
         
         $calendar = FollowupMonitoring::create($data);
 
@@ -73,14 +73,14 @@ class CalendarController extends Controller
     public function updateDataCalendar(Request $request, $id){
         $user = Auth::user();
         $data = $request->validate([
-            'followup_date' => 'required|date',
+            'followup_date' => 'required',
             'followup_note' => 'required',
-            'prospek_id' => 'required',
+            'followup_result' => 'required|string|max:255',
+            'konsumen_id' => 'required',
+            'followup_last_day' => 'required',
+            'prospek_id' => 'required'
         ]);
         $data['sales_id'] = $user->id;
-        if($request['konsumen_id']) {
-            $data['konsumen_id'] = $request['konsumen_id'];
-        }
         
         $calendar = FollowupMonitoring::findOrFail($id);
 
