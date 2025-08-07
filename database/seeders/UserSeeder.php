@@ -35,5 +35,12 @@ class UserSeeder extends Seeder
             'nip' => '12348765',
             'password' => 'password123sales'
         ]);
+        User::create([
+            'id' => 3,
+            'name' => 'Mitra',
+            'email' => 'mitra@gmail.com',
+            'nip' => '11111111',
+            'password' => 'password123mitra'
+        ]);
     }
 }
