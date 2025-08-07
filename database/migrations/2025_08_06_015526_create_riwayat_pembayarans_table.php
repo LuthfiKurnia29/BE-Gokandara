@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('transaksi_id')->constrained('transaksis')->onDelete('cascade');
             $table->date('tanggal');
             $table->integer('nominal');
-            $table->text('keterangan');
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

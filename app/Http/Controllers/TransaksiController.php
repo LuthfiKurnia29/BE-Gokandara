@@ -126,7 +126,7 @@ class TransaksiController extends Controller {
             'tipe_diskon' => 'nullable|in:percent,fixed',
             'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|integer',
-            'jangka_waktu' => 'required|integer',
+            'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
