@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('transaksis', function (Blueprint $table) {
             $table->enum('skema_pembayaran', ['Cash Keras', 'Cash Tempo', 'Kredit']);
             $table->integer('dp')->nullable();
-            $table->integer('jangka_waktu');
+            $table->integer('jangka_waktu')->nullable();
         });
     }
 
@@ -26,6 +26,7 @@ return new class extends Migration
         Schema::table('transaksis', function (Blueprint $table) {
             $table->dropColumn('skema_pembayaran');
             $table->dropColumn('dp');
+            $table->dropColumn('jangka_waktu');
         });
     }
 };

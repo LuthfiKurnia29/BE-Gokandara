@@ -54,10 +54,11 @@ class TransaksiController extends Controller {
             'tipe_id' => 'required',
             'unit_id' => 'required',
             'diskon' => 'nullable',
-            'tipe_diskon' => 'nullable|in:percent,fixed'
+            'tipe_diskon' => 'nullable|in:percent,fixed',
+            'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
+            'dp' => 'nullable|integer',
+            'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
         ]);
-
-        
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
         $validate['created_id'] = auth()->user()->id;
@@ -122,6 +123,10 @@ class TransaksiController extends Controller {
             'tipe_id' => 'required',
             'unit_id' => 'required',
             'diskon' => 'nullable',
+            'tipe_diskon' => 'nullable|in:percent,fixed',
+            'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
+            'dp' => 'nullable|integer',
+            'jangka_waktu' => 'required|integer',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
