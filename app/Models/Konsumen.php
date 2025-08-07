@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Konsumen extends Model
 {
     protected $guarded = ['id'];
-    protected $appends = ['image_url'];
+    protected $appends = ['gambar_url'];
 
-    public function getImageUrlAttribute() {
-        return asset('files/' . $this->image);
+    public function getGambarUrlAttribute() {
+        return asset('files/' . $this->gambar);
     }
 
     public function projek()
