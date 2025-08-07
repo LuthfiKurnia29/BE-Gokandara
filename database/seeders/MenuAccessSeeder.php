@@ -142,11 +142,6 @@ class MenuAccessSeeder extends Seeder {
         ]);
         UserMenuAccess::create([
             'user_role_id' => 4,
-            'menu_id' => 3,
-            'is_allowed' => true
-        ]);
-        UserMenuAccess::create([
-            'user_role_id' => 4,
             'menu_id' => 4,
             'is_allowed' => true
         ]);
