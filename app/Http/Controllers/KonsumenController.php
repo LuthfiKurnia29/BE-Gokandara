@@ -114,14 +114,14 @@ class KonsumenController extends Controller
             unset($validate['gambar']);
         }
 
-        Konsumen::create($validate);
+        $data = Konsumen::create($validate);
 
         // Create a follow-up entry for the new konsumen
         $followupData1 = [
             'followup_date' => $validate['tgl_fu_1'],
             'followup_note' => $validate['materi_fu_1'],
             'followup_result' => null, 
-            'konsumen_id' => $validate['id'], 
+            'konsumen_id' => $data->id, 
             'sales_id' => $user->id,
             'prospek_id' => $validate['prospek_id'] 
         ];
@@ -131,7 +131,7 @@ class KonsumenController extends Controller
             'followup_date' => $validate['tgl_fu_2'],
             'followup_note' => $validate['materi_fu_2'],
             'followup_result' => null, 
-            'konsumen_id' => $validate['id'], 
+            'konsumen_id' => $data->id, 
             'sales_id' => $user->id, 
             'prospek_id' => $validate['prospek_id']
         ];
