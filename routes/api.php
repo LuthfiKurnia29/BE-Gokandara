@@ -19,6 +19,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowupMonitoringController;
 use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
+use App\Http\Controllers\RiwayatPembayaranController;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -121,6 +122,12 @@ Route::middleware('auth:sanctum')->get('get-transaksi/{id}', [TransaksiControlle
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
+
+// Riwayat Pembayaran
+Route::middleware('auth:sanctum')->get('riwayat-pembayaran/{id}', [RiwayatPembayaranController::class, 'index']);
+Route::middleware('auth:sanctum')->post('create-riwayat-pembayaran', [RiwayatPembayaranController::class, 'store']);
+Route::middleware('auth:sanctum')->put('update-riwayat-pembayaran/{id}', [RiwayatPembayaranController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('delete-riwayat-pembayaran/{id}', [RiwayatPembayaranController::class, 'destroy']);
 
 // Follow-Up Monitoring
 Route::middleware('auth:sanctum')->get('list-follow-up', [FollowupMonitoringController::class, 'ListFollowUp']);
