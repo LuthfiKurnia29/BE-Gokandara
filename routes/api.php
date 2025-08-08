@@ -130,8 +130,9 @@ Route::middleware('auth:sanctum')->delete('delete-follow-up/{id}', [FollowupMoni
 
 // Calendar
 Route::middleware('auth:sanctum')->get('get-calendar', [CalendarController::class, 'getCalendar']);
+Route::middleware('auth:sanctum')->get('get-calendar/{id}', [CalendarController::class, 'getCalendarById']);
 Route::middleware('auth:sanctum')->post('create-calendar', [CalendarController::class, 'createDataCalendar']);
-Route::middleware('auth:sanctum')->put('update-calendar', [CalendarController::class, 'updateDataCalendar']);
+Route::middleware('auth:sanctum')->put('update-calendar/{id}', [CalendarController::class, 'updateDataCalendar']);
 Route::middleware('auth:sanctum')->delete('delete-calendar', [CalendarController::class, 'deleteDataCalendar']);
 
 // Dashboard
