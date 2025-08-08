@@ -13,7 +13,7 @@ class CalendarController extends Controller
     //
     public function getCalendar(Request $request)
     {
-        $query = FollowupMonitoring::query()->whereBetween(FollowupMonitoring::raw('DAY(followup_date)'), [$request->startDay, $request->endDay]);
+        $query = FollowupMonitoring::with(['konsumen', 'prospek'])->whereBetween(FollowupMonitoring::raw('DAY(followup_date)'), [$request->startDay, $request->endDay]);
 
         // Filter by tanggal
         if (auth()->user->hasRole('Sales')) {
@@ -33,9 +33,7 @@ class CalendarController extends Controller
 
     public function getCalendarById(Request $request, $id)
     {
-        $query = FollowupMonitoring::Find($id);
-
-        $result = $query->get();
+        $result = FollowupMonitoring::with(['konsumen', 'prospek'])->where('id', $id)->first();
 
         return response()->json([
             'success' => true,
