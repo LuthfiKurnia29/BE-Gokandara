@@ -11,13 +11,9 @@ class RiwayatPembayaranController extends Controller
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
-        $created_id = $request->created_id;
 
         $data = RiwayatPembayaran::where('transaksi_id', $id)
-            ->where(function ($query) use ($search, $created_id) {
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
-                }
+            ->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('tanggal', 'like', "%$search%")
                         ->orWhere('nominal', 'like', "%$search%")
@@ -34,7 +30,7 @@ class RiwayatPembayaranController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'transaksi_id' => 'required|exists:transaksi,id',
+            'transaksi_id' => 'required|exists:transaksis,id',
             'tanggal' => 'required|date',
             'nominal' => 'required|numeric',
             'keterangan' => 'nullable|string',
