@@ -36,7 +36,7 @@ class KonsumenController extends Controller
                     $query->where(function ($q) use ($user, $sales) {
                         $q->where('added_by', $user->id)->orWhereIn('added_by', $sales);
                     });
-                } elseif ($userRole->role->name === 'sales') {
+                } elseif ($userRole->role->name === 'Sales' || $userRole->role->name === 'Mitra') {
                     $query->where('added_by', Auth::user()->id);
                 }
                 if ($created_id) {
