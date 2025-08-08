@@ -16,7 +16,7 @@ class CalendarController extends Controller
         $query = FollowupMonitoring::with(['konsumen', 'prospek'])->whereBetween(FollowupMonitoring::raw('DAY(followup_date)'), [$request->startDay, $request->endDay]);
 
         // Filter by tanggal
-        if (auth()->user->hasRole('Sales')) {
+        if (auth()->user()->hasRole('Sales')) {
             $query->where('sales_id', auth()->user()->id);
         } else if (isset($request->sales_id)) {
             $query->where('sales_id', $request->sales_id);
