@@ -67,7 +67,7 @@ class CalendarController extends Controller
             'success' => true,
             'message' => "Successfully created calendar data",
             'data' => $calendar
-        ], 201);
+        ]);
     }
 
     public function updateDataCalendar(Request $request, $id){
@@ -102,7 +102,7 @@ class CalendarController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Successfully updated calendar data",
-        ], 204);
+        ]);
     }
 
     public function deleteDataCalendar($id){
