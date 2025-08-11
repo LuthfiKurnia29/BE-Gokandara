@@ -25,4 +25,9 @@ class Chatting extends Model
     {
         return $this->belongsTo(User::class, 'user_penerima_id');
     }
+
+    public function notifikasi()
+    {
+        return $this->hasMany(Notifikasi::class, 'chat_id');
+    }
 }
