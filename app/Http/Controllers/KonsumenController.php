@@ -77,7 +77,7 @@ class KonsumenController extends Controller
         $userRoles = $user->roles->pluck('id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
-        $availKonsumen = Konsumen::where('ktp_number', $request->ktp_number)->where('project_id', $request->project_id)->first();
+        $availKonsumen = Konsumen::where('phone', $request->phone)->where('project_id', $request->project_id)->first();
 
         if ($availKonsumen) {
             Notifikasi::create([
@@ -99,7 +99,7 @@ class KonsumenController extends Controller
 
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:konsumens',
+            'email' => 'nullable|email|max:255|unique:konsumens',
             'phone' => 'required|string|max:15',
             'ktp_number' => 'required|string|max:16|unique:konsumens',
             'address' => 'required|string|max:255',
@@ -224,7 +224,7 @@ class KonsumenController extends Controller
 
         $validate = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'email', 'max:255', Rule::unique('konsumens')->ignore($konsumen->id)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('konsumens')->ignore($konsumen->id)],
             'phone' => 'required|string|max:15',
             'ktp_number' => ['required', 'string', 'max:16', Rule::unique('konsumens')->ignore($konsumen->id)],
             'address' => 'required|string|max:255',
@@ -271,11 +271,42 @@ class KonsumenController extends Controller
      */
     public function destroy(string $id)
     {
-        $konsumen = Konsumen::findOrFail($id);
-        if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
-            unlink(storage_path($konsumen->gambar));
+        $authUser = auth()->user();
+        $roles = $authUser->roles->pluck('role_id')->toArray();
+        
+        if(in_array(1, $roles)) {
+            $konsumen = Konsumen::findOrFail($id);
+            if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
+                unlink(storage_path($konsumen->gambar));
+            }
+            Konsumen::where('id', $id)->delete();
+
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'Konsumen deleted successfully',
+                ],
+                201,
+            );
+        } else {
+            $konsumen = Konsumen::where('id', $id)->first();
+            $konsumen->update(['status_delete' => 'pending']);
+
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'The application to delete the konsumen has been successfully submitted.',
+                ],
+                201,
+            );
         }
-        Konsumen::destroy($id);
+    }
+
+    public function approveDeleteAdmin($id)
+    {
+        $konsumen = Konsumen::where('id', $id)->first();
+        $konsumen->update(['status_delete' => 'deleted']);
+        $konsumen->delete();
 
         return response()->json(
             [

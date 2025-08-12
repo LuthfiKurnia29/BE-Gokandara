@@ -22,6 +22,7 @@ class TransaksiController extends Controller {
                 if ($search) {
                     $query
                         ->where('status', 'like', "%$search%")
+                        ->orWhere('no_transaksi', 'like', "%$search%")
                         ->orWhereHas('konsumen', function ($q) use ($search) {
                             $q->where('name', 'like', "%$search%")
                                 ->orWhere('address', 'like', "%$search%")
@@ -57,6 +58,7 @@ class TransaksiController extends Controller {
             'tipe_diskon' => 'nullable|in:percent,fixed',
             'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|integer',
+            'no_transaksi' => 'required|numeric|digits:7|unique:transaksis,no_transaksi',
             'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
         ]);
 
@@ -126,6 +128,7 @@ class TransaksiController extends Controller {
             'tipe_diskon' => 'nullable|in:percent,fixed',
             'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|integer',
+            'no_transaksi' => 'required|numeric|digits:7|unique:transaksis,no_transaksi,' . $id,
             'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
         ]);
 

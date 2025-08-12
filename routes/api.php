@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->get('konsumen/{id}', [KonsumenController::cla
 Route::middleware('auth:sanctum')->post('konsumen', [KonsumenController::class, 'store']);
 Route::middleware('auth:sanctum')->put('konsumen/{id}', [KonsumenController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('konsumen/{id}', [KonsumenController::class, 'destroy']);
+Route::middleware('auth:sanctum')->delete('konsumen-delete-approval/{id}', [KonsumenController::class, 'approveDeleteAdmin']);
 
 // Projek
 Route::middleware('auth:sanctum')->get('projek', [ProjekController::class, 'index']);
