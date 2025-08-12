@@ -215,6 +215,7 @@ class ChattingController extends Controller
             $chat = Chatting::create($validate);
 
             Notifikasi::create([
+                'penerima_id' => $validate['user_penerima_id'],
                 'konsumen_id' => null,
                 'chat_id' => $chat->id,
                 'jenis_notifikasi' => 'chat',

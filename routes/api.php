@@ -96,6 +96,7 @@ Route::middleware('auth:sanctum')->delete('properti/{id}', [PropertiController::
 // Notifikasi
 Route::middleware('auth:sanctum')->get('notifikasi', [NotifikasiController::class, 'index']);
 Route::middleware('auth:sanctum')->post('notifikasi-read/{id}', [NotifikasiController::class, 'read']);
+Route::middleware('auth:sanctum')->get('notifikasi-count', [NotifikasiController::class, 'count']);
 Route::middleware('auth:sanctum')->delete('notifikasi/{id}', [NotifikasiController::class, 'destroy']);
 
 // Referensi

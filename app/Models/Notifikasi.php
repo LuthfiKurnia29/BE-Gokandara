@@ -23,4 +23,9 @@ class Notifikasi extends Model
     {
         return $this->belongsTo(Chatting::class, 'chat_id');
     }
+
+    public function penerima()
+    {
+        return $this->belongsTo(User::class, 'penerima_id');
+    }
 }

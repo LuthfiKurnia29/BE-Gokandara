@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('notifikasis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('chat_id')->constrained('chattings')->onDelete('cascade')->nullable();
-            $table->foreignId('konsumen_id')->constrained('konsumens')->onDelete('cascade')->nullable();
+            $table->foreignId('penerima_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('chat_id')->nullable()->constrained('chattings')->onDelete('cascade');
+            $table->foreignId('konsumen_id')->nullable()->constrained('konsumens')->onDelete('cascade');
             $table->string('jenis_notifikasi');
             $table->boolean('is_read')->default(false);
             $table->timestamps();

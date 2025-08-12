@@ -81,6 +81,7 @@ class KonsumenController extends Controller
 
         if ($availKonsumen) {
             Notifikasi::create([
+                'penerima_id' => 1,
                 'konsumen_id' => $availKonsumen->id,
                 'chat_id' => null,
                 'jenis_notifikasi' => 'konsumen',

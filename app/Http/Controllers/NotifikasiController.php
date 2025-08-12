@@ -13,7 +13,9 @@ class NotifikasiController extends Controller
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Notifikasi::with('konsumen', 'chatting')->where(function ($query) use ($search) {
+        $data = Notifikasi::with('konsumen', 'chatting')
+            ->where('penerima_id', auth()->user()->id)
+            ->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('jenis_notifikasi', 'like', "%$search%");
                 }
@@ -36,6 +38,15 @@ class NotifikasiController extends Controller
             ],
             200,
         );
+    }
+
+    public function count() 
+    {
+        $countNotif = Notifikasi::where('penerima_id', auth()->user()->id)
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json($countNotif);
     }
 
     public function destroy($id)
