@@ -20,6 +20,7 @@ use App\Http\Controllers\FollowupMonitoringController;
 use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
 use App\Http\Controllers\RiwayatPembayaranController;
+use App\Http\Controllers\NotifikasiController;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -91,6 +92,12 @@ Route::middleware('auth:sanctum')->get('properti', [PropertiController::class, '
 Route::middleware('auth:sanctum')->get('properti/{id}', [PropertiController::class, 'show']);
 Route::middleware('auth:sanctum')->put('properti/{id}', [PropertiController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('properti/{id}', [PropertiController::class, 'destroy']);
+
+// Notifikasi
+Route::middleware('auth:sanctum')->get('notifikasi', [NotifikasiController::class, 'index']);
+Route::middleware('auth:sanctum')->post('notifikasi-read/{id}', [NotifikasiController::class, 'read']);
+Route::middleware('auth:sanctum')->get('notifikasi-count', [NotifikasiController::class, 'count']);
+Route::middleware('auth:sanctum')->delete('notifikasi/{id}', [NotifikasiController::class, 'destroy']);
 
 // Referensi
 Route::middleware('auth:sanctum')->get('referensi', [RefrensiController::class, 'getAllRefrence']);

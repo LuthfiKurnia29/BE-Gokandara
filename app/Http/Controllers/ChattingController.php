@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Chatting;
 use App\Models\User;
+use App\Models\Notifikasi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -211,7 +212,15 @@ class ChattingController extends Controller
         foreach ($validate['user_penerima_id'] as $penerimaId) {
             $validate['user_penerima_id'] = $penerimaId;
             $validate['file'] = $request->file('file') ? $request->file('file')->store('chat_files', 'public') : null;
-            Chatting::create($validate);
+            $chat = Chatting::create($validate);
+
+            Notifikasi::create([
+                'penerima_id' => $validate['user_penerima_id'],
+                'konsumen_id' => null,
+                'chat_id' => $chat->id,
+                'jenis_notifikasi' => 'chat',
+                'is_read' => false
+            ]);
         }
 
         return response()->json(

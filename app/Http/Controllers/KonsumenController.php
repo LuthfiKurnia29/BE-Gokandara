@@ -6,6 +6,7 @@ use App\Models\FollowupMonitoring;
 use App\Models\Konsumen;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -76,6 +77,26 @@ class KonsumenController extends Controller
         $userRoles = $user->roles->pluck('id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
+        $availKonsumen = Konsumen::where('ktp_number', $request->ktp_number)->where('project_id', $request->project_id)->first();
+
+        if ($availKonsumen) {
+            Notifikasi::create([
+                'penerima_id' => 1,
+                'konsumen_id' => $availKonsumen->id,
+                'chat_id' => null,
+                'jenis_notifikasi' => 'konsumen',
+                'is_read' => false
+            ]);
+
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Konsumen with this KTP number already exists in this project.',
+                ],
+                400,
+            );
+        }
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
@@ -120,20 +141,20 @@ class KonsumenController extends Controller
         $followupData1 = [
             'followup_date' => $validate['tgl_fu_1'],
             'followup_note' => $validate['materi_fu_1'],
-            'followup_result' => null, 
-            'konsumen_id' => $data->id, 
+            'followup_result' => null,
+            'konsumen_id' => $data->id,
             'sales_id' => $user->id,
-            'prospek_id' => $validate['prospek_id'] 
+            'prospek_id' => $validate['prospek_id'],
         ];
         FollowupMonitoring::create($followupData1);
 
         $followupData2 = [
             'followup_date' => $validate['tgl_fu_2'],
             'followup_note' => $validate['materi_fu_2'],
-            'followup_result' => null, 
-            'konsumen_id' => $data->id, 
-            'sales_id' => $user->id, 
-            'prospek_id' => $validate['prospek_id']
+            'followup_result' => null,
+            'konsumen_id' => $data->id,
+            'sales_id' => $user->id,
+            'prospek_id' => $validate['prospek_id'],
         ];
         FollowupMonitoring::create($followupData2);
 
