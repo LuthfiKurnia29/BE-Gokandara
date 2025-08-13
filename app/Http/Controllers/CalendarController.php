@@ -33,7 +33,7 @@ class CalendarController extends Controller
 
     public function getCalendarById(Request $request, $id)
     {
-        $result = FollowupMonitoring::with(['konsumen', 'prospek'])->where('id', $id)->first();
+        $result = FollowupMonitoring::with(['konsumen.followups', 'prospek'])->where('id', $id)->first();
 
         return response()->json([
             'success' => true,
