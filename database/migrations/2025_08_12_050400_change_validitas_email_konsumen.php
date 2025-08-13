@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('konsumens', function (Blueprint $table) {
             $table->string('email')->nullable()->change();
+            $table->string('ktp_number')->nullable()->change();
         });
 
     }
@@ -24,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('konsumens', function (Blueprint $table) {
             $table->string('email')->nullable(false)->change();
+            $table->string('ktp_number')->nullable(false)->change();
         });
     }
 };
