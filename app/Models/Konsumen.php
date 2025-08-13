@@ -25,4 +25,9 @@ class Konsumen extends Model
     {
         return $this->belongsTo(Prospek::class, 'prospek_id');
     }
+
+    public function followups()
+    {
+        return $this->hasMany(FollowupMonitoring::class);
+    }
 }
