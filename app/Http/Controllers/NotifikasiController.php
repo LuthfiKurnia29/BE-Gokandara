@@ -46,7 +46,7 @@ class NotifikasiController extends Controller
         return response()->json($data);
     }
 
-    public function read($id)
+    public function read()
     {
         $notifikasi = Notifikasi::findOrFail($id);
         $notifikasi->update(['is_read' => true]);
