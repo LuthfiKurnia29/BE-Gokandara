@@ -46,7 +46,7 @@ class NotifikasiController extends Controller
         return response()->json($data);
     }
 
-    public function read()
+    public function read($id)
     {
         $notifikasi = Notifikasi::findOrFail($id);
         $notifikasi->update(['is_read' => true]);
@@ -60,7 +60,7 @@ class NotifikasiController extends Controller
         );
     }
 
-    public function readAll($id)
+    public function readAll()
     {
         $notifikasi = Notifikasi::where('penerima_id', auth()->user()->id)->update(['is_read' => true]);
 
