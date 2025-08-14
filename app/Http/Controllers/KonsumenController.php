@@ -280,6 +280,7 @@ class KonsumenController extends Controller
                 unlink(storage_path($konsumen->gambar));
             }
             Konsumen::where('id', $id)->delete();
+            FollowupMonitoring::where('konsumen_id', $id)->delete();
 
             return response()->json(
                 [
@@ -307,6 +308,7 @@ class KonsumenController extends Controller
         $konsumen = Konsumen::where('id', $id)->first();
         $konsumen->update(['status_delete' => 'deleted']);
         $konsumen->delete();
+        FollowupMonitoring::where('konsumen_id', $id)->delete();
 
         return response()->json(
             [
