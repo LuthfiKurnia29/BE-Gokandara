@@ -123,4 +123,19 @@ class FollowupMonitoringController extends Controller
             200,
         );
     }
-}
+
+    public function updateStatus($id)
+    {
+        $followup = FollowupMonitoring::findOrFail($id);
+        $followup->status = !$followup->status;
+        $followup->save();
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'FollowUp status updated successfully',
+            ],
+            200,
+        );
+    }
+};
