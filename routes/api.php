@@ -21,6 +21,7 @@ use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
 use App\Http\Controllers\RiwayatPembayaranController;
 use App\Http\Controllers\NotifikasiController;
+use Illuminate\Support\Facades\Mail;
 
 // Authentication & Authorization
 Route::post('login', [LoginController::class, 'authenticate']);
@@ -166,4 +167,10 @@ Route::middleware('auth:sanctum')->prefix('target')->group(function () {
     Route::put('{id}', [TargetController::class, 'update']);
     Route::delete('{id}', [TargetController::class, 'destroy']);
     Route::get('{id}/achieved', [TargetController::class, 'getAchievedUser']);
+});
+
+Route::get('/send-mail', function () {
+    $data = ['title' => 'Hello', 'content' => 'Test email via Brevo SMTP'];
+    Mail::to('lkurniahadi@gmail.com')->send(new \App\Mail\NotifMail($data));
+    return 'Email sent!';
 });
