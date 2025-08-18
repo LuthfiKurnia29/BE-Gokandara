@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\FollowupMonitoring;
-use Illuminate\Console\Scheduling\Schedule;
+// use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -22,7 +22,7 @@ Artisan::command('inspire', function () {
 //     // Logic to execute on failure, like logging or sending an alert.
 // });
 
-Schedule::call(function () {
+FacadesSchedule::call(function () {
     $fus = FollowupMonitoring::where('followup_date', date('Y-m-d'))->get();
 
     foreach ($fus as $fu) {
