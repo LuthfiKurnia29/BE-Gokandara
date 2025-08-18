@@ -11,8 +11,12 @@ class FollowupMonitoring extends Model
     public function konsumen() {
         return $this->belongsTo(Konsumen::class);
     }
-    
+
     public function prospek() {
         return $this->belongsTo(Prospek::class);
+    }
+
+    public function sales() {
+        return $this->belongsTo(User::class, 'sales_id');
     }
 }

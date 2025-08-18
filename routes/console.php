@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\FollowupMonitoring;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schedule as FacadesSchedule;
 
 Artisan::command('inspire', function () {
@@ -19,3 +21,18 @@ Artisan::command('inspire', function () {
 // })->onFailure(function () {
 //     // Logic to execute on failure, like logging or sending an alert.
 // });
+
+Schedule::call(function () {
+    $fus = FollowupMonitoring::where('followup_date', date('Y-m-d'))->get();
+
+    foreach ($fus as $fu) {
+        $data = [
+            'followup_date' => $fu->followup_date,
+            'followup_last_day' => $fu->followup_last_day,
+            'konsumen' => $fu->konsumen,
+            'prospek' => $fu->prospek,
+            'followup_note' => $fu->followup_note,
+        ];
+        Mail::to($fu->sales->email)->send(new \App\Mail\NotifMail($data));
+    }
+})->dailyAt('05:00');

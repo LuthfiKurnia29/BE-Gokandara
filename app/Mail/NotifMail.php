@@ -29,7 +29,7 @@ class NotifMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Notif Mail',
+            subject: 'Notifikasi Followup',
         );
     }
 
