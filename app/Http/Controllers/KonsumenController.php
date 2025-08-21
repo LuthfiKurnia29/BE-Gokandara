@@ -365,22 +365,4 @@ class KonsumenController extends Controller
         ]);
     }
 
-    public function assignKonsumen(Request $request)
-    {
-        $validate = $request->validate([
-            'konsumen_id' => 'required|exists:konsumens,id',
-            'assign_id' => 'required|exists:users,id',
-        ]);
-
-        $konsumen = Konsumen::findOrFail($validate['konsumen_id']);
-        $konsumen->update(['assign_id' => $validate['assign_id']]);
-
-        return response()->json(
-            [
-                'success' => true,
-                'message' => 'Konsumen assigned successfully',
-            ],
-            201,
-        );
-    }
 }
