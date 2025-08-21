@@ -137,6 +137,7 @@ Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiCon
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
 
 // Skema Pembayaran
+Route::middleware('auth:sanctum')->get('all-skema-pembayaran', [SkemaPembayaranController::class, 'allSkemaPembayaran']);
 Route::middleware('auth:sanctum')->get('list-skema-pembayaran', [SkemaPembayaranController::class, 'listSkemaPembayaran']);
 Route::middleware('auth:sanctum')->post('create-skema-pembayaran', [SkemaPembayaranController::class, 'createSkemaPembayaran']);
 Route::middleware('auth:sanctum')->put('update-skema-pembayaran/{id}', [SkemaPembayaranController::class, 'updateSkemaPembayaran']);
