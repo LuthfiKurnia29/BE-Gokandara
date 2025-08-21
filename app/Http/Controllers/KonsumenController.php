@@ -127,7 +127,12 @@ class KonsumenController extends Controller
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
-        $validate['created_id'] = auth()->user()->id;
+
+        if($request->has('assign_id')) {
+            $validate['created_id'] = $request->assign_id;
+        } else {
+            $validate['created_id'] = auth()->user()->id;
+        }
         $validate['updated_id'] = auth()->user()->id;
 
         if ($request->hasFile('gambar')) {
@@ -246,6 +251,12 @@ class KonsumenController extends Controller
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
+
+        if ($request->has('assign_id')) {
+            $validate['created_id'] = $request->assign_id;
+        } else {
+            $validate['created_id'] = auth()->user()->id;
+        }
         $validate['updated_id'] = auth()->user()->id;
 
         if ($request->hasFile('gambar')) {
