@@ -7,6 +7,11 @@ use App\Models\SkemaPembayaran;
 
 class SkemaPembayaranController extends Controller
 {
+    public function allSkemaPembayaran() {
+        $data = SkemaPembayaran::get();
+        return response()->json($data);
+    }
+    
     public function listSkemaPembayaran(Request $request)
     {
         $per = $request->per ?? 10;
