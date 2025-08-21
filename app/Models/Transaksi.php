@@ -32,6 +32,11 @@ class Transaksi extends Model
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
+
+    public function skemaPembayaran()
+    {
+        return $this->belongsTo(SkemaPembayaran::class, 'skema_pembayaran_id');
+    }
     
     public function createdBy()
     {
