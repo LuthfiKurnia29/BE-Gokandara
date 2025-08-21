@@ -13,6 +13,7 @@ use App\Http\Controllers\TipeController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\SkemaPembayaranController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\ChattingController;
 use App\Http\Controllers\DashboardController;
@@ -123,6 +124,7 @@ Route::middleware('auth:sanctum')->get('all-unit', [UnitController::class, 'allU
 Route::middleware('auth:sanctum')->get('all-konsumen', [KonsumenController::class, 'allKonsumen']);
 Route::middleware('auth:sanctum')->get('all-konsumen-by-sales', [KonsumenController::class, 'allKonsumenBySales']);
 Route::middleware('auth:sanctum')->get('konsumen-by-supervisor', [KonsumenController::class, 'konsumenBySupervisor']);
+Route::middleware('auth:sanctum')->post('assign-konsumen', [KonsumenController::class, 'assignKonsumen']);
 
 // Properti-all
 Route::middleware('auth:sanctum')->get('all-properti', [PropertiController::class, 'allProperti']);
@@ -134,6 +136,13 @@ Route::middleware('auth:sanctum')->get('get-transaksi/{id}', [TransaksiControlle
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
+
+// Skema Pembayaran
+Route::middleware('auth:sanctum')->get('all-skema-pembayaran', [SkemaPembayaranController::class, 'allSkemaPembayaran']);
+Route::middleware('auth:sanctum')->get('list-skema-pembayaran', [SkemaPembayaranController::class, 'listSkemaPembayaran']);
+Route::middleware('auth:sanctum')->post('create-skema-pembayaran', [SkemaPembayaranController::class, 'createSkemaPembayaran']);
+Route::middleware('auth:sanctum')->put('update-skema-pembayaran/{id}', [SkemaPembayaranController::class, 'updateSkemaPembayaran']);
+Route::middleware('auth:sanctum')->delete('delete-skema-pembayaran/{id}', [SkemaPembayaranController::class, 'deleteSkemaPembayaran']);
 
 // Riwayat Pembayaran
 Route::middleware('auth:sanctum')->get('riwayat-pembayaran/{id}', [RiwayatPembayaranController::class, 'index']);

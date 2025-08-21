@@ -85,7 +85,7 @@ class KonsumenController extends Controller
                 'konsumen_id' => $availKonsumen->id,
                 'chat_id' => null,
                 'jenis_notifikasi' => 'konsumen',
-                'is_read' => false
+                'is_read' => false,
             ]);
 
             return response()->json(
@@ -113,6 +113,7 @@ class KonsumenController extends Controller
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
+            'assign_id' => 'nullable|exists:users,id',
         ];
 
         if ($isMitra) {
@@ -239,6 +240,7 @@ class KonsumenController extends Controller
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
             'gambar' => [Rule::when($isMitra && !$konsumen->gambar, ['required', 'image', 'max:2048'], ['nullable', 'image', 'max:2048'])],
+            'assign_id' => 'nullable|exists:users,id',
         ]);
 
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
@@ -273,8 +275,8 @@ class KonsumenController extends Controller
     {
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
-        
-        if(in_array(1, $roles)) {
+
+        if (in_array(1, $roles)) {
             $konsumen = Konsumen::findOrFail($id);
             if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
                 unlink(storage_path($konsumen->gambar));
@@ -350,5 +352,24 @@ class KonsumenController extends Controller
             'data' => $data,
             'message' => 'Konsumen retrieved successfully',
         ]);
+    }
+
+    public function assignKonsumen(Request $request)
+    {
+        $validate = $request->validate([
+            'konsumen_id' => 'required|exists:konsumens,id',
+            'assign_id' => 'required|exists:users,id',
+        ]);
+
+        $konsumen = Konsumen::findOrFail($validate['konsumen_id']);
+        $konsumen->update(['assign_id' => $validate['assign_id']]);
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Konsumen assigned successfully',
+            ],
+            201,
+        );
     }
 }

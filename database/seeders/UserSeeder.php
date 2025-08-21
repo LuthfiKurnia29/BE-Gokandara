@@ -41,5 +41,11 @@ class UserSeeder extends Seeder
             'nip' => '11111111',
             'password' => 'password123mitra'
         ]);
+        User::create([
+            'name' => 'Telemarketing',
+            'email' => 'telemarketing@gmail.com',
+            'nip' => '22222222',
+            'password' => 'password123telemarketing'
+        ]);
     }
 }

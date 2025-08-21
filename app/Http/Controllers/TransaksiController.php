@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Properti;
 use App\Models\DaftarHarga;
 use App\Models\Transaksi;
+use App\Models\Konsumen;
 
 class TransaksiController extends Controller {
     public function listTransaksi(Request $request) {
@@ -48,18 +49,26 @@ class TransaksiController extends Controller {
     }
 
     public function createTransaksi(Request $request) {
+        $konsumen = Konsumen::where('id', $request->konsumen_id)->first();
+        if (is_null($konsumen->ktp_number)) {
+            return response()->json([
+            'message' => 'Konsumen belum memiliki nomor KTP. Silahkan lengkapi data KTP terlebih dahulu.'
+            ], 400);
+        }
+
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'properti_id' => 'required',
+            'skema_pembayaran_id' => 'required',
             'blok_id' => 'required',
             'tipe_id' => 'required',
             'unit_id' => 'required',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
-            'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
+            // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|integer',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi',
-            'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
+            'jangka_waktu' => 'nullable|integer',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -120,16 +129,17 @@ class TransaksiController extends Controller {
     public function updateTransaksi(Request $request, $id) {
         $validate = $request->validate([
             'konsumen_id' => 'required',
+            'skema_pembayaran_id' => 'required',
             'properti_id' => 'required',
             'blok_id' => 'required',
             'tipe_id' => 'required',
             'unit_id' => 'required',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
-            'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
+            // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|integer',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi,' . $id,
-            'jangka_waktu' => 'nullable|integer|required_if:skema_pembayaran,Cash Tempo,Kredit',
+            'jangka_waktu' => 'nullable|integer',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;

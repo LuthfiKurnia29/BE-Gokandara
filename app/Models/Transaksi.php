@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Transaksi extends Model
 {
     protected $guarded = ['id'];
+    protected $with = ['skemaPembayaran'];
 
     public function konsumen()
     {
@@ -31,6 +32,11 @@ class Transaksi extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function skemaPembayaran()
+    {
+        return $this->belongsTo(SkemaPembayaran::class, 'skema_pembayaran_id');
     }
     
     public function createdBy()

@@ -32,5 +32,10 @@ class RoleSeeder extends Seeder {
             'name' => 'Mitra',
             'code' => 'mtr'
         ]);
+        Role::create([
+            'id' => 5,
+            'name' => 'Telemarketing',
+            'code' => 'tlm'
+        ]);
     }
 }
