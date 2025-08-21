@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Transaksi extends Model
 {
     protected $guarded = ['id'];
+    protected $with = ['skemaPembayaran'];
 
     public function konsumen()
     {
