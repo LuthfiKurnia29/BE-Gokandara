@@ -15,23 +15,92 @@ class TargetController extends Controller {
      * Display a listing of the resource.
      */
     public function index(Request $request) {
-        $per = $request->per ?? 10;
-        $page = $request->page ?? 1;
-        $search = $request->search;
+        if (auth()->user()->hasRole('Admin')) {
+            $per = $request->per ?? 10;
+            $page = $request->page ?? 1;
+            $search = $request->search;
+    
+            $data = Target::with(['role'])->where(function ($query) use ($search) {
+                if ($search) {
+                    $query->whereHas('role', function ($query) use ($search) {
+                        $query->where('name', 'like', "%$search%");
+                    })
+                        ->orWhere('min_penjualan', 'like', "%$search%")
+                        ->orWhere('hadiah', 'like', "%$search%");
+                }
+            })
+                ->orderBy('id', 'desc')
+                ->paginate($per);
+    
+            return response()->json($data);
+        }
 
-        $data = Target::with(['role'])->where(function ($query) use ($search) {
-            if ($search) {
-                $query->whereHas('role', function ($query) use ($search) {
-                    $query->where('name', 'like', "%$search%");
-                })
-                    ->orWhere('min_penjualan', 'like', "%$search%")
-                    ->orWhere('hadiah', 'like', "%$search%");
-            }
-        })
-            ->orderBy('id', 'desc')
+        $per = $request->per ?? 10;
+        $search = $request->search;
+        $authUserId = auth()->id();
+
+        // Get user's role IDs
+        $userRoleIds = DB::table('user_roles')
+            ->where('user_id', $authUserId)
+            ->pluck('role_id')
+            ->toArray();
+
+        if (empty($userRoleIds)) {
+            return response()->json([
+                'data' => [],
+                'current_page' => 1,
+                'per_page' => $per,
+                'total' => 0,
+                'last_page' => 0,
+                'from' => null,
+                'to' => null,
+                'message' => 'User has no assigned roles'
+            ]);
+        }
+
+        // Optimized single query with all calculations in SQL
+        $targets = Target::select([
+                'targets.*',
+                'roles.name as role_name',
+                DB::raw('COALESCE(sales_summary.total_penjualan, 0) as total_penjualan'),
+                DB::raw('CASE WHEN COALESCE(sales_summary.total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
+                DB::raw('CASE WHEN notifikasis.id IS NOT NULL THEN 1 ELSE 0 END as has_claimed'),
+                DB::raw('CASE 
+                    WHEN targets.min_penjualan > 0 THEN 
+                        ROUND((COALESCE(sales_summary.total_penjualan, 0) / targets.min_penjualan) * 100, 2)
+                    ELSE 0 
+                END as percentage')
+            ])
+            ->join('roles', 'targets.role_id', '=', 'roles.id')
+            ->leftJoin(
+                DB::raw('(SELECT 
+                    targets.id as target_id,
+                    SUM(transaksis.grand_total) as total_penjualan
+                FROM targets
+                LEFT JOIN transaksis ON transaksis.created_id = ' . $authUserId . '
+                    AND transaksis.created_at >= targets.tanggal_awal 
+                    AND transaksis.created_at <= targets.tanggal_akhir
+                GROUP BY targets.id
+                ) as sales_summary'),
+                'targets.id', '=', 'sales_summary.target_id'
+            )
+            ->leftJoin('notifikasis', function ($join) use ($authUserId) {
+                $join->on('notifikasis.target_id', '=', 'targets.id')
+                     ->where('notifikasis.user_id', '=', $authUserId);
+            })
+            ->whereIn('targets.role_id', $userRoleIds)
+            ->where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('roles.name', 'like', "%$search%")
+                        ->orWhere('targets.min_penjualan', 'like', "%$search%")
+                        ->orWhere('targets.hadiah', 'like', "%$search%");
+                }
+            })
+            ->havingRaw('COALESCE(sales_summary.total_penjualan, 0) >= targets.min_penjualan')
+            ->orderBy('targets.id', 'desc')
             ->paginate($per);
 
-        return response()->json($data);
+        return response()->json($targets);
     }
 
     /**
