@@ -87,7 +87,7 @@ class KonsumenController extends Controller {
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Konsumen with this KTP number already exists in this project.',
+                    'message' => 'Konsumen with this Phone number already exists in this project.',
                 ],
                 400,
             );
@@ -223,7 +223,7 @@ class KonsumenController extends Controller {
             'name' => 'required|string|max:255',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('konsumens')->ignore($konsumen->id)],
             'phone' => 'required|string|max:15',
-            'ktp_number' => ['nullable', 'string', 'max:16', Rule::unique('konsumens')->ignore($konsumen->id)],
+            'ktp_number' => ['nullable', 'string', 'max:16'],
             'address' => 'required|string|max:255',
             'project_id' => 'required',
             'refrensi_id' => 'required',
