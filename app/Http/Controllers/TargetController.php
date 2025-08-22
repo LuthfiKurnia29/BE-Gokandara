@@ -116,6 +116,10 @@ class TargetController extends Controller {
             return response()->json(['error' => 'Target not found'], 404);
         }
 
+        $per = $request->per ?? 10;
+        $page = $request->page ?? 1;
+        $search = $request->search;
+
         // Single optimized query with joins and aggregation
         $users = User::select([
             'users.id',
@@ -130,10 +134,10 @@ class TargetController extends Controller {
                 $join->on('transaksis.created_id', '=', 'users.id')
                     ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
             })
-            ->whereIn('roles.name', ['Supervisor', 'Sales', 'Mitra'])
+            ->whereIn('roles.name', [$target->role->name])
             ->groupBy('users.id', 'users.name', 'users.email') // Add other selected user fields
             ->havingRaw('COALESCE(SUM(transaksis.grand_total), 0) >= ?', [$target->min_penjualan])
-            ->get();
+            ->paginate();
 
         return response()->json($users);
     }
@@ -158,7 +162,7 @@ class TargetController extends Controller {
                 $join->on('transaksis.created_id', '=', 'users.id')
                     ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
             })
-            ->whereIn('roles.name', ['Supervisor', 'Sales', 'Mitra'])
+            ->whereIn('roles.name', [$target->role->name])
             ->groupBy('users.id', 'users.name', 'users.email') // Add other selected user fields
             ->havingRaw('COALESCE(SUM(transaksis.grand_total), 0) >= ?', [$target->min_penjualan])
             ->where('id', auth()->user()->id)->first();
