@@ -156,10 +156,24 @@ class UserController extends Controller {
         ], 201);
     }
 
-    public function getUserSpvRole() {
+    public function getUserSpv() {
         $roleSpv = Role::where("code", "spv")->first();
         $users = User::whereHas('roles', function ($q) use ($roleSpv) {
             $q->where('role_id', $roleSpv->id);
+        })->select('id', 'name')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get Supervisor',
+            'data' => $users
+        ], 200);
+    }
+
+    public function getUserSpvSales() {
+        $roleSpv = Role::where("code", "spv")->first();
+        $roleSales = Role::where("code", "sls")->first();
+        $users = User::whereHas('roles', function ($q) use ($roleSpv) {
+            $q->whereIn('role_id', [$roleSpv->id, $roleSales->id]);
         })->select('id', 'name')->get();
 
         return response()->json([
