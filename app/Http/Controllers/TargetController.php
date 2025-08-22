@@ -37,72 +37,78 @@ class TargetController extends Controller {
 
         $per = $request->per ?? 10;
         $search = $request->search;
-        $authUserId = auth()->id();
+        $authUser = auth()->user();
 
-        // Get user's role IDs
-        $userRoleIds = DB::table('user_roles')
-            ->where('user_id', $authUserId)
-            ->pluck('role_id')
-            ->toArray();
+        // Get user's roles
+        $userRoles = $authUser->roles->pluck('role.name')->toArray();
 
-        if (empty($userRoleIds)) {
+        if (empty($userRoles)) {
             return response()->json([
                 'data' => [],
-                'current_page' => 1,
-                'per_page' => $per,
-                'total' => 0,
-                'last_page' => 0,
-                'from' => null,
-                'to' => null,
                 'message' => 'User has no assigned roles'
             ]);
         }
 
-        // Create subquery for sales calculation
-        $salesSubquery = DB::table('transaksis')
-            ->select([
-                DB::raw('targets.id as target_id'),
-                DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_penjualan')
-            ])
-            ->rightJoin('targets', function ($join) use ($authUserId) {
-                $join->whereRaw('transaksis.created_id = ? AND transaksis.created_at BETWEEN targets.tanggal_awal AND targets.tanggal_akhir', [$authUserId]);
+        // Query targets that match user's role and check achievement
+        $targets = Target::with(['role'])
+            ->whereHas('role', function ($query) use ($userRoles) {
+                $query->whereIn('name', $userRoles);
             })
-            ->groupBy('targets.id');
-
-        // Main query with optimized joins
-        $targets = Target::select([
-                'targets.*',
-                'roles.name as role_name',
-                DB::raw('COALESCE(transaksis.grand_total, 0) as total_penjualan'),
-                DB::raw('CASE WHEN COALESCE(total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
-                DB::raw('CASE WHEN notifikasis.id IS NOT NULL THEN 1 ELSE 0 END as has_claimed'),
-                DB::raw('CASE 
-                    WHEN targets.min_penjualan > 0 THEN 
-                        ROUND((COALESCE(total_penjualan, 0) / targets.min_penjualan) * 100, 2)
-                    ELSE 0 
-                END as percentage')
-            ])
-            ->join('roles', 'targets.role_id', '=', 'roles.id')
-            ->leftJoinSub($salesSubquery, 'sales_data', function ($join) {
-                $join->on('targets.id', '=', 'sales_data.target_id');
-            })
-            ->leftJoin('notifikasis', function ($join) use ($authUserId) {
-                $join->on('notifikasis.target_id', '=', 'targets.id')
-                     ->where('notifikasis.user_id', '=', $authUserId);
-            })
-            ->whereIn('targets.role_id', $userRoleIds)
             ->where(function ($query) use ($search) {
                 if ($search) {
-                    $query->where('roles.name', 'like', "%$search%")
-                        ->orWhere('targets.min_penjualan', 'like', "%$search%")
-                        ->orWhere('targets.hadiah', 'like', "%$search%");
+                    $query->whereHas('role', function ($q) use ($search) {
+                        $q->where('name', 'like', "%$search%");
+                    })
+                    ->orWhere('min_penjualan', 'like', "%$search%")
+                    ->orWhere('hadiah', 'like', "%$search%");
                 }
             })
-            ->havingRaw('COALESCE(total_penjualan, 0) >= targets.min_penjualan')
-            ->orderBy('targets.id', 'desc')
-            ->paginate($per);
+            ->get()
+            ->map(function ($target) use ($authUser) {
+                // Calculate user's total sales for this target period
+                $totalPenjualan = Transaksi::where('created_id', $authUser->id)
+                    ->whereBetween('created_at', [$target->tanggal_awal, $target->tanggal_akhir])
+                    ->sum('grand_total');
 
-        return response()->json($targets);
+                // Check if user achieved the target
+                $isAchieved = $totalPenjualan >= $target->min_penjualan;
+
+                // Check if user has already claimed bonus
+                $hasClaimed = Notifikasi::where('target_id', $target->id)
+                    ->where('user_id', $authUser->id)
+                    ->exists();
+
+                // Add calculated fields to target
+                $target->total_penjualan = $totalPenjualan;
+                $target->is_achieved = $isAchieved;
+                $target->has_claimed = $hasClaimed;
+                $target->percentage = $target->min_penjualan > 0 ? 
+                    round(($totalPenjualan / $target->min_penjualan) * 100, 2) : 0;
+
+                return $target;
+            })
+            ->filter(function ($target) {
+                // Only return achieved targets
+                return $target->is_achieved;
+            })
+            ->values();
+
+        // Manual pagination for the filtered collection
+        $currentPage = $request->page ?? 1;
+        $perPage = $per;
+        $total = $targets->count();
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedTargets = $targets->slice($offset, $perPage)->values();
+
+        return response()->json([
+            'data' => $paginatedTargets,
+            'current_page' => (int) $currentPage,
+            'per_page' => (int) $perPage,
+            'total' => $total,
+            'last_page' => ceil($total / $perPage),
+            'from' => $offset + 1,
+            'to' => min($offset + $perPage, $total),
+        ]);
     }
 
     /**
