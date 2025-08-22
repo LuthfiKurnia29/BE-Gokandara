@@ -123,7 +123,6 @@ Route::middleware('auth:sanctum')->get('all-unit', [UnitController::class, 'allU
 Route::middleware('auth:sanctum')->get('all-konsumen', [KonsumenController::class, 'allKonsumen']);
 Route::middleware('auth:sanctum')->get('all-konsumen-by-sales', [KonsumenController::class, 'allKonsumenBySales']);
 Route::middleware('auth:sanctum')->get('konsumen-by-supervisor', [KonsumenController::class, 'konsumenBySupervisor']);
-Route::middleware('auth:sanctum')->post('assign-konsumen', [KonsumenController::class, 'assignKonsumen']);
 
 // Properti-all
 Route::middleware('auth:sanctum')->get('all-properti', [PropertiController::class, 'allProperti']);

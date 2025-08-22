@@ -113,7 +113,7 @@ class KonsumenController extends Controller
             'tgl_fu_1' => 'required|string',
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
-            'assign_id' => 'nullable|exists:users,id',
+            'created_id' => 'nullable|exists:users,id',
         ];
 
         if ($isMitra) {
@@ -127,7 +127,12 @@ class KonsumenController extends Controller
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
-        $validate['created_id'] = auth()->user()->id;
+
+        if($request->has('created_id')) {
+            $validate['created_id'] = $request->created_id;
+        } else {
+            $validate['created_id'] = auth()->user()->id;
+        }
         $validate['updated_id'] = auth()->user()->id;
 
         if ($request->hasFile('gambar')) {
@@ -240,12 +245,18 @@ class KonsumenController extends Controller
             'materi_fu_2' => 'required|string',
             'tgl_fu_2' => 'required|string',
             'gambar' => [Rule::when($isMitra && !$konsumen->gambar, ['required', 'image', 'max:2048'], ['nullable', 'image', 'max:2048'])],
-            'assign_id' => 'nullable|exists:users,id',
+            'created_id' => 'nullable|exists:users,id',
         ]);
 
         $validate['tgl_fu_1'] = Carbon::parse($validate['tgl_fu_1'])->format('Y-m-d H:i:s');
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
+
+        if ($request->has('created_id')) {
+            $validate['created_id'] = $request->created_id;
+        } else {
+            $validate['created_id'] = auth()->user()->id;
+        }
         $validate['updated_id'] = auth()->user()->id;
 
         if ($request->hasFile('gambar')) {
@@ -354,22 +365,4 @@ class KonsumenController extends Controller
         ]);
     }
 
-    public function assignKonsumen(Request $request)
-    {
-        $validate = $request->validate([
-            'konsumen_id' => 'required|exists:konsumens,id',
-            'assign_id' => 'required|exists:users,id',
-        ]);
-
-        $konsumen = Konsumen::findOrFail($validate['konsumen_id']);
-        $konsumen->update(['assign_id' => $validate['assign_id']]);
-
-        return response()->json(
-            [
-                'success' => true,
-                'message' => 'Konsumen assigned successfully',
-            ],
-            201,
-        );
-    }
 }
