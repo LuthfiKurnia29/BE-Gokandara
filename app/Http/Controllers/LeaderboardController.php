@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Konsumen;
 use App\Models\Role;
 use App\Models\Transaksi;
 use App\Models\User;
@@ -35,14 +36,16 @@ class LeaderboardController extends Controller
                     ->where('status', 'approved')
                     ->get();
                 $revenue = $transactionGoal->sum('grand_total');
+                $totalLeads = Konsumen::where('created_id', $user->user->id)->count();
                 return [
-                    'salesId' => $user->user->id,
-                    'salesName' => $user->user->name,
-                    'salesPhone' => $user->user->phone,
-                    'TotalTarget' => $transactionTarget->count(),
-                    'TotalGoal' => $transactionGoal->count(),
-                    'TotalRevenue' => $revenue,
-                    'TargetPercentage' => $transactionTarget->count() > 0 ? ($transactionGoal->count() / $transactionTarget->count()) * 100 : 0,
+                    'sales_id' => $user->user->id,
+                    'sales_name' => $user->user->name,
+                    'sales_phone' => $user->user->phone,
+                    'total_target' => $transactionTarget->count(),
+                    'total_goal' => $transactionGoal->count(),
+                    'total_revenue' => $revenue,
+                    'target_percentage' => $transactionTarget->count() > 0 ? ($transactionGoal->count() / $transactionTarget->count()) * 100 : 0,
+                    'total_leads' => $totalLeads,
                 ];
             });
         $leaderboardData = $data->toArray();

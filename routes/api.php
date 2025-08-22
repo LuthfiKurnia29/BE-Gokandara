@@ -186,6 +186,5 @@ Route::get('/send-mail', function () {
     return 'Email sent!';
 });
 
-
 // Route for Leaderboard
 Route::middleware('auth:sanctum')->get('leaderboard', [LeaderboardController::class, 'getAllLeaderboard']);
