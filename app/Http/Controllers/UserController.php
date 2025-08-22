@@ -100,6 +100,8 @@ class UserController extends Controller {
                 $this->syncAccessMenuSales($userRole);
             } else if ($request['role_id'] == 4) {
                 $this->syncAccessMenuMitra($userRole);
+            } else if ($request['role_id'] == 5) {
+                $this->syncAccessMenuMitra($userRole);
             }
         }
         return response()->json([
@@ -287,6 +289,44 @@ class UserController extends Controller {
     }
 
     private function syncAccessMenuMitra(UserRole $userRole) {
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 3,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => $userRole,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
+    }
+    
+    private function syncAccessMenuTele(UserRole $userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
