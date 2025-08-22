@@ -19,14 +19,13 @@ class UserController extends Controller {
     public function me(Request $request) {
         $user = Auth::user(); // Ambil user dari access token
         // Ambil semua role user
-        $roles = UserRole::with('role') // join ke tabel role jika ada
-            ->where('user_id', $user->id)
-            ->get();
+        $roles = UserRole::with('role')->where('user_id', $user->id)->get();
 
+        $userRoleIds = $roles->pluck('id');
         $roleIds = $roles->pluck('role_id');
 
         // Ambil akses menu berdasarkan role
-        $menuAccesses = UserMenuAccess::with('menu')->whereIn('user_role_id', $roleIds)->get();
+        $menuAccesses = UserMenuAccess::with('menu')->whereIn('user_role_id', $userRoleIds)->get();
 
         return response()->json([
             'user' => $user,
