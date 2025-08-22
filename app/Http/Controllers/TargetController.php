@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notifikasi;
 use App\Models\Penjualan;
 use App\Models\Target;
 use App\Models\Transaksi;
@@ -127,8 +128,7 @@ class TargetController extends Controller {
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($target) {
                 $join->on('transaksis.created_id', '=', 'users.id')
-                    ->join('konsumens', 'transaksis.konsumen_id', '=', 'konsumens.id')
-                    ->whereBetween('konsumens.tgl_fu_2', [$target->tanggal_awal, $target->tanggal_akhir]);
+                    ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
             })
             ->whereIn('roles.name', ['Supervisor', 'Sales', 'Mitra'])
             ->groupBy('users.id', 'users.name', 'users.email') // Add other selected user fields
@@ -136,5 +136,56 @@ class TargetController extends Controller {
             ->get();
 
         return response()->json($users);
+    }
+
+    public function claimBonus(Request $request, $id) {
+        $target = Target::find($id);
+
+        if (!$target) {
+            return response()->json(['error' => 'Target not found'], 404);
+        }
+
+        $user = User::select([
+            'users.id',
+            'users.name',
+            'users.email', // Add other user fields you need
+            DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_penjualan')
+        ])
+            ->with(['roles.role'])
+            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+            ->leftJoin('transaksis', function ($join) use ($target) {
+                $join->on('transaksis.created_id', '=', 'users.id')
+                    ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
+            })
+            ->whereIn('roles.name', ['Supervisor', 'Sales', 'Mitra'])
+            ->groupBy('users.id', 'users.name', 'users.email') // Add other selected user fields
+            ->havingRaw('COALESCE(SUM(transaksis.grand_total), 0) >= ?', [$target->min_penjualan])
+            ->where('id', auth()->user()->id)->first();
+
+        if (isset($user->id)) {
+            $checkNotif = Notifikasi::where('target_id', $id)->where('user_id', auth()->user()->id)->first();
+            if ($checkNotif) {
+                return response()->json([
+                    'message' => 'Anda sudah melakukan claim bonus untuk Target ini'
+                ], 400);
+            }
+
+            Notifikasi::create([
+                'penerima_id' => 1,
+                'target_id' => $id,
+                'user_id' => auth()->user()->id,
+                'jenis_notifikasi' => 'claim',
+                'is_read' => false,
+            ]);
+
+            return response()->json([
+                'message' => 'Berhasil claim bonus. Silakan tunggu konfirmasi dari Manajer/Admin'
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Kinerja Anda tidak memenuhi Target yang ditentukan'
+        ], 400);
     }
 }
