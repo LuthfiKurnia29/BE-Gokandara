@@ -73,12 +73,12 @@ class TargetController extends Controller {
         $targets = Target::select([
                 'targets.*',
                 'roles.name as role_name',
-                DB::raw('COALESCE(sales_data.total_penjualan, 0) as total_penjualan'),
-                DB::raw('CASE WHEN COALESCE(sales_data.total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
+                DB::raw('COALESCE(transaksis.grand_total, 0) as total_penjualan'),
+                DB::raw('CASE WHEN COALESCE(total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
                 DB::raw('CASE WHEN notifikasis.id IS NOT NULL THEN 1 ELSE 0 END as has_claimed'),
                 DB::raw('CASE 
                     WHEN targets.min_penjualan > 0 THEN 
-                        ROUND((COALESCE(sales_data.total_penjualan, 0) / targets.min_penjualan) * 100, 2)
+                        ROUND((COALESCE(total_penjualan, 0) / targets.min_penjualan) * 100, 2)
                     ELSE 0 
                 END as percentage')
             ])
@@ -98,7 +98,7 @@ class TargetController extends Controller {
                         ->orWhere('targets.hadiah', 'like', "%$search%");
                 }
             })
-            ->havingRaw('COALESCE(sales_data.total_penjualan, 0) >= targets.min_penjualan')
+            ->havingRaw('COALESCE(total_penjualan, 0) >= targets.min_penjualan')
             ->orderBy('targets.id', 'desc')
             ->paginate($per);
 
