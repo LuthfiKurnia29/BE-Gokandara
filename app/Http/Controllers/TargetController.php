@@ -58,32 +58,34 @@ class TargetController extends Controller {
             ]);
         }
 
-        // Optimized single query with all calculations in SQL
+        // Create subquery for sales calculation
+        $salesSubquery = DB::table('transaksis')
+            ->select([
+                DB::raw('targets.id as target_id'),
+                DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_penjualan')
+            ])
+            ->rightJoin('targets', function ($join) use ($authUserId) {
+                $join->whereRaw('transaksis.created_id = ? AND transaksis.created_at BETWEEN targets.tanggal_awal AND targets.tanggal_akhir', [$authUserId]);
+            })
+            ->groupBy('targets.id');
+
+        // Main query with optimized joins
         $targets = Target::select([
                 'targets.*',
                 'roles.name as role_name',
-                DB::raw('COALESCE(sales_summary.total_penjualan, 0) as total_penjualan'),
-                DB::raw('CASE WHEN COALESCE(sales_summary.total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
+                DB::raw('COALESCE(sales_data.total_penjualan, 0) as total_penjualan'),
+                DB::raw('CASE WHEN COALESCE(sales_data.total_penjualan, 0) >= targets.min_penjualan THEN 1 ELSE 0 END as is_achieved'),
                 DB::raw('CASE WHEN notifikasis.id IS NOT NULL THEN 1 ELSE 0 END as has_claimed'),
                 DB::raw('CASE 
                     WHEN targets.min_penjualan > 0 THEN 
-                        ROUND((COALESCE(sales_summary.total_penjualan, 0) / targets.min_penjualan) * 100, 2)
+                        ROUND((COALESCE(sales_data.total_penjualan, 0) / targets.min_penjualan) * 100, 2)
                     ELSE 0 
                 END as percentage')
             ])
             ->join('roles', 'targets.role_id', '=', 'roles.id')
-            ->leftJoin(
-                DB::raw('(SELECT 
-                    targets.id as target_id,
-                    SUM(transaksis.grand_total) as total_penjualan
-                FROM targets
-                LEFT JOIN transaksis ON transaksis.created_id = ' . $authUserId . '
-                    AND transaksis.created_at >= targets.tanggal_awal 
-                    AND transaksis.created_at <= targets.tanggal_akhir
-                GROUP BY targets.id
-                ) as sales_summary'),
-                'targets.id', '=', 'sales_summary.target_id'
-            )
+            ->leftJoinSub($salesSubquery, 'sales_data', function ($join) {
+                $join->on('targets.id', '=', 'sales_data.target_id');
+            })
             ->leftJoin('notifikasis', function ($join) use ($authUserId) {
                 $join->on('notifikasis.target_id', '=', 'targets.id')
                      ->where('notifikasis.user_id', '=', $authUserId);
@@ -96,7 +98,7 @@ class TargetController extends Controller {
                         ->orWhere('targets.hadiah', 'like', "%$search%");
                 }
             })
-            ->havingRaw('COALESCE(sales_summary.total_penjualan, 0) >= targets.min_penjualan')
+            ->havingRaw('COALESCE(sales_data.total_penjualan, 0) >= targets.min_penjualan')
             ->orderBy('targets.id', 'desc')
             ->paginate($per);
 
