@@ -14,13 +14,11 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
-class KonsumenController extends Controller
-{
+class KonsumenController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $user = Auth::user();
         // var_dump($user); die;
         $per = $request->per ?? 10;
@@ -63,16 +61,14 @@ class KonsumenController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $user = Auth::user();
         $userRoles = $user->roles->pluck('id')->toArray();
         $isMitra = in_array(4, $userRoles);
@@ -101,7 +97,7 @@ class KonsumenController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:konsumens',
             'phone' => 'required|string|max:15',
-            'ktp_number' => 'nullable|string|max:16|unique:konsumens',
+            'ktp_number' => 'nullable|string|max:16',
             'address' => 'required|string|max:255',
             'project_id' => 'required',
             'refrensi_id' => 'required',
@@ -128,7 +124,7 @@ class KonsumenController extends Controller
         $validate['tgl_fu_2'] = Carbon::parse($validate['tgl_fu_2'])->format('Y-m-d H:i:s');
         $validate['added_by'] = $user->id;
 
-        if($request->has('created_id')) {
+        if ($request->has('created_id')) {
             $validate['created_id'] = $request->created_id;
         } else {
             $validate['created_id'] = auth()->user()->id;
@@ -173,8 +169,7 @@ class KonsumenController extends Controller
         );
     }
 
-    public function allKonsumen(Request $request)
-    {
+    public function allKonsumen(Request $request) {
         $search = $request->search;
         $data = Konsumen::select('id', 'name')
             ->when($search, function ($query) use ($search) {
@@ -186,8 +181,7 @@ class KonsumenController extends Controller
         return response()->json($data);
     }
 
-    public function allKonsumenBySales(Request $request)
-    {
+    public function allKonsumenBySales(Request $request) {
         $user = Auth::user();
         // Get all konsumen created by the authenticated user
         $search = $request->search;
@@ -201,8 +195,7 @@ class KonsumenController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id) {
         $data = Konsumen::with(['projek', 'prospek'])
             ->where('id', $id)
             ->first();
@@ -212,16 +205,14 @@ class KonsumenController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Konsumen $konsumen)
-    {
+    public function edit(Konsumen $konsumen) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
 
@@ -282,8 +273,7 @@ class KonsumenController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    public function destroy(string $id) {
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
 
@@ -316,8 +306,7 @@ class KonsumenController extends Controller
         }
     }
 
-    public function approveDeleteAdmin($id)
-    {
+    public function approveDeleteAdmin($id) {
         $konsumen = Konsumen::where('id', $id)->first();
         $konsumen->update(['status_delete' => 'deleted']);
         $konsumen->delete();
@@ -332,8 +321,7 @@ class KonsumenController extends Controller
         );
     }
 
-    public function konsumenBySales(Request $request)
-    {
+    public function konsumenBySales(Request $request) {
         $user = Auth::user();
         $data = Konsumen::where('added_by', $user->id)
             ->with(['projek', 'prospek'])
@@ -346,8 +334,7 @@ class KonsumenController extends Controller
         ]);
     }
 
-    public function konsumenBySupervisor(Request $request)
-    {
+    public function konsumenBySupervisor(Request $request) {
         $user = Auth::user();
         $sales = User::where('parent_id', $user->id)->pluck('id');
 
@@ -364,5 +351,4 @@ class KonsumenController extends Controller
             'message' => 'Konsumen retrieved successfully',
         ]);
     }
-
 }
