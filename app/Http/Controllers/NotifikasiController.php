@@ -5,15 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Notifikasi;
 
-class NotifikasiController extends Controller
-{
-    public function index(Request $request)
-    {
+class NotifikasiController extends Controller {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Notifikasi::with('konsumen', 'chatting.pengirim')
+        $data = Notifikasi::with(['konsumen', 'chatting.pengirim', 'target', 'user'])
             ->where('penerima_id', auth()->user()->id)
             ->where(function ($query) use ($search) {
                 if ($search) {
@@ -26,13 +24,12 @@ class NotifikasiController extends Controller
         return response()->json($data);
     }
 
-    public function indexUnread(Request $request)
-    {
+    public function indexUnread(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Notifikasi::with('konsumen', 'chatting.pengirim')
+        $data = Notifikasi::with(['konsumen', 'chatting.pengirim', 'target', 'user'])
             ->where('penerima_id', auth()->user()->id)
             ->where('is_read', false)
             ->where(function ($query) use ($search) {
@@ -46,8 +43,7 @@ class NotifikasiController extends Controller
         return response()->json($data);
     }
 
-    public function read($id)
-    {
+    public function read($id) {
         $notifikasi = Notifikasi::findOrFail($id);
         $notifikasi->update(['is_read' => true]);
 
@@ -60,8 +56,7 @@ class NotifikasiController extends Controller
         );
     }
 
-    public function readAll()
-    {
+    public function readAll() {
         $notifikasi = Notifikasi::where('penerima_id', auth()->user()->id)->update(['is_read' => true]);
 
         return response()->json(
@@ -73,8 +68,7 @@ class NotifikasiController extends Controller
         );
     }
 
-    public function count() 
-    {
+    public function count() {
         $countNotif = Notifikasi::where('penerima_id', auth()->user()->id)
             ->where('is_read', false)
             ->count();
@@ -82,8 +76,7 @@ class NotifikasiController extends Controller
         return response()->json($countNotif);
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id) {
         $notifikasi = Notifikasi::findOrFail($id);
         $notifikasi->delete();
 

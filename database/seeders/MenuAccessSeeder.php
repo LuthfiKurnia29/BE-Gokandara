@@ -160,5 +160,37 @@ class MenuAccessSeeder extends Seeder {
             'menu_id' => 7,
             'is_allowed' => true
         ]);
+
+        // Tele
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 1,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 2,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 4,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 5,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 6,
+            'is_allowed' => true
+        ]);
+        UserMenuAccess::create([
+            'user_role_id' => 7,
+            'menu_id' => 7,
+            'is_allowed' => true
+        ]);
     }
 }

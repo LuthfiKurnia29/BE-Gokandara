@@ -172,7 +172,7 @@ class UserController extends Controller {
     public function getUserSpvSales() {
         $roleSpv = Role::where("code", "spv")->first();
         $roleSales = Role::where("code", "sls")->first();
-        $users = User::whereHas('roles', function ($q) use ($roleSpv) {
+        $users = User::whereHas('roles', function ($q) use ($roleSpv, $roleSales) {
             $q->whereIn('role_id', [$roleSpv->id, $roleSales->id]);
         })->select('id', 'name')->get();
 
@@ -339,7 +339,7 @@ class UserController extends Controller {
             'is_allowed' => true
         ]);
     }
-    
+
     private function syncAccessMenuTele(UserRole $userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
