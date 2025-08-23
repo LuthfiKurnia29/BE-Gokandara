@@ -242,7 +242,7 @@ class TargetController extends Controller {
             ->whereIn('roles.name', [$target->role->name])
             ->groupBy('users.id', 'users.name', 'users.email') // Add other selected user fields
             ->havingRaw('COALESCE(SUM(transaksis.grand_total), 0) >= ?', [$target->min_penjualan])
-            ->where('id', auth()->user()->id)->first();
+            ->where('users.id', auth()->user()->id)->first();
 
         if (isset($user->id)) {
             $checkNotif = Notifikasi::where('target_id', $id)->where('user_id', auth()->user()->id)->first();
