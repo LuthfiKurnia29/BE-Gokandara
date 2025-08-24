@@ -219,30 +219,31 @@ class TransaksiController extends Controller {
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
             ->where('properti_id', $properti_id)
             ->where(function ($query) use ($search) {
-                if ($search) {
-                    $query
-                        ->where('status', 'like', "%$search%")
-                        ->orWhere('no_transaksi', 'like', "%$search%")
-                        ->orWhereHas('konsumen', function ($q) use ($search) {
-                            $q->where('name', 'like', "%$search%")
-                                ->orWhere('address', 'like', "%$search%")
-                                ->orWhere('ktp_number', 'like', "%$search%")
-                                ->orWhere('phone', 'like', "%$search%")
-                                ->orWhere('email', 'like', "%$search%")
-                                ->orWhere('description', 'like', "%$search%")
-                                ->orWhere('pengalaman', 'like', "%$search%")
-                                ->orWhere('materi_fu', 'like', "%$search%");
-                        })
-                        ->orWhereHas('properti', function ($q) use ($search) {
-                            $q->where('luas_bangunan', 'like', "%$search%")
-                                ->orWhere('luas_tanah', 'like', "%$search%")
-                                ->orWhere('lokasi', 'like', "%$search%")
-                                ->orWhere('kelebihan', 'like', "%$search%");
-                        });
-                }
+            if ($search) {
+                $query
+                ->where('status', 'like', "%$search%")
+                ->orWhere('no_transaksi', 'like', "%$search%")
+                ->orWhereHas('konsumen', function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                    ->orWhere('address', 'like', "%$search%")
+                    ->orWhere('ktp_number', 'like', "%$search%")
+                    ->orWhere('phone', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%")
+                    ->orWhere('description', 'like', "%$search%")
+                    ->orWhere('pengalaman', 'like', "%$search%")
+                    ->orWhere('materi_fu', 'like', "%$search%");
+                })
+                ->orWhereHas('properti', function ($q) use ($search) {
+                    $q->where('luas_bangunan', 'like', "%$search%")
+                    ->orWhere('luas_tanah', 'like', "%$search%")
+                    ->orWhere('lokasi', 'like', "%$search%")
+                    ->orWhere('kelebihan', 'like', "%$search%");
+                });
+            }
             })
             ->orderBy('id', 'desc')
-            ->paginate($per);
+            ->take(3)
+            ->get();
 
         return response()->json($data);
     }
