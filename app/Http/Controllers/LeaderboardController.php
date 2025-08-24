@@ -17,41 +17,43 @@ class LeaderboardController extends Controller
     {
         $dateStart = $request->dateStart ?? null;
         $dateEnd = $request->dateEnd ?? null;
-        $leaderboardData = []; // Placeholder for actual leaderboard data retrieval logic
+
         $role = Role::where('name', 'sales')->first();
-        $data = UserRole::where('role_id', $role->id)
-            ->get()
-            ->map(function ($user) use ($dateStart, $dateEnd) {
-                // Get transaction data from the user
-                $transactionTarget = collect();
-                if($dateStart && $dateEnd) {
-                    $transactionTarget = Transaksi::where('created_id', $user->user->id)
-                    ->whereBetween('created_at', [$dateStart, $dateEnd])
-                    ->get();
-                }else{
-                    $transactionTarget = Transaksi::where('created_id', $user->user->id)
-                    ->get();
-                }
-                $transactionGoal = Transaksi::where('created_id', $user->user->id)
-                    ->where('status', 'approved')
-                    ->get();
-                $revenue = $transactionGoal->sum('grand_total');
-                $totalLeads = Konsumen::where('created_id', $user->user->id)->count();
-                return [
-                    'sales_id' => $user->user->id,
-                    'sales_name' => $user->user->name,
-                    'sales_phone' => $user->user->phone,
-                    'total_target' => $transactionTarget->count(),
-                    'total_goal' => $transactionGoal->count(),
-                    'total_revenue' => $revenue,
-                    'target_percentage' => $transactionTarget->count() > 0 ? ($transactionGoal->count() / $transactionTarget->count()) * 100 : 0,
-                    'total_leads' => $totalLeads,
-                ];
-            });
-        $leaderboardData = $data->toArray();
+
+        $users = User::whereHas('roles', function ($query) use ($role) {
+            $query->where('role_id', $role->id);
+        })->get();
+
+        $data = $users->map(function ($user) use ($dateStart, $dateEnd) {
+            $transactionTarget = $dateStart && $dateEnd
+                ? Transaksi::where('created_id', $user->id)->whereBetween('created_at', [$dateStart, $dateEnd])->get()
+                : Transaksi::where('created_id', $user->id)->get();
+
+            $transactionGoal = Transaksi::where('created_id', $user->id)
+                ->where('status', 'approved')
+                ->get();
+
+            $revenue = $transactionGoal->sum('grand_total');
+            $totalLeads = Konsumen::where('created_id', $user->id)->count();
+
+            return [
+                'sales_id' => $user->id,
+                'sales_name' => $user->name,
+                'sales_phone' => $user->phone,
+                'total_target' => $transactionTarget->count(),
+                'total_goal' => $transactionGoal->count(),
+                'total_revenue' => $revenue,
+                'target_percentage' => $transactionTarget->count() > 0 ? ($transactionGoal->count() / $transactionTarget->count()) * 100 : 0,
+                'total_leads' => $totalLeads,
+            ];
+        });
+
+        // Sort by total_leads descending
+        $leaderboardData = $data->sortByDesc('total_leads')->values()->toArray();
+
         return response()->json([
             'message' => 'Leaderboard data retrieved successfully',
-            'data' => $leaderboardData, // Uncomment and replace with actual data
+            'data' => $leaderboardData,
         ]);
-    }
+    }   
 }
