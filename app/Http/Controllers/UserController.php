@@ -100,7 +100,7 @@ class UserController extends Controller {
             } else if ($request['role_id'] == 4) {
                 $this->syncAccessMenuMitra($userRole);
             } else if ($request['role_id'] == 5) {
-                $this->syncAccessMenuMitra($userRole);
+                $this->syncAccessMenuTele($userRole);
             }
         }
         return response()->json([
