@@ -18,6 +18,7 @@ use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\ChattingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowupMonitoringController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
 use App\Http\Controllers\RiwayatPembayaranController;
@@ -185,3 +186,6 @@ Route::get('/send-mail', function () {
     Mail::to('lkurniahadi@gmail.com')->send(new \App\Mail\NotifMail($data));
     return 'Email sent!';
 });
+
+// Route for Leaderboard
+Route::middleware('auth:sanctum')->get('leaderboard', [LeaderboardController::class, 'getAllLeaderboard']);

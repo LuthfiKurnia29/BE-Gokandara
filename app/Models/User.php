@@ -60,4 +60,5 @@ class User extends Authenticatable {
             $q->where('name', $role);
         })->exists();
     }
+    
 }
