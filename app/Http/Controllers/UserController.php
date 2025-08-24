@@ -143,7 +143,7 @@ class UserController extends Controller {
             'role_id' => $request['role_id'],
         ]);
 
-        MenuAccess::where('user_role_id', $userRole->id)->delete();
+        UserMenuAccess::where('user_role_id', $userRole->id)->delete();
 
         if ($request['role_id'] == 1) {
             $this->syncAccessMenuAdmin($userRole->id);
