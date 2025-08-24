@@ -138,6 +138,25 @@ class UserController extends Controller {
         $validate['parent_id'] = $request['parent_id'];
         $user->update($validate);
 
+        $userRole = UserRole::where('user_id', $user->id)->first();
+        $userRole->update([
+            'role_id' => $request['role_id'],
+        ]);
+
+        MenuAccess::where('user_role_id', $userRole->id)->delete();
+
+        if ($request['role_id'] == 1) {
+            $this->syncAccessMenuAdmin($userRole->id);
+        } else if ($request['role_id'] == 2) {
+            $this->syncAccessMenuSpv($userRole->id);
+        } else if ($request['role_id'] == 3) {
+            $this->syncAccessMenuSales($userRole->id);
+        } else if ($request['role_id'] == 4) {
+            $this->syncAccessMenuMitra($userRole->id);
+        } else if ($request['role_id'] == 5) {
+            $this->syncAccessMenuTele($userRole->id);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully',
