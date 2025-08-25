@@ -32,7 +32,8 @@ class LeaderboardController extends Controller
         $leaderboardQuery = User::select([
                 'users.id as sales_id',
                 'users.name as sales_name', 
-                'users.phone as sales_phone',
+                'users.email as sales_email',
+                'users.nip as sales_nip',
                 DB::raw('COALESCE(target_stats.total_target, 0) as total_target'),
                 DB::raw('COALESCE(goal_stats.total_goal, 0) as total_goal'),
                 DB::raw('COALESCE(goal_stats.total_revenue, 0) as total_revenue'),
@@ -144,7 +145,8 @@ class LeaderboardController extends Controller
         $top3Data = User::select([
                 'users.id as sales_id',
                 'users.name as sales_name', 
-                'users.phone as sales_phone',
+                'users.email as sales_email',
+                'users.nip as sales_nip',
                 DB::raw('COALESCE(target_stats.total_target, 0) as total_target'),
                 DB::raw('COALESCE(goal_stats.total_goal, 0) as total_goal'),
                 DB::raw('COALESCE(goal_stats.total_revenue, 0) as total_revenue'),
