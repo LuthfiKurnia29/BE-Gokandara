@@ -18,6 +18,7 @@ use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\ChattingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowupMonitoringController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
 use App\Http\Controllers\RiwayatPembayaranController;
@@ -144,6 +145,9 @@ Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiContro
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
 
+// History Penjualan/Transaksi
+Route::middleware('auth:sanctum')->get('history-transaksi/{properti_id}', [TransaksiController::class, 'historyTransaksi']);
+
 // Skema Pembayaran
 Route::middleware('auth:sanctum')->get('all-skema-pembayaran', [SkemaPembayaranController::class, 'allSkemaPembayaran']);
 Route::middleware('auth:sanctum')->get('list-skema-pembayaran', [SkemaPembayaranController::class, 'listSkemaPembayaran']);
@@ -190,3 +194,7 @@ Route::get('/send-mail', function () {
     Mail::to('lkurniahadi@gmail.com')->send(new \App\Mail\NotifMail($data));
     return 'Email sent!';
 });
+
+// Route for Leaderboard
+Route::middleware('auth:sanctum')->get('leaderboard', [LeaderboardController::class, 'getAllLeaderboard']);
+Route::middleware('auth:sanctum')->get('leaderboard/top-3', [LeaderboardController::class, 'getTop3Leaderboard']);

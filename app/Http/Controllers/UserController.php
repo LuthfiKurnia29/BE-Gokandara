@@ -92,15 +92,15 @@ class UserController extends Controller {
             ]);
 
             if ($request['role_id'] == 1) {
-                $this->syncAccessMenuAdmin($userRole);
+                $this->syncAccessMenuAdmin($userRole->id);
             } else if ($request['role_id'] == 2) {
-                $this->syncAccessMenuSpv($userRole);
+                $this->syncAccessMenuSpv($userRole->id);
             } else if ($request['role_id'] == 3) {
-                $this->syncAccessMenuSales($userRole);
+                $this->syncAccessMenuSales($userRole->id);
             } else if ($request['role_id'] == 4) {
-                $this->syncAccessMenuMitra($userRole);
+                $this->syncAccessMenuMitra($userRole->id);
             } else if ($request['role_id'] == 5) {
-                $this->syncAccessMenuMitra($userRole);
+                $this->syncAccessMenuTele($userRole->id);
             }
         }
         return response()->json([
@@ -137,6 +137,25 @@ class UserController extends Controller {
         ]);
         $validate['parent_id'] = $request['parent_id'];
         $user->update($validate);
+
+        $userRole = UserRole::where('user_id', $user->id)->first();
+        $userRole->update([
+            'role_id' => $request['role_id'],
+        ]);
+
+        UserMenuAccess::where('user_role_id', $userRole->id)->delete();
+
+        if ($request['role_id'] == 1) {
+            $this->syncAccessMenuAdmin($userRole->id);
+        } else if ($request['role_id'] == 2) {
+            $this->syncAccessMenuSpv($userRole->id);
+        } else if ($request['role_id'] == 3) {
+            $this->syncAccessMenuSales($userRole->id);
+        } else if ($request['role_id'] == 4) {
+            $this->syncAccessMenuMitra($userRole->id);
+        } else if ($request['role_id'] == 5) {
+            $this->syncAccessMenuTele($userRole->id);
+        }
 
         return response()->json([
             'success' => true,
@@ -182,7 +201,7 @@ class UserController extends Controller {
         ], 200);
     }
 
-    private function syncAccessMenuAdmin(UserRole $userRole) {
+    private function syncAccessMenuAdmin($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
@@ -225,7 +244,7 @@ class UserController extends Controller {
         ]);
     }
 
-    private function syncAccessMenuSpv(UserRole $userRole) {
+    private function syncAccessMenuSpv($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
@@ -263,7 +282,7 @@ class UserController extends Controller {
         ]);
     }
 
-    private function syncAccessMenuSales(UserRole $userRole) {
+    private function syncAccessMenuSales($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
@@ -301,7 +320,7 @@ class UserController extends Controller {
         ]);
     }
 
-    private function syncAccessMenuMitra(UserRole $userRole) {
+    private function syncAccessMenuMitra($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
@@ -339,7 +358,7 @@ class UserController extends Controller {
         ]);
     }
 
-    private function syncAccessMenuTele(UserRole $userRole) {
+    private function syncAccessMenuTele($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 1,
