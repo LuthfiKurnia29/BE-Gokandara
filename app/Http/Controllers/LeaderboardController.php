@@ -19,7 +19,7 @@ class LeaderboardController extends Controller
         $page = $request->page ?? 1;
 
         // Get sales role ID once
-        $salesRoleId = Role::where('name', 'sales')->value('id');
+        $salesRoleId = Role::where('code', 'sls')->value('id');
         
         if (!$salesRoleId) {
             return response()->json([
@@ -131,7 +131,7 @@ class LeaderboardController extends Controller
         $dateEnd = $request->dateEnd ?? null;
 
         // Get sales role ID once
-        $salesRoleId = Role::where('name', 'sales')->value('id');
+        $salesRoleId = Role::where('code', 'sls')->value('id');
         
         if (!$salesRoleId) {
             return response()->json([
