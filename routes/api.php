@@ -192,3 +192,4 @@ Route::get('/send-mail', function () {
 
 // Route for Leaderboard
 Route::middleware('auth:sanctum')->get('leaderboard', [LeaderboardController::class, 'getAllLeaderboard']);
+Route::middleware('auth:sanctum')->get('leaderboard/top-3', [LeaderboardController::class, 'getTop3Leaderboard']);
