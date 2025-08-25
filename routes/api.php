@@ -97,6 +97,14 @@ Route::middleware('auth:sanctum')->get('properti/{id}', [PropertiController::cla
 Route::middleware('auth:sanctum')->put('properti/{id}', [PropertiController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('properti/{id}', [PropertiController::class, 'destroy']);
 
+// Dashboard
+Route::middleware('auth:sanctum')->get('dashboard/followup-today', [DashboardController::class, 'getFollowUpToday']);
+Route::middleware('auth:sanctum')->get('dashboard/followup-tomorrow', [DashboardController::class, 'getFollowUpTomorrow']);
+Route::middleware('auth:sanctum')->get('dashboard/new-konsumens', [DashboardController::class, 'getNewKonsumens']);
+Route::middleware('auth:sanctum')->get('dashboard/konsumen-by-prospek', [DashboardController::class, 'getKonsumenByProspek']);
+Route::middleware('auth:sanctum')->get('dashboard/sales-overview', [DashboardController::class, 'getSalesOverview']);
+Route::middleware('auth:sanctum')->get('dashboard/transaksi-by-properti', [DashboardController::class, 'getTransaksiByProperti']);
+
 // Notifikasi
 Route::middleware('auth:sanctum')->get('notifikasi', [NotifikasiController::class, 'index']);
 Route::middleware('auth:sanctum')->get('notifikasi-unread', [NotifikasiController::class, 'indexUnread']);
@@ -165,9 +173,6 @@ Route::middleware('auth:sanctum')->delete('delete-calendar/{id}', [CalendarContr
 
 // Dashboard
 Route::middleware('auth:sanctum')->get('followup', [FollowupMonitoringController::class, 'getAllFollowUps']);
-Route::middleware('auth:sanctum')->get('followup-today', [DashboardController::class, 'getFollowUpToday']);
-Route::middleware('auth:sanctum')->get('followup-tomorrow', [DashboardController::class, 'getFollowUpTomorrow']);
-Route::middleware('auth:sanctum')->get('new-konsumens', [DashboardController::class, 'getNewKonsumens']);
 
 // Target
 Route::middleware('auth:sanctum')->prefix('target')->group(function () {
