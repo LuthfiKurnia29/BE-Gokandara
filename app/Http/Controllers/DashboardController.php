@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller {
 
     public function getFollowUpToday() {
-        $today = Carbon::today()->format('d-m-Y');
+        $today = Carbon::today()->format('Y-m-d');
         $followUps = FollowupMonitoring::whereDate('followup_date', $today)
             ->with('konsumen')
             ->get();
@@ -29,7 +29,7 @@ class DashboardController extends Controller {
     }
 
     public function getFollowUpTomorrow() {
-        $tomorrow = Carbon::now()->addDay()->format('d-m-Y');
+        $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
         $followUps = FollowupMonitoring::where('followup_date', $tomorrow)
             ->with('konsumen')
             ->get();
