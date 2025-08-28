@@ -23,6 +23,7 @@ use App\Http\Controllers\PropertiController;
 use App\Http\Controllers\TargetController;
 use App\Http\Controllers\RiwayatPembayaranController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\AnalisaController;
 use Illuminate\Support\Facades\Mail;
 
 // Authentication & Authorization
@@ -174,6 +175,14 @@ Route::middleware('auth:sanctum')->get('get-calendar/{id}', [CalendarController:
 Route::middleware('auth:sanctum')->post('create-calendar', [CalendarController::class, 'createDataCalendar']);
 Route::middleware('auth:sanctum')->put('update-calendar/{id}', [CalendarController::class, 'updateDataCalendar']);
 Route::middleware('auth:sanctum')->delete('delete-calendar/{id}', [CalendarController::class, 'deleteDataCalendar']);
+
+// Analisis
+Route::middleware('auth:sanctum')->get('get-new-konsumen', [AnalisaController::class, 'getNewKonsumen']);
+Route::middleware('auth:sanctum')->get('get-followup', [AnalisaController::class, 'getFollowup']);
+Route::middleware('auth:sanctum')->get('get-statistik-penjualan', [AnalisaController::class, 'getStatistikPenjualan']);
+Route::middleware('auth:sanctum')->get('get-statistik-pemesanan', [AnalisaController::class, 'getStatistikPemesanan']);
+Route::middleware('auth:sanctum')->get('get-realisasi', [AnalisaController::class, 'getRealisasi']);
+Route::middleware('auth:sanctum')->get('get-ringkasan-penjualan', [AnalisaController::class, 'getRingkasanPenjualan']);
 
 // Dashboard
 Route::middleware('auth:sanctum')->get('followup', [FollowupMonitoringController::class, 'getAllFollowUps']);
