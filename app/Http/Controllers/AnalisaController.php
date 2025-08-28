@@ -168,12 +168,11 @@ class AnalisaController extends Controller
         });
 
         if ($filter == 'harian') {
-            $query->whereDate('created_at', now()->toDateString());
+            $query->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()]);
         } elseif ($filter == 'mingguan') {
-            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            $query->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()]);
         } else {
-            // bulanan (default)
-            $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+            $query->whereBetween('created_at', [now()->subYear()->startOfDay(), now()->endOfDay()]);
         }
 
         $data = $query->get();
