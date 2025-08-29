@@ -77,6 +77,8 @@ class PropertiController extends Controller
             'daftar_harga.*.unit_id' => 'required|integer',
             'daftar_harga.*.tipe_id' => 'required|integer',
             'daftar_harga.*.harga' => 'required|numeric',
+            'fasilitas' => 'required|array',
+            'fasilitas.*.nama_fasilitas' => 'required|string',
         ]);
 
         $properti = Properti::create($validate);
@@ -99,11 +101,11 @@ class PropertiController extends Controller
         }
 
         foreach($validate['fasilitas'] as $fasilitas) {
-            $fasilitas = [
+            $fasilitasData = [
                 'properti_id' => $properti->id,
-                'nama_fasilitas' => $fasilitas->name,
+                'nama_fasilitas' => $fasilitas['nama_fasilitas'],
             ];
-            Fasilitas::create($fasilitas);
+            Fasilitas::create($fasilitasData);
         }
 
         return response()->json([
@@ -149,6 +151,8 @@ class PropertiController extends Controller
             'daftar_harga.*.unit_id' => 'required|integer',
             'daftar_harga.*.tipe_id' => 'required|integer',
             'daftar_harga.*.harga' => 'required|numeric',
+            'fasilitas' => 'required|array',
+            'fasilitas.*.nama_fasilitas' => 'required|string',
         ]);
 
         $properti->update($validate);
@@ -174,6 +178,15 @@ class PropertiController extends Controller
                 ];
                 Properti_Gambar::create($gambarData);
             }
+        }
+
+        $properti->fasilitas()->delete();
+        foreach($validate['fasilitas'] as $fasilitas) {
+            $fasilitasData = [
+                'properti_id' => $properti->id,
+                'nama_fasilitas' => $fasilitas['nama_fasilitas'],
+            ];
+            Fasilitas::create($fasilitasData);
         }
 
         return response()->json([
