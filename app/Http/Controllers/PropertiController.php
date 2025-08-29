@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Properti;
 use App\Models\Properti_Gambar;
 use App\Models\DaftarHarga;
+use App\Models\Fasilitas;
 use Illuminate\Http\Request;
 
 class PropertiController extends Controller
@@ -95,6 +96,14 @@ class PropertiController extends Controller
             $gambarData['properti_id'] = $properti->id;
             $gambarData['image'] = $gambar->store('properti_images', 'public');
             Properti_Gambar::create($gambarData);
+        }
+
+        foreach($validate['fasilitas'] as $fasilitas) {
+            $fasilitas = [
+                'properti_id' => $properti->id,
+                'nama_fasilitas' => $fasilitas->name,
+            ];
+            Fasilitas::create($fasilitas);
         }
 
         return response()->json([
