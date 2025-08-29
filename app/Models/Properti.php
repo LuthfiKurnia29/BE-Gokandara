@@ -18,6 +18,11 @@ class Properti extends Model
         return $this->hasMany(Properti_Gambar::class, 'properti_id');
     }
 
+    public function fasilitas()
+    {
+        return $this->hasMany(Fasilitas::class, 'properti_id');
+    }
+
     public function daftarHarga()
     {
         return $this->hasMany(DaftarHarga::class, 'properti_id');
