@@ -119,7 +119,7 @@ class PropertiController extends Controller
      */
     public function show($id)
     {
-        $data = Properti::with(['propertiGambar', 'daftarHarga'])->where('id', $id)->first();
+        $data = Properti::with(['propertiGambar', 'daftarHarga', 'fasilitas'])->where('id', $id)->first();
 
         return response()->json($data);
     }
