@@ -7,6 +7,7 @@ use App\Models\Konsumen;
 use App\Models\FollowupMonitoring;
 use App\Models\Transaksi;
 use App\Models\Target;
+use App\Models\Prospek;
 
 class AnalisaController extends Controller
 {
@@ -186,9 +187,8 @@ class AnalisaController extends Controller
         $result = [];
         foreach ($grouped as $prospekId => $transaksis) {
             $result[] = [
-                'prospek_id' => $prospekId,
+                'prospek' => Prospek::find($prospekId),
                 'grand_total' => $transaksis->sum('grand_total'),
-                'transaksis' => $transaksis,
             ];
         }
 
