@@ -20,7 +20,7 @@ class AnalisaController extends Controller
             }
         })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()->take(4);
 
         return response()->json($data);
     }
