@@ -49,6 +49,9 @@ class UserController extends Controller {
                     $query->whereIn('name', $request->roles);
                 });
             })
+            ->when(auth()->user()->hasRole('Supervisor'), function ($query) {
+                $query->where('parent_id', auth()->user()->id);
+            })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
@@ -178,6 +181,8 @@ class UserController extends Controller {
         $roleSpv = Role::where("code", "spv")->first();
         $users = User::whereHas('roles', function ($q) use ($roleSpv) {
             $q->where('role_id', $roleSpv->id);
+        })->when(auth()->user()->hasRole('Supervisor'), function ($query) {
+            $query->where('parent_id', auth()->user()->id);
         })->select('id', 'name')->get();
 
         return response()->json([
@@ -192,6 +197,8 @@ class UserController extends Controller {
         $roleSales = Role::where("code", "sls")->first();
         $users = User::whereHas('roles', function ($q) use ($roleSpv, $roleSales) {
             $q->whereIn('role_id', [$roleSpv->id, $roleSales->id]);
+        })->when(auth()->user()->hasRole('Supervisor'), function ($query) {
+            $query->where('parent_id', auth()->user()->id);
         })->select('id', 'name')->get();
 
         return response()->json([
