@@ -52,7 +52,7 @@ class TransaksiController extends Controller {
         $konsumen = Konsumen::where('id', $request->konsumen_id)->first();
         if (is_null($konsumen->ktp_number)) {
             return response()->json([
-            'message' => 'Konsumen belum memiliki nomor KTP. Silahkan lengkapi data KTP terlebih dahulu.'
+                'message' => 'Konsumen belum memiliki nomor KTP. Silahkan lengkapi data KTP terlebih dahulu.'
             ], 400);
         }
 
@@ -66,7 +66,7 @@ class TransaksiController extends Controller {
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
             // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
-            'dp' => 'nullable|integer',
+            'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi',
             'jangka_waktu' => 'nullable|integer',
         ]);
@@ -137,7 +137,7 @@ class TransaksiController extends Controller {
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
             // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
-            'dp' => 'nullable|integer',
+            'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi,' . $id,
             'jangka_waktu' => 'nullable|integer',
         ]);
@@ -219,27 +219,27 @@ class TransaksiController extends Controller {
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
             ->where('properti_id', $properti_id)
             ->where(function ($query) use ($search) {
-            if ($search) {
-                $query
-                ->where('status', 'like', "%$search%")
-                ->orWhere('no_transaksi', 'like', "%$search%")
-                ->orWhereHas('konsumen', function ($q) use ($search) {
-                    $q->where('name', 'like', "%$search%")
-                    ->orWhere('address', 'like', "%$search%")
-                    ->orWhere('ktp_number', 'like', "%$search%")
-                    ->orWhere('phone', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%")
-                    ->orWhere('description', 'like', "%$search%")
-                    ->orWhere('pengalaman', 'like', "%$search%")
-                    ->orWhere('materi_fu', 'like', "%$search%");
-                })
-                ->orWhereHas('properti', function ($q) use ($search) {
-                    $q->where('luas_bangunan', 'like', "%$search%")
-                    ->orWhere('luas_tanah', 'like', "%$search%")
-                    ->orWhere('lokasi', 'like', "%$search%")
-                    ->orWhere('kelebihan', 'like', "%$search%");
-                });
-            }
+                if ($search) {
+                    $query
+                        ->where('status', 'like', "%$search%")
+                        ->orWhere('no_transaksi', 'like', "%$search%")
+                        ->orWhereHas('konsumen', function ($q) use ($search) {
+                            $q->where('name', 'like', "%$search%")
+                                ->orWhere('address', 'like', "%$search%")
+                                ->orWhere('ktp_number', 'like', "%$search%")
+                                ->orWhere('phone', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%")
+                                ->orWhere('description', 'like', "%$search%")
+                                ->orWhere('pengalaman', 'like', "%$search%")
+                                ->orWhere('materi_fu', 'like', "%$search%");
+                        })
+                        ->orWhereHas('properti', function ($q) use ($search) {
+                            $q->where('luas_bangunan', 'like', "%$search%")
+                                ->orWhere('luas_tanah', 'like', "%$search%")
+                                ->orWhere('lokasi', 'like', "%$search%")
+                                ->orWhere('kelebihan', 'like', "%$search%");
+                        });
+                }
             })
             ->orderBy('id', 'desc')
             ->take(3)
