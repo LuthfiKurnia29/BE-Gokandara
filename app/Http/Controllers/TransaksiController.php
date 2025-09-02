@@ -7,18 +7,21 @@ use App\Models\Properti;
 use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 use App\Models\Konsumen;
+use Illuminate\Container\Attributes\Auth;
 
 class TransaksiController extends Controller {
     public function listTransaksi(Request $request) {
+        // $user = Auth::user();
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
         $created_id = $request->created_id;
-
+        $id = auth()->user()->id;
+        // if()
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
-            ->where(function ($query) use ($search, $created_id) {
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
+            ->where(function ($query) use ($search, $created_id, $id) {
+                if(!auth()->user()->hasRole('Admin')){
+                    $query->where('created_id', $id);
                 }
                 if ($search) {
                     $query
