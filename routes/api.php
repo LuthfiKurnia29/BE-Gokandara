@@ -163,6 +163,7 @@ Route::middleware('auth:sanctum')->put('update-riwayat-pembayaran/{id}', [Riwaya
 Route::middleware('auth:sanctum')->delete('delete-riwayat-pembayaran/{id}', [RiwayatPembayaranController::class, 'destroy']);
 
 // Follow-Up Monitoring
+Route::middleware('auth:sanctum')->get('list-follow-up-by-konsumen', [FollowupMonitoringController::class, 'ListFollowUpByKonsumen']);
 Route::middleware('auth:sanctum')->get('list-follow-up', [FollowupMonitoringController::class, 'ListFollowUp']);
 Route::middleware('auth:sanctum')->post('create-follow-up', [FollowupMonitoringController::class, 'CreateFollowUp']);
 Route::middleware('auth:sanctum')->put('update-follow-up/{id}', [FollowupMonitoringController::class, 'UpdateFollowUp']);

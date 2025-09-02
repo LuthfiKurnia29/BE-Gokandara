@@ -96,7 +96,7 @@ class KonsumenController extends Controller {
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:konsumens',
-            'phone' => 'required|string|max:15',
+            'phone' => 'required|string|max:20',
             'ktp_number' => 'nullable|string|max:16',
             'address' => 'required|string|max:255',
             'project_id' => 'required',
@@ -222,7 +222,7 @@ class KonsumenController extends Controller {
         $validate = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('konsumens')->ignore($konsumen->id)],
-            'phone' => 'required|string|max:15',
+            'phone' => 'required|string|max:20',
             'ktp_number' => ['nullable', 'string', 'max:16'],
             'address' => 'required|string|max:255',
             'project_id' => 'required',
