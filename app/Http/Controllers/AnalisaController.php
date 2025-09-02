@@ -15,13 +15,19 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
 
-        $data = Konsumen::where(function ($query) use ($sales) {
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
-        })
-            ->orderBy('created_at', 'desc')
-            ->get()->take(4);
+        if (auth()->id() == 1) {
+            $data = Konsumen::orderBy('created_at', 'desc')->get()->take(4);
+        } else {
+            $data = Konsumen::where('created_id', auth()->id())
+                ->where(function ($query) use ($sales) {
+                    if ($sales) {
+                        $query->where('created_id', $sales);
+                    }
+                })
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->take(4);
+        }
 
         return response()->json($data);
     }
@@ -30,20 +36,38 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
         $waktu = $request->waktu; // today, tomorrow
-        $data = FollowupMonitoring::where(function ($query) use ($sales) {
-            if ($sales) {
-                $query->where('sales_id', $sales);
-            }
-        })
-            ->where(function ($query) use ($waktu) {
-                if ($waktu == 'today') {
-                    $query->whereDate('followup_date', now()->toDateString());
-                } elseif ($waktu == 'tomorrow') {
-                    $query->whereDate('followup_date', now()->addDay()->toDateString());
+        if (auth()->id() == 1) {
+            $data = FollowupMonitoring::where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('sales_id', $sales);
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->get();
+                ->where(function ($query) use ($waktu) {
+                    if ($waktu == 'today') {
+                        $query->whereDate('followup_date', now()->toDateString());
+                    } elseif ($waktu == 'tomorrow') {
+                        $query->whereDate('followup_date', now()->addDay()->toDateString());
+                    }
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $data = FollowupMonitoring::where('created_id', auth()->id())
+                ->where(function ($query) use ($sales) {
+                    if ($sales) {
+                        $query->where('sales_id', $sales);
+                    }
+                })
+                ->where(function ($query) use ($waktu) {
+                    if ($waktu == 'today') {
+                        $query->whereDate('followup_date', now()->toDateString());
+                    } elseif ($waktu == 'tomorrow') {
+                        $query->whereDate('followup_date', now()->addDay()->toDateString());
+                    }
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return response()->json(['count_data' => $data->count()]);
     }
@@ -52,11 +76,20 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
-        $query = Transaksi::where(function ($query) use ($sales) {
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
-        });
+
+        if (auth()->id() == 1) {
+            $query = Transaksi::where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('created_id', $sales);
+                }
+            });
+        } else {
+            $query = Transaksi::where('created_id', auth()->id())->where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('created_id', $sales);
+                }
+            });
+        }
 
         if ($filter == 'harian') {
             $query->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()]);
@@ -162,11 +195,22 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
-        $query = Transaksi::with(['konsumen.prospek'])->where(function ($query) use ($sales) {
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
-        });
+
+        if (auth()->id() == 1) {
+            $query = Transaksi::with(['konsumen.prospek'])->where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('created_id', $sales);
+                }
+            });
+        } else {
+            $query = Transaksi::with(['konsumen.prospek'])
+                ->where('created_id', auth()->id())
+                ->where(function ($query) use ($sales) {
+                    if ($sales) {
+                        $query->where('created_id', $sales);
+                    }
+                });
+        }
 
         if ($filter == 'harian') {
             $query->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()]);
@@ -199,11 +243,20 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
-        $query = Transaksi::where(function ($query) use ($sales) {
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
-        });
+
+        if (auth()->id() == 1) {
+            $query = Transaksi::where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('created_id', $sales);
+                }
+            });
+        } else {
+            $query = Transaksi::where('created_id', auth()->id())->where(function ($query) use ($sales) {
+                if ($sales) {
+                    $query->where('created_id', $sales);
+                }
+            });
+        }
 
         if ($filter == 'harian') {
             $query->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()]);
