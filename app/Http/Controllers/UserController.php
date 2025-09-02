@@ -255,11 +255,11 @@ class UserController extends Controller {
             'menu_id' => 2,
             'is_allowed' => true
         ]);
-        UserMenuAccess::create([
-            'user_role_id' => $userRole,
-            'menu_id' => 3,
-            'is_allowed' => true
-        ]);
+        // UserMenuAccess::create([
+        //     'user_role_id' => $userRole,
+        //     'menu_id' => 3,
+        //     'is_allowed' => true
+        // ]);
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 4,
@@ -293,11 +293,11 @@ class UserController extends Controller {
             'menu_id' => 2,
             'is_allowed' => true
         ]);
-        UserMenuAccess::create([
-            'user_role_id' => $userRole,
-            'menu_id' => 3,
-            'is_allowed' => true
-        ]);
+        // UserMenuAccess::create([
+        //     'user_role_id' => $userRole,
+        //     'menu_id' => 3,
+        //     'is_allowed' => true
+        // ]);
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 4,
@@ -331,11 +331,11 @@ class UserController extends Controller {
             'menu_id' => 2,
             'is_allowed' => true
         ]);
-        UserMenuAccess::create([
-            'user_role_id' => $userRole,
-            'menu_id' => 3,
-            'is_allowed' => true
-        ]);
+        // UserMenuAccess::create([
+        //     'user_role_id' => $userRole,
+        //     'menu_id' => 3,
+        //     'is_allowed' => true
+        // ]);
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 4,
@@ -369,11 +369,11 @@ class UserController extends Controller {
             'menu_id' => 2,
             'is_allowed' => true
         ]);
-        UserMenuAccess::create([
-            'user_role_id' => $userRole,
-            'menu_id' => 3,
-            'is_allowed' => true
-        ]);
+        // UserMenuAccess::create([
+        //     'user_role_id' => $userRole,
+        //     'menu_id' => 3,
+        //     'is_allowed' => true
+        // ]);
         UserMenuAccess::create([
             'user_role_id' => $userRole,
             'menu_id' => 4,
