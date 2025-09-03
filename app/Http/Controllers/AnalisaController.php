@@ -52,7 +52,7 @@ class AnalisaController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
-            $data = FollowupMonitoring::where('created_id', auth()->id())
+            $data = FollowupMonitoring::where('sales_id', auth()->id())
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('sales_id', $sales);
