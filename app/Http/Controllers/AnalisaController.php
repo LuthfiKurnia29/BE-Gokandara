@@ -8,6 +8,7 @@ use App\Models\FollowupMonitoring;
 use App\Models\Transaksi;
 use App\Models\Target;
 use App\Models\Prospek;
+use App\Models\User;
 
 class AnalisaController extends Controller
 {
