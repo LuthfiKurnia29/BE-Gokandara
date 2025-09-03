@@ -15,7 +15,7 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
 
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $data = Konsumen::orderBy('created_at', 'desc')->get()->take(4);
         } else {
             $data = Konsumen::where('created_id', auth()->id())
@@ -36,7 +36,7 @@ class AnalisaController extends Controller
     {
         $sales = $request->created_id;
         $waktu = $request->waktu; // today, tomorrow
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $data = FollowupMonitoring::where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('sales_id', $sales);
@@ -77,7 +77,7 @@ class AnalisaController extends Controller
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
 
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $query = Transaksi::where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
@@ -196,7 +196,7 @@ class AnalisaController extends Controller
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
 
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $query = Transaksi::with(['konsumen.prospek'])->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
@@ -244,7 +244,7 @@ class AnalisaController extends Controller
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
 
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $query = Transaksi::where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);

@@ -17,7 +17,7 @@ class DashboardController extends Controller
     public function getFollowUpToday()
     {
         $today = Carbon::today()->format('Y-m-d');
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $followUps = FollowupMonitoring::whereDate('followup_date', $today)
             ->with('konsumen')
             ->get();
@@ -42,7 +42,7 @@ class DashboardController extends Controller
     public function getFollowUpTomorrow()
     {
         $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $followUps = FollowupMonitoring::whereDate('followup_date', $tomorrow)
             ->with('konsumen')
             ->get();
@@ -65,7 +65,7 @@ class DashboardController extends Controller
 
     public function getNewKonsumens()
     {
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $newKonsumens = Konsumen::whereDate('created_at', Carbon::today())->get();
         } else {
             $newKonsumens = Konsumen::where('created_id', auth()->id())
@@ -86,7 +86,7 @@ class DashboardController extends Controller
     public function getKonsumenByProspek()
     {
         // Get count of konsumen grouped by prospek_id
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
             ->groupBy('prospek_id')
             ->get();
@@ -167,7 +167,7 @@ class DashboardController extends Controller
             }
 
             // Get total terjual (sum of transaksi grand_total) for this month
-            if (auth()->id() == 1) {
+            if (auth()->user()->hasRole('Admin')) {
                 // Admin: tampilkan semua data
                 $terjual = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
@@ -240,7 +240,7 @@ class DashboardController extends Controller
     public function getTransaksiByProperti()
     {
         // Get count of transaksi grouped by properti_id
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             // Admin: tampilkan semua data
             $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
             ->groupBy('properti_id')

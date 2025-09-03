@@ -15,7 +15,7 @@ class CalendarController extends Controller
     {
         $sales = $request->sales_id;
 
-        if (auth()->id() == 1) {
+        if (auth()->user()->hasRole('Admin')) {
             $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek'])
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
