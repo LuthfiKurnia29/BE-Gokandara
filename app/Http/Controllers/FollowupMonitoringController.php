@@ -11,8 +11,13 @@ class FollowupMonitoringController extends Controller {
     public function getAllFollowUps(Request $request) {
         $startDate = $request->tanggal_awal;
         $endDate = $request->tanggal_akhir;
+        $id = auth()->user()->id;
 
         $query = FollowupMonitoring::with('konsumen');
+
+         if(!auth()->user()->hasRole('Admin')){
+            $query->where('sales_id', $id);
+        }
 
         if ($startDate && $endDate) {
             $query->whereBetween('followup_date', [$startDate, $endDate]);
