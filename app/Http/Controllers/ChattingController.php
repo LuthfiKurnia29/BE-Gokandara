@@ -57,7 +57,7 @@ class ChattingController extends Controller
             $chattingPaginated->setCollection($data);
 
             return response()->json($chattingPaginated);
-        } elseif (in_array(2, $roles)) {
+        } else if (in_array(2, $roles)) {
             $latestPerCode = Chatting::select('code', DB::raw('MAX(id) as latest_id'))
                 ->where(function ($q) use ($authUserId) {
                     $q->where(function ($sub) use ($authUserId) {

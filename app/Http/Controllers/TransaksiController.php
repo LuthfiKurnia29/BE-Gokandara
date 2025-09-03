@@ -8,7 +8,7 @@ use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 use App\Models\Konsumen;
 use App\Models\User;
-use Illuminate\Container\Attributes\Auth;
+use Illuminate\Support\Facades\Auth;
 
 class TransaksiController extends Controller {
     public function listTransaksi(Request $request) {
@@ -20,18 +20,19 @@ class TransaksiController extends Controller {
         $id = auth()->user()->id;
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
             ->where(function ($query) use ($search, $created_id, $id) {
-                if(auth()->user()->hasRole('Admin')){
+                if ($created_id) {
+                    $query->where('created_id', $created_id);
+                } else if (auth()->user()->hasRole('Admin')) {
                     $query->where('status', '==', 'Negotiation')
                           ->orWhere('created_id', $id);
-                }else {
-                    if(auth()->user()->hasRole('Supervisor'))
-                        $query->where('created_id', $id)
+                } else {
+                    if (auth()->user()->hasRole('Supervisor')) {
+                      $query->where('created_id', $id)
                               ->orWhereHas('createdBy', function ($q) use ($id) {
                                   $q->where('parent_id', $id);
                               });
-                    else {
-                        $userSpv = User::where('id', $id)->first();
-                        $query->where('created_id', $userSpv->parent_id);
+                    } else {
+                        $query->where('created_id', $id);
                     }
                 }
 
@@ -87,8 +88,8 @@ class TransaksiController extends Controller {
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
-        $validate['created_id'] = auth()->user()->id;
-        $validate['updated_id'] = auth()->user()->id;
+        $validate['created_id'] = Auth::user()->id;
+        $validate['updated_id'] = Auth::user()->id;
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
@@ -115,7 +116,15 @@ class TransaksiController extends Controller {
             $validate['grand_total'] = $harga->harga;
         }
 
-        if (auth()->user()->hasRole('Mitra')) {
+        // Set status berdasarkan role user
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('role.name')->toArray();
+
+        if (in_array('Admin', $userRoles)) {
+            $validate['status'] = 'Approved';
+        } elseif (in_array('Supervisor', $userRoles)) {
+            $validate['status'] = 'Negotiation';
+        } elseif (in_array('Mitra', $userRoles)) {
             $validate['status'] = 'Negotiation';
         } else {
             $validate['status'] = 'Pending';
@@ -158,7 +167,7 @@ class TransaksiController extends Controller {
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
-        $validate['updated_id'] = auth()->user()->id;
+        $validate['updated_id'] = Auth::user()->id;
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
             'properti_id' => $properti->id,
