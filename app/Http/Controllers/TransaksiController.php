@@ -7,6 +7,7 @@ use App\Models\Properti;
 use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 use App\Models\Konsumen;
+use App\Models\User;
 use Illuminate\Container\Attributes\Auth;
 
 class TransaksiController extends Controller {
@@ -17,12 +18,23 @@ class TransaksiController extends Controller {
         $search = $request->search;
         $created_id = $request->created_id;
         $id = auth()->user()->id;
-        // if()
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
             ->where(function ($query) use ($search, $created_id, $id) {
-                if(!auth()->user()->hasRole('Admin')){
-                    $query->where('created_id', $id);
+                if(auth()->user()->hasRole('Admin')){
+                    $query->where('status', '==', 'Negotiation')
+                          ->orWhere('created_id', $id);
+                }else {
+                    if(auth()->user()->hasRole('Supervisor'))
+                        $query->where('created_id', $id)
+                              ->orWhereHas('createdBy', function ($q) use ($id) {
+                                  $q->where('parent_id', $id);
+                              });
+                    else {
+                        $userSpv = User::where('id', $id)->first();
+                        $query->where('created_id', $userSpv->parent_id);
+                    }
                 }
+
                 if ($search) {
                     $query
                         ->where('status', 'like', "%$search%")
