@@ -212,6 +212,9 @@ class KonsumenController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'like', "%$search%");
             })
+            ->when(!auth()->user()->hasRole('Admin'), function ($query) {
+                $query->where('created_id', auth()->user()->id);
+            })
             ->orderBy('id', 'desc')
             ->get();
 
