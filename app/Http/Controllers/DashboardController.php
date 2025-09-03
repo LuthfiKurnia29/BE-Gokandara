@@ -12,50 +12,90 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller {
-
-    public function getFollowUpToday() {
+class DashboardController extends Controller
+{
+    public function getFollowUpToday()
+    {
         $today = Carbon::today()->format('Y-m-d');
-        $followUps = FollowupMonitoring::whereDate('followup_date', $today)
+        if (auth()->id() == 1) {
+            $followUps = FollowupMonitoring::whereDate('followup_date', $today)
             ->with('konsumen')
             ->get();
+        } else {
+            $followUps = FollowupMonitoring::where('sales_id', auth()->id())
+            ->whereDate('followup_date', $today)
+            ->with('konsumen')
+            ->get();
+        }
         // This method can be used to return a dashboard view or data
-        return response()->json([
-            'message' => 'successfully retrieved follow-ups for today',
-            'status' => 'success',
-            'data' => $followUps,
-            'count' => $followUps->count()
-        ], 200);
+        return response()->json(
+            [
+                'message' => 'successfully retrieved follow-ups for today',
+                'status' => 'success',
+                'data' => $followUps,
+                'count' => $followUps->count(),
+            ],
+            200,
+        );
     }
 
-    public function getFollowUpTomorrow() {
+    public function getFollowUpTomorrow()
+    {
         $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
-        $followUps = FollowupMonitoring::where('followup_date', $tomorrow)
+        if (auth()->id() == 1) {
+            $followUps = FollowupMonitoring::whereDate('followup_date', $tomorrow)
             ->with('konsumen')
             ->get();
-        return response()->json([
-            'message' => 'successfully retrieved follow-ups for this week',
-            'status' => 'success',
-            'data' => $followUps,
-            'count' => $followUps->count()
-        ], 200);
+        } else {
+            $followUps = FollowupMonitoring::where('sales_id', auth()->id())
+            ->whereDate('followup_date', $tomorrow)
+            ->with('konsumen')
+            ->get();
+        }
+        return response()->json(
+            [
+                'message' => 'successfully retrieved follow-ups for this week',
+                'status' => 'success',
+                'data' => $followUps,
+                'count' => $followUps->count(),
+            ],
+            200,
+        );
     }
 
-    public function getNewKonsumens() {
-        $newKonsumens = Konsumen::whereDate('created_at', Carbon::today())->get();
-        return response()->json([
-            'message' => 'successfully retrieved new konsumens',
-            'status' => 'success',
-            'data' => $newKonsumens,
-            'count' => $newKonsumens->count()
-        ], 200);
+    public function getNewKonsumens()
+    {
+        if (auth()->id() == 1) {
+            $newKonsumens = Konsumen::whereDate('created_at', Carbon::today())->get();
+        } else {
+            $newKonsumens = Konsumen::where('created_id', auth()->id())
+            ->whereDate('created_at', Carbon::today())
+            ->get();
+        }
+        return response()->json(
+            [
+                'message' => 'successfully retrieved new konsumens',
+                'status' => 'success',
+                'data' => $newKonsumens,
+                'count' => $newKonsumens->count(),
+            ],
+            200,
+        );
     }
 
-    public function getKonsumenByProspek() {
+    public function getKonsumenByProspek()
+    {
         // Get count of konsumen grouped by prospek_id
-        $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
+        if (auth()->id() == 1) {
+            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
             ->groupBy('prospek_id')
             ->get();
+        } else {
+            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
+            ->where('created_id', auth()->id())
+            ->groupBy('prospek_id')
+            ->get();
+        }
 
         // Get all prospek data to include names
         $prospeks = Prospek::all();
@@ -76,113 +116,142 @@ class DashboardController extends Controller {
 
             $labels[] = $prospek->name ?? 'Prospek ' . $prospek->id;
             $values[] = $count;
-            $percentage = $konsumenByProspek->sum('total') > 0 ? round(($count / $konsumenByProspek->sum('total') * 100)) : 0;
+            $percentage = $konsumenByProspek->sum('total') > 0 ? round(($count / $konsumenByProspek->sum('total')) * 100) : 0;
 
             $chartData[] = [
                 'name' => $prospek->name ?? 'Prospek ' . $prospek->id,
                 'value' => $count,
                 'percentage' => $percentage . '%',
-                'color' => $prospek->color
+                'color' => $prospek->color,
             ];
         }
 
-        return response()->json([
-            'message' => 'successfully retrieved konsumen by prospek data',
-            'status' => 'success',
-            'data' => [
-                'chart_data' => $chartData,
-                'labels' => $labels,
-                'values' => $values
-            ]
-        ], 200);
+        return response()->json(
+            [
+                'message' => 'successfully retrieved konsumen by prospek data',
+                'status' => 'success',
+                'data' => [
+                    'chart_data' => $chartData,
+                    'labels' => $labels,
+                    'values' => $values,
+                ],
+            ],
+            200,
+        );
     }
 
-    public function getSalesOverview(Request $request) {
+    public function getSalesOverview(Request $request)
+    {
         // Get year from request, default to current year
         $year = $request->input('year', Carbon::now()->year);
-        
+
         // Define months for the chart
-        $months = [
-            'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-            'Januari', 'Februari', 'Maret'
-        ];
-        
+        $months = ['April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret'];
+
         // Initialize data arrays
         $totalTerjual = [];
         $totalDipesan = [];
-        
+
         // Get data for each month
         foreach ($months as $index => $month) {
             // Calculate the actual month number (April is month 4)
             $monthNumber = ($index + 4) % 12;
-            if ($monthNumber == 0) $monthNumber = 12;
-            
+            if ($monthNumber == 0) {
+                $monthNumber = 12;
+            }
+
             // Determine the year for this month (some months might be in the next year)
             $queryYear = $year;
             if ($monthNumber < 4) {
                 $queryYear = $year + 1;
             }
-            
+
             // Get total terjual (sum of transaksi grand_total) for this month
-            $terjual = Transaksi::whereYear('created_at', $queryYear)
-                ->whereMonth('created_at', $monthNumber)
-                ->sum('grand_total');
-            
-            // Get total dipesan (count of konsumen) for this month
-            $dipesan = Konsumen::whereYear('created_at', $queryYear)
-                ->whereMonth('created_at', $monthNumber)
-                ->count();
-            
+            if (auth()->id() == 1) {
+                // Admin: tampilkan semua data
+                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->sum('grand_total');
+
+                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->count();
+            } else {
+                // Selain admin: tampilkan data sesuai yang login
+                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->where('created_id', auth()->id())
+                    ->sum('grand_total');
+
+                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->where('created_id', auth()->id())
+                    ->count();
+            }
+
             $totalTerjual[] = $terjual;
             $totalDipesan[] = $dipesan;
         }
-        
+
         // Calculate total for the summary boxes
         $totalTerjualSum = array_sum($totalTerjual);
         $totalDipesanSum = array_sum($totalDipesan);
-        
+
         // Calculate percentage change compared to previous week
         // For this example, we'll just return 0% as placeholder
         $percentageChange = '0,0%';
-        
-        return response()->json([
-            'message' => 'successfully retrieved sales overview data',
-            'status' => 'success',
-            'data' => [
-                'summary' => [
-                    'total_terjual' => [
-                        'value' => $totalTerjualSum,
-                        'unit' => 'Unit',
-                        'percentage_change' => $percentageChange
-                    ],
-                    'total_dipesan' => [
-                        'value' => $totalDipesanSum,
-                        'unit' => 'Unit',
-                        'percentage_change' => $percentageChange
-                    ]
-                ],
-                'chart' => [
-                    'months' => $months,
-                    'series' => [
-                        [
-                            'name' => 'Total Terjual',
-                            'data' => $totalTerjual
+
+        return response()->json(
+            [
+                'message' => 'successfully retrieved sales overview data',
+                'status' => 'success',
+                'data' => [
+                    'summary' => [
+                        'total_terjual' => [
+                            'value' => $totalTerjualSum,
+                            'unit' => 'Unit',
+                            'percentage_change' => $percentageChange,
                         ],
-                        [
-                            'name' => 'Total Dipesan',
-                            'data' => $totalDipesan
-                        ]
-                    ]
-                ]
-            ]
-        ], 200);
+                        'total_dipesan' => [
+                            'value' => $totalDipesanSum,
+                            'unit' => 'Unit',
+                            'percentage_change' => $percentageChange,
+                        ],
+                    ],
+                    'chart' => [
+                        'months' => $months,
+                        'series' => [
+                            [
+                                'name' => 'Total Terjual',
+                                'data' => $totalTerjual,
+                            ],
+                            [
+                                'name' => 'Total Dipesan',
+                                'data' => $totalDipesan,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            200,
+        );
     }
-    
-    public function getTransaksiByProperti() {
+
+    public function getTransaksiByProperti()
+    {
         // Get count of transaksi grouped by properti_id
-        $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
+        if (auth()->id() == 1) {
+            // Admin: tampilkan semua data
+            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
             ->groupBy('properti_id')
             ->get();
+        } else {
+            // Selain admin: tampilkan data sesuai yang login
+            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
+            ->where('created_id', auth()->id())
+            ->groupBy('properti_id')
+            ->get();
+        }
 
         // Get all properti data to include names
         $propertis = Properti::all();
@@ -191,7 +260,7 @@ class DashboardController extends Controller {
         $chartData = [];
         $labels = [];
         $values = [];
-        
+
         // Define colors for the chart
         $colors = [
             '#FF6384', // Red
@@ -203,7 +272,7 @@ class DashboardController extends Controller {
             '#8AC249', // Green
             '#EA5F89', // Pink
             '#00D8B6', // Turquoise
-            '#FF8A80'  // Light Red
+            '#FF8A80', // Light Red
         ];
 
         $colorIndex = 0;
@@ -218,8 +287,8 @@ class DashboardController extends Controller {
 
             $labels[] = $properti->name ?? 'Properti ' . $properti->id;
             $values[] = $count;
-            $percentage = $transaksiByProperti->sum('total') > 0 ? round(($count / $transaksiByProperti->sum('total') * 100)) : 0;
-            
+            $percentage = $transaksiByProperti->sum('total') > 0 ? round(($count / $transaksiByProperti->sum('total')) * 100) : 0;
+
             // Assign color from the array, cycling through if needed
             $color = $colors[$colorIndex % count($colors)];
             $colorIndex++;
@@ -228,18 +297,21 @@ class DashboardController extends Controller {
                 'name' => $properti->name ?? 'Properti ' . $properti->id,
                 'value' => $count,
                 'percentage' => $percentage . '%',
-                'color' => $color
+                'color' => $color,
             ];
         }
 
-        return response()->json([
-            'message' => 'successfully retrieved transaksi by properti data',
-            'status' => 'success',
-            'data' => [
-                'chart_data' => $chartData,
-                'labels' => $labels,
-                'values' => $values
-            ]
-        ], 200);
+        return response()->json(
+            [
+                'message' => 'successfully retrieved transaksi by properti data',
+                'status' => 'success',
+                'data' => [
+                    'chart_data' => $chartData,
+                    'labels' => $labels,
+                    'values' => $values,
+                ],
+            ],
+            200,
+        );
     }
 }

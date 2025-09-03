@@ -14,11 +14,14 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
-class KonsumenController extends Controller {
+
+class KonsumenController extends Controller
+{
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $user = Auth::user();
         // var_dump($user); die;
         $per = $request->per ?? 10;
@@ -28,6 +31,7 @@ class KonsumenController extends Controller {
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek'])
+            ->where('created_id', auth()->id())
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($userRole->role->name === 'supervisor') {
                     // Get All Sales under Supervisor
@@ -61,14 +65,16 @@ class KonsumenController extends Controller {
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {
+    public function create()
+    {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $user = Auth::user();
         $userRoles = $user->roles->pluck('id')->toArray();
         $isMitra = in_array(4, $userRoles);
@@ -95,9 +101,23 @@ class KonsumenController extends Controller {
 
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:konsumens',
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('konsumens')->where(function ($query) use ($request) {
+                    return $query->where('email', $request->email);
+                }),
+            ],
             'phone' => 'required|string|max:20',
-            'ktp_number' => 'nullable|string|max:16',
+            'ktp_number' => [
+                'nullable',
+                'string',
+                'max:16',
+                Rule::unique('konsumens')->where(function ($query) use ($request) {
+                    return $query->where('ktp_number', $request->ktp_number);
+                }),
+            ],
             'address' => 'required|string|max:255',
             'project_id' => 'required',
             'refrensi_id' => 'required',
@@ -112,6 +132,22 @@ class KonsumenController extends Controller {
             'created_id' => 'nullable|exists:users,id',
         ];
 
+        $messages = [
+            'email.unique' => 'Email sudah terdaftar.',
+            'ktp_number.unique' => 'Nomor KTP sudah terdaftar.',
+        ];
+
+        if ($messages) {
+            foreach ($messages as $key => $msg) {
+                if ($request->has($key) && Konsumen::where($key, $request->$key)->exists()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $msg,
+                    ], 400);
+                }
+            }
+        }
+        
         if ($isMitra) {
             $rules['gambar'] = 'required|image|max:2048';
         } else {
@@ -169,7 +205,8 @@ class KonsumenController extends Controller {
         );
     }
 
-    public function allKonsumen(Request $request) {
+    public function allKonsumen(Request $request)
+    {
         $search = $request->search;
         $data = Konsumen::select('id', 'name')
             ->when($search, function ($query) use ($search) {
@@ -181,7 +218,8 @@ class KonsumenController extends Controller {
         return response()->json($data);
     }
 
-    public function allKonsumenBySales(Request $request) {
+    public function allKonsumenBySales(Request $request)
+    {
         $user = Auth::user();
         // Get all konsumen created by the authenticated user
         $search = $request->search;
@@ -195,7 +233,8 @@ class KonsumenController extends Controller {
     /**
      * Display the specified resource.
      */
-    public function show(string $id) {
+    public function show(string $id)
+    {
         $data = Konsumen::with(['projek', 'prospek'])
             ->where('id', $id)
             ->first();
@@ -205,14 +244,16 @@ class KonsumenController extends Controller {
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Konsumen $konsumen) {
+    public function edit(Konsumen $konsumen)
+    {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
 
@@ -273,11 +314,12 @@ class KonsumenController extends Controller {
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id) {
+    public function destroy(string $id)
+    {
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
 
-        if (in_array(1, $roles)) {
+        if (in_array(1, $roles) || in_array(2, $roles)) {
             $konsumen = Konsumen::findOrFail($id);
             if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
                 unlink(storage_path($konsumen->gambar));
@@ -306,7 +348,8 @@ class KonsumenController extends Controller {
         }
     }
 
-    public function approveDeleteAdmin($id) {
+    public function approveDeleteAdmin($id)
+    {
         $konsumen = Konsumen::where('id', $id)->first();
         $konsumen->update(['status_delete' => 'deleted']);
         $konsumen->delete();
@@ -321,7 +364,8 @@ class KonsumenController extends Controller {
         );
     }
 
-    public function konsumenBySales(Request $request) {
+    public function konsumenBySales(Request $request)
+    {
         $user = Auth::user();
         $data = Konsumen::where('added_by', $user->id)
             ->with(['projek', 'prospek'])
@@ -334,7 +378,8 @@ class KonsumenController extends Controller {
         ]);
     }
 
-    public function konsumenBySupervisor(Request $request) {
+    public function konsumenBySupervisor(Request $request)
+    {
         $user = Auth::user();
         $sales = User::where('parent_id', $user->id)->pluck('id');
 
