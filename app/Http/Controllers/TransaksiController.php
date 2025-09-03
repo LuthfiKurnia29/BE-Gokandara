@@ -20,7 +20,9 @@ class TransaksiController extends Controller {
         // if()
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy'])
             ->where(function ($query) use ($search, $created_id, $id) {
-                if(!auth()->user()->hasRole('Admin')){
+                if ($created_id) {
+                    $query->where('created_id', $created_id);
+                } else if (!auth()->user()->hasRole('Admin')){
                     $query->where('created_id', $id);
                 }
                 if ($search) {
