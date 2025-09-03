@@ -145,9 +145,10 @@ class AnalisaController extends Controller
         $targetBulanIni = Target::whereMonth('tanggal_awal', $month)->whereYear('tanggal_awal', $year);
 
         if ($sales) {
-            $targetHariIni->where('sales_id', $sales);
-            $targetMingguIni->where('sales_id', $sales);
-            $targetBulanIni->where('sales_id', $sales);
+            $sales = User::find($sales);
+            $targetHariIni->where('role_id', $sales->roles[0]->role_id);
+            $targetMingguIni->where('role_id', $sales->roles[0]->role_id);
+            $targetBulanIni->where('role_id', $sales->roles[0]->role_id);
         }
 
         $targetHariIni = $targetHariIni->sum('min_penjualan');
@@ -160,9 +161,9 @@ class AnalisaController extends Controller
         $transaksiBulanIni = Transaksi::whereMonth('created_at', $month)->whereYear('created_at', $year);
 
         if ($sales) {
-            $transaksiHariIni->where('created_id', $sales);
-            $transaksiMingguIni->where('created_id', $sales);
-            $transaksiBulanIni->where('created_id', $sales);
+            $transaksiHariIni->where('created_id', $sales->id);
+            $transaksiMingguIni->where('created_id', $sales->id);
+            $transaksiBulanIni->where('created_id', $sales->id);
         }
 
         $penjualanHariIni = $transaksiHariIni->sum('grand_total');
