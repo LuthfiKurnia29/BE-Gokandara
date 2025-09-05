@@ -224,6 +224,11 @@ class TransaksiController extends Controller {
         ]);
 
         $transaksi = Transaksi::where('id', $id)->first();
+        if(!auth()->user()->hasRole('Admin')) {
+            return response()->json([
+                'message' => 'Unauthorized to change status to ' . $validate['status']
+            ], 403);
+        }
         $transaksi->update($validate);
 
         return response()->json(
