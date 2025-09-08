@@ -74,12 +74,15 @@ class UserController extends Controller {
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:konsumens',
             'role_id' => 'required',
-            // 'nip' => 'required'
+            'nip' => 'required'
             // 'parent_id' => $user->id
             // 'password' => 'required|string|max:15',
             // 'kesiapan_dana' => 'required|numeric|min:0',
             // 'pengalaman' => 'required|string|max:255',
+        ], [
+            'email.unique' => 'Email yang diinput sudah ada.'
         ]);
+        
         $validate['parent_id'] = $request['parent_id'];
         if ($request['password']) {
             $hashedPass = Hash::make($request['password']);
@@ -136,7 +139,9 @@ class UserController extends Controller {
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:konsumens',
             'role_id' => 'required',
-            // 'nip' => 'required'
+            'nip' => 'required'
+        ], [
+            'email.unique' => 'Email yang diinput sudah ada.'
         ]);
         $validate['parent_id'] = $request['parent_id'];
         $user->update($validate);
