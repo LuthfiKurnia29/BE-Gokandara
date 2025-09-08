@@ -25,10 +25,11 @@ class CalendarController extends Controller
                 ->whereBetween('followup_date', [$request->startDay, $request->endDay]);
         } else {
             $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek'])
-                ->where('sales_id', auth()->id())
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('sales_id', $sales);
+                    } else {
+                        $query->where('sales_id', auth()->id());
                     }
                 })
                 ->whereBetween('followup_date', [$request->startDay, $request->endDay]);
