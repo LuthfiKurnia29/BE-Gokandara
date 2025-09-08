@@ -48,7 +48,7 @@ class KonsumenController extends Controller
 
                 if ($userRole->role->name === 'Admin') {
                     // Get All Sales under Admin
-                    $q->orWhere('status_delete', 'pending');
+                    $query->orWhere('status_delete', 'pending');
                 }
                 
                 if ($search) {
