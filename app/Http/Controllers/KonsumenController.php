@@ -31,7 +31,13 @@ class KonsumenController extends Controller
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek'])
-            ->where('created_id', auth()->id())
+            ->where(function ($query) use ($userRole) {
+                $q->where('created_id', auth()->id());
+                if ($userRole->role->name === 'Admin') {
+                    // Get All Sales under Admin
+                    $query->orWhere('status_delete', 'pending');
+                }
+            })
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($userRole->role->name === 'Supervisor') {
                     // Get All Sales under Supervisor
@@ -45,11 +51,6 @@ class KonsumenController extends Controller
                 if ($created_id) {
                     $query->where('created_id', $created_id);
                 }
-
-                // if ($userRole->role->name === 'Admin') {
-                //     // Get All Sales under Admin
-                //     $query->orWhere('status_delete', 'pending');
-                // }
                 
                 if ($search) {
                     $query
