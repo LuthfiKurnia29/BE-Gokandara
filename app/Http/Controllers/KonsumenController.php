@@ -32,7 +32,7 @@ class KonsumenController extends Controller
 
         $data = Konsumen::with(['projek', 'prospek'])
             ->where(function ($query) use ($userRole) {
-                $q->where('created_id', auth()->id());
+                $query->where('created_id', auth()->id());
                 if ($userRole->role->name === 'Admin') {
                     // Get All Sales under Admin
                     $query->orWhere('status_delete', 'pending');
