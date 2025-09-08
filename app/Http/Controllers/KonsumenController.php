@@ -33,18 +33,24 @@ class KonsumenController extends Controller
         $data = Konsumen::with(['projek', 'prospek'])
             ->where('created_id', auth()->id())
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
-                if ($userRole->role->name === 'supervisor') {
+                if ($userRole->role->name === 'Supervisor') {
                     // Get All Sales under Supervisor
                     $sales = User::where('parent_id', $user->id)->pluck('id');
                     $query->where(function ($q) use ($user, $sales) {
                         $q->where('added_by', $user->id)->orWhereIn('added_by', $sales);
                     });
-                } elseif ($userRole->role->name === 'Sales' || $userRole->role->name === 'Mitra') {
+                } else if ($userRole->role->name === 'Sales' || $userRole->role->name === 'Mitra') {
                     $query->where('added_by', Auth::user()->id);
                 }
                 if ($created_id) {
                     $query->where('created_id', $created_id);
                 }
+
+                if ($userRole->role->name === 'Admin') {
+                    // Get All Sales under Admin
+                    $q->orWhere('status_delete', 'pending');
+                }
+                
                 if ($search) {
                     $query
                         ->where('name', 'like', "%$search%")
