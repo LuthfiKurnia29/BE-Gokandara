@@ -39,7 +39,9 @@ class KonsumenController extends Controller
                 }
             })
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
-                if ($userRole->role->name === 'Supervisor') {
+                if ($created_id) {
+                    $query->where('created_id', $created_id);
+                } else if ($userRole->role->name === 'Supervisor') {
                     // Get All Sales under Supervisor
                     $sales = User::where('parent_id', $user->id)->pluck('id');
                     $query->where(function ($q) use ($user, $sales) {
@@ -47,9 +49,6 @@ class KonsumenController extends Controller
                     });
                 } else if ($userRole->role->name === 'Sales' || $userRole->role->name === 'Mitra') {
                     $query->where('added_by', Auth::user()->id);
-                }
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
                 }
                 
                 if ($search) {
