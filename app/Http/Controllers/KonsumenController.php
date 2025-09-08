@@ -34,14 +34,6 @@ class KonsumenController extends Controller
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
-                } else if ($userRole->role->name === 'Supervisor') {
-                    // Get All Sales under Supervisor
-                    $sales = User::where('parent_id', $user->id)->pluck('id');
-                    $query->where(function ($q) use ($user, $sales) {
-                        $q->where('added_by', $user->id)->orWhereIn('added_by', $sales);
-                    });
-                } else if ($userRole->role->name === 'Sales' || $userRole->role->name === 'Mitra') {
-                    $query->where('added_by', Auth::user()->id);
                 } else {
                      $query->where('created_id', auth()->id());
                 }
