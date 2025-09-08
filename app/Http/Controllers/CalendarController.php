@@ -28,7 +28,7 @@ class CalendarController extends Controller
                 ->where('sales_id', auth()->id())
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
-                        $query->where('created_id', $sales);
+                        $query->where('sales_id', $sales);
                     }
                 })
                 ->whereBetween('followup_date', [$request->startDay, $request->endDay]);
