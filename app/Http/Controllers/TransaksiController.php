@@ -31,6 +31,10 @@ class TransaksiController extends Controller {
                               ->orWhereHas('createdBy', function ($q) use ($id) {
                                   $q->where('parent_id', $id);
                               });
+                    } if (auth()->user()->hasRole('Telemarketing')) {
+                      $query->whereHas('konsumen', function ($q) use ($id) {
+                          $q->where('added_by', $id);
+                      });
                     } else {
                         $query->where('created_id', $id);
                     }
