@@ -52,6 +52,11 @@ class UserController extends Controller {
             ->when(auth()->user()->hasRole('Supervisor'), function ($query) {
                 $query->where('parent_id', auth()->user()->id);
             })
+            ->when(auth()->user()->hasRole('Mitra'), function ($query) {
+                $query->whereHas('roles.role', function ($query) use ($request) {
+                    $query->where('name', 'Admin');
+                });
+            })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
