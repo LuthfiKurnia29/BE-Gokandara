@@ -88,8 +88,8 @@ class TransaksiController extends Controller {
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
-        $validate['created_id'] = Auth::user()->id;
-        $validate['updated_id'] = Auth::user()->id;
+        $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
+        $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
 
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
@@ -167,7 +167,8 @@ class TransaksiController extends Controller {
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
-        $validate['updated_id'] = Auth::user()->id;
+        $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
+        $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
         $properti = Properti::where('id', $validate['properti_id'])->first();
         $harga = DaftarHarga::where([
             'properti_id' => $properti->id,
