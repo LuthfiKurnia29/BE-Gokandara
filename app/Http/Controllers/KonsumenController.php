@@ -36,6 +36,7 @@ class KonsumenController extends Controller
                     $query->where('created_id', $created_id);
                 } else {
                      $query->where('created_id', auth()->id());
+                     $query->orWhere('added_by', auth()->id());
                 }
 
                 if ($userRole->role->name === 'Admin') {
