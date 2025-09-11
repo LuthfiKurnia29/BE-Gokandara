@@ -87,10 +87,10 @@ class TargetController extends Controller {
 
                 return $target;
             })
-            ->filter(function ($target) {
-                // Only return achieved targets
-                return $target->is_achieved;
-            })
+            // ->filter(function ($target) {
+            //     // Only return achieved targets
+            //     return $target->is_achieved;
+            // })
             ->values();
 
         // Manual pagination for the filtered collection
