@@ -44,7 +44,7 @@ class Properti extends Model {
         return $this->belongsToMany(Tipe::class, 'properti_tipes', 'properti_id', 'tipe_id');
     }
 
-    public function blok() {
+    public function bloks() {
         return $this->belongsToMany(Blok::class, 'properti_bloks', 'properti_id', 'blok_id');
     }
 }
