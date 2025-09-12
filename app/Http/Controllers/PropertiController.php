@@ -77,9 +77,9 @@ class PropertiController extends Controller {
             'daftar_harga.*.harga' => 'required|numeric',
             'fasilitas' => 'required|array',
             'fasilitas.*.nama_fasilitas' => 'required|string',
-            'units' => 'required|array',
-            'tipes' => 'required|array',
-            'bloks' => 'required|array',
+            'unit_ids' => 'required|array',
+            'tipe_ids' => 'required|array',
+            'blok_ids' => 'required|array',
         ]);
 
         $properti = Properti::create($validate);
@@ -109,7 +109,7 @@ class PropertiController extends Controller {
             Fasilitas::create($fasilitasData);
         }
 
-        foreach ($validate['units'] as $unit) {
+        foreach ($validate['unit_ids'] as $unit) {
             $unitData = [
                 'properti_id' => $properti->id,
                 'unit_id' => $unit['unit_id'],
@@ -117,7 +117,7 @@ class PropertiController extends Controller {
             PropertiUnit::create($unitData);
         }
 
-        foreach ($validate['tipes'] as $tipe) {
+        foreach ($validate['tipe_ids'] as $tipe) {
             $tipeData = [
                 'properti_id' => $properti->id,
                 'tipe_id' => $tipe['tipe_id'],
@@ -125,7 +125,7 @@ class PropertiController extends Controller {
             PropertiTipe::create($tipeData);
         }
 
-        foreach ($validate['bloks'] as $blok) {
+        foreach ($validate['blok_ids'] as $blok) {
             $blokData = [
                 'properti_id' => $properti->id,
                 'blok_id' => $blok['blok_id'],
@@ -175,9 +175,9 @@ class PropertiController extends Controller {
             'daftar_harga.*.harga' => 'required|numeric',
             'fasilitas' => 'required|array',
             'fasilitas.*.nama_fasilitas' => 'required|string',
-            'units' => 'required|array',
-            'tipes' => 'required|array',
-            'bloks' => 'required|array',
+            'unit_ids' => 'required|array',
+            'tipe_ids' => 'required|array',
+            'blok_ids' => 'required|array',
         ]);
 
         $properti->update($validate);
@@ -215,7 +215,7 @@ class PropertiController extends Controller {
         }
 
         PropertiUnit::where('properti_id', $properti->id)->delete();
-        foreach ($validate['units'] as $unit) {
+        foreach ($validate['unit_ids'] as $unit) {
             $unitData = [
                 'properti_id' => $properti->id,
                 'unit_id' => $unit['unit_id'],
@@ -224,7 +224,7 @@ class PropertiController extends Controller {
         }
 
         PropertiTipe::where('properti_id', $properti->id)->delete();
-        foreach ($validate['tipes'] as $tipe) {
+        foreach ($validate['tipe_ids'] as $tipe) {
             $tipeData = [
                 'properti_id' => $properti->id,
                 'tipe_id' => $tipe['tipe_id'],
@@ -233,7 +233,7 @@ class PropertiController extends Controller {
         }
 
         PropertiBlok::where('properti_id', $properti->id)->delete();
-        foreach ($validate['bloks'] as $blok) {
+        foreach ($validate['blok_ids'] as $blok) {
             $blokData = [
                 'properti_id' => $properti->id,
                 'blok_id' => $blok['blok_id'],
