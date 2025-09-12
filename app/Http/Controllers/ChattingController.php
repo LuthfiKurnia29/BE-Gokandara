@@ -10,10 +10,8 @@ use App\Models\Notifikasi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class ChattingController extends Controller
-{
-    public function index(Request $request)
-    {
+class ChattingController extends Controller {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
@@ -22,7 +20,7 @@ class ChattingController extends Controller
         $roles = $authUser->roles->pluck('role_id')->toArray();
         $authUserId = $authUser->id;
 
-        if (in_array(1, $roles)) {
+        if (in_array(1, $roles) || in_array(4, $roles) || in_array(5, $roles)) {
             $latestPerCode = Chatting::select('code', DB::raw('MAX(id) as latest_id'))
                 ->when($search, function ($query) use ($search) {
                     $query->where('pesan', 'like', "%$search%");
@@ -154,8 +152,7 @@ class ChattingController extends Controller
         return response()->json(['message' => 'Unauthorized or role not recognized.'], 403);
     }
 
-    public function lastChatting(Request $request)
-    {
+    public function lastChatting(Request $request) {
         $per = $request->per ?? 10;
         $search = $request->search;
 
@@ -198,8 +195,7 @@ class ChattingController extends Controller
         return response()->json($users);
     }
 
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $validate = $request->validate([
             'user_penerima_id' => 'required|array',
             'pesan' => 'required',
@@ -232,8 +228,7 @@ class ChattingController extends Controller
         );
     }
 
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $chat = Chatting::where('id', $id)->first();
         $validate = $request->validate([
             'pesan' => 'required',
@@ -250,8 +245,7 @@ class ChattingController extends Controller
         );
     }
 
-    public function destroy(Request $request)
-    {
+    public function destroy(Request $request) {
         foreach ($request->id as $id) {
             $chat = Chatting::findOrFail($id);
             if ($chat->file && file_exists(storage_path($chat->file))) {

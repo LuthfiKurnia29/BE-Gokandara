@@ -54,7 +54,7 @@ class UserController extends Controller {
                 $query->where('parent_id', auth()->user()->id);
             })
             ->when(auth()->user()->hasRole('Mitra'), function ($query) {
-                $query->whereHas('roles.role', function ($query) use ($request) {
+                $query->whereHas('roles.role', function ($query) {
                     $query->where('name', 'Admin');
                 });
             })
