@@ -234,6 +234,23 @@ class UserController extends Controller {
         ], 200);
     }
 
+    public function getUserSpvSalesMitra() {
+        $roleSpv = Role::where("code", "spv")->first();
+        $roleSales = Role::where("code", "sls")->first();
+        $roleMitra = Role::where("code", "mtr")->first();
+        $users = User::whereHas('roles', function ($q) use ($roleSpv, $roleSales, $roleMitra) {
+            $q->whereIn('role_id', [$roleSpv->id, $roleSales->id, $roleMitra->id]);
+        })->when(auth()->user()->hasRole('Supervisor'), function ($query) {
+            $query->where('parent_id', auth()->user()->id);
+        })->select('id', 'name')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get Supervisor',
+            'data' => $users
+        ], 200);
+    }
+
     private function syncAccessMenuAdmin($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,

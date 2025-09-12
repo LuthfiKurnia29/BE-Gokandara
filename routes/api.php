@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->get('role', [RoleController::class, 'getAllRo
 Route::middleware('auth:sanctum')->get('user', [UserController::class, 'index']);
 Route::middleware('auth:sanctum')->get('user-spv', [UserController::class, 'getUserSpv']);
 Route::middleware('auth:sanctum')->get('user-spv-sales', [UserController::class, 'getUserSpvSales']);
+Route::middleware('auth:sanctum')->get('user-spv-sales-mitra', [UserController::class, 'getUserSpvSalesMitra']);
 Route::middleware('auth:sanctum')->get('user/{id}', [UserController::class, 'show']);
 Route::middleware('auth:sanctum')->post('user', [UserController::class, 'store']);
 Route::middleware('auth:sanctum')->put('user/{id}', [UserController::class, 'update']);
