@@ -112,7 +112,7 @@ class PropertiController extends Controller {
         foreach ($validate['unit_ids'] as $unit) {
             $unitData = [
                 'properti_id' => $properti->id,
-                'unit_id' => $unit['unit_id'],
+                'unit_id' => $unit,
             ];
             PropertiUnit::create($unitData);
         }
@@ -120,7 +120,7 @@ class PropertiController extends Controller {
         foreach ($validate['tipe_ids'] as $tipe) {
             $tipeData = [
                 'properti_id' => $properti->id,
-                'tipe_id' => $tipe['tipe_id'],
+                'tipe_id' => $tipe,
             ];
             PropertiTipe::create($tipeData);
         }
@@ -128,7 +128,7 @@ class PropertiController extends Controller {
         foreach ($validate['blok_ids'] as $blok) {
             $blokData = [
                 'properti_id' => $properti->id,
-                'blok_id' => $blok['blok_id'],
+                'blok_id' => $blok,
             ];
             PropertiBlok::create($blokData);
         }
@@ -218,7 +218,7 @@ class PropertiController extends Controller {
         foreach ($validate['unit_ids'] as $unit) {
             $unitData = [
                 'properti_id' => $properti->id,
-                'unit_id' => $unit['unit_id'],
+                'unit_id' => $unit,
             ];
             PropertiUnit::create($unitData);
         }
@@ -227,7 +227,7 @@ class PropertiController extends Controller {
         foreach ($validate['tipe_ids'] as $tipe) {
             $tipeData = [
                 'properti_id' => $properti->id,
-                'tipe_id' => $tipe['tipe_id'],
+                'tipe_id' => $tipe,
             ];
             PropertiTipe::create($tipeData);
         }
@@ -236,7 +236,7 @@ class PropertiController extends Controller {
         foreach ($validate['blok_ids'] as $blok) {
             $blokData = [
                 'properti_id' => $properti->id,
-                'blok_id' => $blok['blok_id'],
+                'blok_id' => $blok,
             ];
             PropertiBlok::create($blokData);
         }
