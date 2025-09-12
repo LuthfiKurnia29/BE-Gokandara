@@ -130,7 +130,7 @@ class UserController extends Controller {
     public function show(string $id) {
         $data = User::with('roles')->where('id', $id)->first();
         if ($data->enc_pw) {
-            $data->password = Crypt::decryptString($data->enc_pw);
+            $data->enc_pw = Crypt::decryptString($data->enc_pw);
         }
         return response()->json($data);
     }
