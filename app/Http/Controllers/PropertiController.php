@@ -6,47 +6,47 @@ use App\Models\Properti;
 use App\Models\Properti_Gambar;
 use App\Models\DaftarHarga;
 use App\Models\Fasilitas;
+use App\Models\PropertiBlok;
+use App\Models\PropertiTipe;
+use App\Models\PropertiUnit;
 use Illuminate\Http\Request;
 
-class PropertiController extends Controller
-{
+class PropertiController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
         $data = Properti::with(['propertiGambar', 'projek'])->where(function ($query) use ($search) {
-                if ($search) {
-                    $query->where('luas_bangunan', 'like', "%$search%")
-                          ->orWhere('luas_tanah', 'like', "%$search%")
-                          ->orWhere('kelebihan', 'like', "%$search%")
-                          ->orWhere('lokasi', 'like', "%$search%")
-                          ->orWhere('harga', 'like', "%$search%");
-                }
-            })
+            if ($search) {
+                $query->where('luas_bangunan', 'like', "%$search%")
+                    ->orWhere('luas_tanah', 'like', "%$search%")
+                    ->orWhere('kelebihan', 'like', "%$search%")
+                    ->orWhere('lokasi', 'like', "%$search%")
+                    ->orWhere('harga', 'like', "%$search%");
+            }
+        })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
         return response()->json($data);
     }
 
-    public function allProperti(Request $request)
-    {
+    public function allProperti(Request $request) {
         $search = $request->search;
         $data = Properti::with('projek')->select('id', 'luas_bangunan', 'luas_tanah', 'kelebihan', 'lokasi', 'harga', 'project_id')
-                ->when($search, function ($query) use ($search) {
-                    $query->where('luas_bangunan', 'like', "%$search%")
-                          ->orWhere('luas_tanah', 'like', "%$search%")
-                          ->orWhere('kelebihan', 'like', "%$search%")
-                          ->orWhere('lokasi', 'like', "%$search%")
-                          ->orWhere('harga', 'like', "%$search%");
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('luas_bangunan', 'like', "%$search%")
+                    ->orWhere('luas_tanah', 'like', "%$search%")
+                    ->orWhere('kelebihan', 'like', "%$search%")
+                    ->orWhere('lokasi', 'like', "%$search%")
+                    ->orWhere('harga', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
@@ -54,16 +54,14 @@ class PropertiController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $validate = $request->validate([
             'project_id' => 'required',
             'luas_bangunan' => 'required|string',
@@ -79,6 +77,9 @@ class PropertiController extends Controller
             'daftar_harga.*.harga' => 'required|numeric',
             'fasilitas' => 'required|array',
             'fasilitas.*.nama_fasilitas' => 'required|string',
+            'units' => 'required|array',
+            'tipes' => 'required|array',
+            'bloks' => 'required|array',
         ]);
 
         $properti = Properti::create($validate);
@@ -100,12 +101,36 @@ class PropertiController extends Controller
             Properti_Gambar::create($gambarData);
         }
 
-        foreach($validate['fasilitas'] as $fasilitas) {
+        foreach ($validate['fasilitas'] as $fasilitas) {
             $fasilitasData = [
                 'properti_id' => $properti->id,
                 'nama_fasilitas' => $fasilitas['nama_fasilitas'],
             ];
             Fasilitas::create($fasilitasData);
+        }
+
+        foreach ($validate['units'] as $unit) {
+            $unitData = [
+                'properti_id' => $properti->id,
+                'unit_id' => $unit['unit_id'],
+            ];
+            PropertiUnit::create($unitData);
+        }
+
+        foreach ($validate['tipes'] as $tipe) {
+            $tipeData = [
+                'properti_id' => $properti->id,
+                'tipe_id' => $tipe['tipe_id'],
+            ];
+            PropertiTipe::create($tipeData);
+        }
+
+        foreach ($validate['bloks'] as $blok) {
+            $blokData = [
+                'properti_id' => $properti->id,
+                'blok_id' => $blok['blok_id'],
+            ];
+            PropertiBlok::create($blokData);
         }
 
         return response()->json([
@@ -117,8 +142,7 @@ class PropertiController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
-    {
+    public function show($id) {
         $data = Properti::with(['propertiGambar', 'daftarHarga', 'fasilitas'])->where('id', $id)->first();
 
         return response()->json($data);
@@ -127,16 +151,14 @@ class PropertiController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
-    {
+    public function edit($id) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $properti = Properti::where('id', $id)->first();
         $validate = $request->validate([
             'project_id' => 'required',
@@ -153,6 +175,9 @@ class PropertiController extends Controller
             'daftar_harga.*.harga' => 'required|numeric',
             'fasilitas' => 'required|array',
             'fasilitas.*.nama_fasilitas' => 'required|string',
+            'units' => 'required|array',
+            'tipes' => 'required|array',
+            'bloks' => 'required|array',
         ]);
 
         $properti->update($validate);
@@ -166,7 +191,7 @@ class PropertiController extends Controller
                 'harga' => $harga['harga'],
             ];
             DaftarHarga::create($hargaData);
-        }   
+        }
 
         if (count($request->properti__gambars)) {
             Properti_Gambar::where('properti_id', $properti->id)->delete();
@@ -181,12 +206,39 @@ class PropertiController extends Controller
         }
 
         $properti->fasilitas()->delete();
-        foreach($validate['fasilitas'] as $fasilitas) {
+        foreach ($validate['fasilitas'] as $fasilitas) {
             $fasilitasData = [
                 'properti_id' => $properti->id,
                 'nama_fasilitas' => $fasilitas['nama_fasilitas'],
             ];
             Fasilitas::create($fasilitasData);
+        }
+
+        PropertiUnit::where('properti_id', $properti->id)->delete();
+        foreach ($validate['units'] as $unit) {
+            $unitData = [
+                'properti_id' => $properti->id,
+                'unit_id' => $unit['unit_id'],
+            ];
+            PropertiUnit::create($unitData);
+        }
+
+        PropertiTipe::where('properti_id', $properti->id)->delete();
+        foreach ($validate['tipes'] as $tipe) {
+            $tipeData = [
+                'properti_id' => $properti->id,
+                'tipe_id' => $tipe['tipe_id'],
+            ];
+            PropertiTipe::create($tipeData);
+        }
+
+        PropertiBlok::where('properti_id', $properti->id)->delete();
+        foreach ($validate['bloks'] as $blok) {
+            $blokData = [
+                'properti_id' => $properti->id,
+                'blok_id' => $blok['blok_id'],
+            ];
+            PropertiBlok::create($blokData);
         }
 
         return response()->json([
@@ -198,8 +250,7 @@ class PropertiController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
-    {
+    public function destroy($id) {
         $properti = Properti::findOrFail($id);
         if ($properti->propertiGambar) {
             foreach ($properti->propertiGambar as $gambar) {

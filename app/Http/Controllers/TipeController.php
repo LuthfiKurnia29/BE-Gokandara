@@ -2,41 +2,45 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Properti;
 use App\Models\Tipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class TipeController extends Controller
-{
+class TipeController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
         $data = Tipe::where(function ($query) use ($search) {
-                if ($search) {
-                    $query->where('name', 'like', "%$search%");
-                }
-            })
+            if ($search) {
+                $query->where('name', 'like', "%$search%");
+            }
+        })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
         return response()->json($data);
     }
 
-    public function allTipe(Request $request)
-    {
+    public function allTipe(Request $request) {
+        if (isset($request->properti_id)) {
+            $data = Properti::find($request->properti_id)->tipes()->get();
+
+            return response()->json($data);
+        }
+
         $search = $request->search;
         $data = Tipe::select('id', 'name')
-                ->when($search, function ($query) use ($search) {
-                    $query->where('name', 'like', "%$search%");
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
@@ -44,16 +48,14 @@ class TipeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $validate = $request->validate([
             'name' => 'required|string|max:255'
         ]);
@@ -69,8 +71,7 @@ class TipeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id) {
         $data = Tipe::where('id', $id)->first();
         return response()->json($data);
     }
@@ -78,16 +79,14 @@ class TipeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(tipe $tipe)
-    {
+    public function edit(tipe $tipe) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $tipe = Tipe::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
@@ -104,8 +103,7 @@ class TipeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(tipe $tipe)
-    {
+    public function destroy(tipe $tipe) {
         Tipe::destroy($tipe->id);
 
         return response()->json([

@@ -2,41 +2,45 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Properti;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class UnitController extends Controller
-{
+class UnitController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
         $data = Unit::where(function ($query) use ($search) {
-                if ($search) {
-                    $query->where('name', 'like', "%$search%");
-                }
-            })
+            if ($search) {
+                $query->where('name', 'like', "%$search%");
+            }
+        })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
         return response()->json($data);
     }
 
-    public function allUnit(Request $request)
-    {
+    public function allUnit(Request $request) {
+        if (isset($request->properti_id)) {
+            $data = Properti::find($request->properti_id)->units()->get();
+
+            return response()->json($data);
+        }
+
         $search = $request->search;
         $data = Unit::select('id', 'name')
-                ->when($search, function ($query) use ($search) {
-                    $query->where('name', 'like', "%$search%");
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
@@ -44,16 +48,14 @@ class UnitController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $validate = $request->validate([
             'name' => 'required|string|max:255'
         ]);
@@ -69,8 +71,7 @@ class UnitController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
+    public function show(string $id) {
         $data = Unit::where('id', $id)->first();
         return response()->json($data);
     }
@@ -78,16 +79,14 @@ class UnitController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Unit $unit)
-    {
+    public function edit(Unit $unit) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $unit = Unit::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
@@ -104,8 +103,7 @@ class UnitController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    public function destroy(string $id) {
         Unit::destroy($id);
 
         return response()->json([

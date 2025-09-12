@@ -3,40 +3,44 @@
 namespace App\Http\Controllers;
 
 use App\Models\Blok;
+use App\Models\Properti;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class BlokController extends Controller
-{
+class BlokController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
         $data = Blok::where(function ($query) use ($search) {
-                if ($search) {
-                    $query->where('name', 'like', "%$search%");
-                }
-            })
+            if ($search) {
+                $query->where('name', 'like', "%$search%");
+            }
+        })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
         return response()->json($data);
     }
 
-    public function allBlok(Request $request)
-    {
+    public function allBlok(Request $request) {
+        if (isset($request->properti_id)) {
+            $data = Properti::find($request->properti_id)->bloks()->get();
+
+            return response()->json($data);
+        }
+
         $search = $request->search;
         $data = Blok::select('id', 'name')
-                ->when($search, function ($query) use ($search) {
-                    $query->where('name', 'like', "%$search%");
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+            })
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($data);
     }
@@ -44,16 +48,14 @@ class BlokController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
+    public function create() {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $validate = $request->validate([
             'name' => 'required|string|max:255'
         ]);
@@ -69,8 +71,7 @@ class BlokController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
-    {
+    public function show($id) {
         $data = Blok::where('id', $id)->first();
 
         return response()->json($data);
@@ -79,16 +80,14 @@ class BlokController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Blok $blok)
-    {
+    public function edit(Blok $blok) {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
         $blok = Blok::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
@@ -105,8 +104,7 @@ class BlokController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
+    public function destroy(string $id) {
         Blok::destroy($id);
 
         return response()->json([

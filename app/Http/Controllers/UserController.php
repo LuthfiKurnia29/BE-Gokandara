@@ -9,6 +9,7 @@ use App\Models\UserMenuAccess;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller {
@@ -87,11 +88,14 @@ class UserController extends Controller {
         ], [
             'email.unique' => 'Email yang diinput sudah ada.'
         ]);
-        
+
         $validate['parent_id'] = $request['parent_id'];
         if ($request['password']) {
             $hashedPass = Hash::make($request['password']);
             $validate['password'] = $hashedPass;
+
+            $encPass = Crypt::encryptString($request['password']);
+            $validate['enc_pw'] = $encPass;
         }
 
         $user = User::create($validate);
@@ -125,6 +129,7 @@ class UserController extends Controller {
      */
     public function show(string $id) {
         $data = User::with('roles')->where('id', $id)->first();
+        $data->password = Crypt::decryptString($data->enc_pw);
         return response()->json($data);
     }
 
@@ -149,6 +154,15 @@ class UserController extends Controller {
             'email.unique' => 'Email yang diinput sudah ada.'
         ]);
         $validate['parent_id'] = $request['parent_id'];
+
+        if ($request['password']) {
+            $hashedPass = Hash::make($request['password']);
+            $validate['password'] = $hashedPass;
+
+            $encPass = Crypt::encryptString($request['password']);
+            $validate['enc_pw'] = $encPass;
+        }
+
         $user->update($validate);
 
         $userRole = UserRole::where('user_id', $user->id)->first();
