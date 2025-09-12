@@ -78,7 +78,7 @@ class UserController extends Controller {
         $user = Auth::user();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users',
+            'email' => 'required|email|max:255|unique:users,email',
             'role_id' => 'required',
             'nip' => 'required'
             // 'parent_id' => $user->id
@@ -149,7 +149,7 @@ class UserController extends Controller {
         $user = User::where('id', $id)->first();
         $validate = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|unique:users,email,' . $id,
             'role_id' => 'required',
             'nip' => 'required'
         ], [
