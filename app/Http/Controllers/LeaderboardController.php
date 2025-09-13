@@ -59,10 +59,12 @@ class LeaderboardController extends Controller
         // Apply pagination
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
 
-        $leaderboardData = $leaderboardData->getCollection()->map(function ($item) {
+        $data = $leaderboardData->getCollection()->map(function ($item) {
             $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
             return $item;
         });
+
+        $leaderboardData->setCollection($data);
 
         return response()->json($leaderboardData);
     }
@@ -158,11 +160,11 @@ class LeaderboardController extends Controller
             ->limit(3)
             ->get();
 
-        $leaderboardData = $leaderboardData->map(function ($item) {
+        $leaderboardQuery = $leaderboardData->map(function ($item) {
             $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
             return $item;
         });
 
-        return response()->json($leaderboardData);
+        return response()->json($leaderboardQuery);
     }
 }
