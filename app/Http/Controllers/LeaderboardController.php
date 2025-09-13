@@ -36,7 +36,7 @@ class LeaderboardController extends Controller
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
             DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
             DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
-            DB::raw('COALESCE(SUM(konsumens.min_penjualan), 0) as total_target'),
+            DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
@@ -135,7 +135,7 @@ class LeaderboardController extends Controller
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
             DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
             DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
-            DB::raw('COALESCE(SUM(konsumens.min_penjualan), 0) as total_target'),
+            DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
