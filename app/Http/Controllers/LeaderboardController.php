@@ -160,7 +160,7 @@ class LeaderboardController extends Controller
             ->limit(3)
             ->get();
 
-        $leaderboardQuery = $leaderboardData->map(function ($item) {
+        $leaderboardQuery = $leaderboardQuery->map(function ($item) {
             $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
             return $item;
         });
