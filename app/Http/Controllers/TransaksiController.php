@@ -69,6 +69,9 @@ class TransaksiController extends Controller {
     }
 
     public function createTransaksi(Request $request) {
+        ini_set('post_max_size', '124M');
+        ini_set('upload_max_filesize', '124M');
+        
         $konsumen = Konsumen::where('id', $request->konsumen_id)->first();
         if (is_null($konsumen->ktp_number)) {
             return response()->json([
@@ -155,6 +158,9 @@ class TransaksiController extends Controller {
 
 
     public function updateTransaksi(Request $request, $id) {
+        ini_set('post_max_size', '124M');
+        ini_set('upload_max_filesize', '124M');
+        
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'skema_pembayaran_id' => 'required',
