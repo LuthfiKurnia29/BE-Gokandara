@@ -46,7 +46,7 @@ class LeaderboardController extends Controller
                     ->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
             })
             ->leftJoin('konsumens', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.konsumen_id', '=', 'konsumen.id')
+                $join->on('transaksis.konsumen_id', '=', 'konsumens.id')
                     ->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
@@ -145,7 +145,7 @@ class LeaderboardController extends Controller
                     ->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
             })
             ->leftJoin('konsumens', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.konsumen_id', '=', 'konsumen.id')
+                $join->on('transaksis.konsumen_id', '=', 'konsumens.id')
                     ->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
