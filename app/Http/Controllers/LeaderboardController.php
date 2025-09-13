@@ -30,53 +30,39 @@ class LeaderboardController extends Controller
 
         // Build the optimized query with aggregations
         $leaderboardQuery = User::select([
-                'users.id as sales_id',
-                'users.name as sales_name', 
-                'users.email as sales_email',
-                'users.nip as sales_nip',
-                DB::raw('COALESCE(target_stats.total_target, 0) as total_target'),
-                DB::raw('COALESCE(goal_stats.total_goal, 0) as total_goal'),
-                DB::raw('COALESCE(goal_stats.total_revenue, 0) as total_revenue'),
-                DB::raw('COALESCE(leads_stats.total_leads, 0) as total_leads'),
-                DB::raw('
-                    CASE 
-                        WHEN COALESCE(target_stats.total_target, 0) > 0 
-                        THEN (COALESCE(goal_stats.total_goal, 0) / target_stats.total_target) * 100 
-                        ELSE 0 
-                    END as target_percentage
-                ')
-            ])
-            ->whereHas('roles', function ($query) use ($salesRoleId) {
-                $query->where('role_id', $salesRoleId);
+            'users.id',
+            'users.name',
+            'users.email', // Add other user fields you need
+            DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
+            DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
+            DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
+            DB::raw('COALESCE(SUM(konsumens.min_penjualan), 0) as total_target'),
+        ])
+            ->with(['roles.role'])
+            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+            ->leftJoin('transaksis', function ($join) use ($target) {
+                $join->on('transaksis.created_id', '=', 'users.id')
+                    ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
             })
-            // Left join for target transactions (with date filter if provided)
-            ->leftJoinSub(
-                $this->getTargetTransactionsSubquery($dateStart, $dateEnd),
-                'target_stats',
-                'users.id',
-                '=',
-                'target_stats.created_id'
-            )
-            // Left join for approved transactions (goals)
-            ->leftJoinSub(
-                $this->getGoalTransactionsSubquery(),
-                'goal_stats', 
-                'users.id',
-                '=',
-                'goal_stats.created_id'
-            )
-            // Left join for leads count
-            ->leftJoinSub(
-                $this->getLeadsSubquery(),
-                'leads_stats',
-                'users.id', 
-                '=',
-                'leads_stats.created_id'
-            )
-            ->orderByDesc('total_leads');
+            ->leftJoin('konsumens', function ($join) use ($target) {
+                $join->on('transaksis.konsumen_id', '=', 'konsumen.id')
+                    ->whereBetween('konsumens.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
+            })
+            ->leftJoin('targets', function ($join) use ($target) {
+                $join->on('targets.role_id', '=', 'user_roles.user_id')
+                    ->whereBetween('targets.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
+            })
+            ->whereIn('roles.id', $salesRoleId)
+            ->groupBy('users.id', 'users.name', 'users.email');
 
         // Apply pagination
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
+
+        $leaderboardData = $leaderboardData->getCollection()->map(function ($item) {
+            $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+            return $item;
+        });
 
         return response()->json($leaderboardData);
     }
@@ -130,7 +116,7 @@ class LeaderboardController extends Controller
     {
         $dateStart = $request->dateStart ?? null;
         $dateEnd = $request->dateEnd ?? null;
-
+        
         // Get sales role ID once
         $salesRoleId = Role::where('code', 'sls')->value('id');
         
@@ -141,55 +127,42 @@ class LeaderboardController extends Controller
             ]);
         }
 
-        // Build the optimized query with aggregations for top 3
-        $top3Data = User::select([
-                'users.id as sales_id',
-                'users.name as sales_name', 
-                'users.email as sales_email',
-                'users.nip as sales_nip',
-                DB::raw('COALESCE(target_stats.total_target, 0) as total_target'),
-                DB::raw('COALESCE(goal_stats.total_goal, 0) as total_goal'),
-                DB::raw('COALESCE(goal_stats.total_revenue, 0) as total_revenue'),
-                DB::raw('COALESCE(leads_stats.total_leads, 0) as total_leads'),
-                DB::raw('
-                    CASE 
-                        WHEN COALESCE(target_stats.total_target, 0) > 0 
-                        THEN (COALESCE(goal_stats.total_goal, 0) / target_stats.total_target) * 100 
-                        ELSE 0 
-                    END as target_percentage
-                ')
-            ])
-            ->whereHas('roles', function ($query) use ($salesRoleId) {
-                $query->where('role_id', $salesRoleId);
+        // Build the optimized query with aggregations
+        $leaderboardQuery = User::select([
+            'users.id',
+            'users.name',
+            'users.email', // Add other user fields you need
+            DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
+            DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
+            DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
+            DB::raw('COALESCE(SUM(konsumens.min_penjualan), 0) as total_target'),
+        ])
+            ->with(['roles.role'])
+            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+            ->leftJoin('transaksis', function ($join) use ($target) {
+                $join->on('transaksis.created_id', '=', 'users.id')
+                    ->whereBetween('transaksis.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
             })
-            // Left join for target transactions (with date filter if provided)
-            ->leftJoinSub(
-                $this->getTargetTransactionsSubquery($dateStart, $dateEnd),
-                'target_stats',
-                'users.id',
-                '=',
-                'target_stats.created_id'
-            )
-            // Left join for approved transactions (goals)
-            ->leftJoinSub(
-                $this->getGoalTransactionsSubquery(),
-                'goal_stats', 
-                'users.id',
-                '=',
-                'goal_stats.created_id'
-            )
-            // Left join for leads count
-            ->leftJoinSub(
-                $this->getLeadsSubquery(),
-                'leads_stats',
-                'users.id', 
-                '=',
-                'leads_stats.created_id'
-            )
+            ->leftJoin('konsumens', function ($join) use ($target) {
+                $join->on('transaksis.konsumen_id', '=', 'konsumen.id')
+                    ->whereBetween('konsumens.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
+            })
+            ->leftJoin('targets', function ($join) use ($target) {
+                $join->on('targets.role_id', '=', 'user_roles.user_id')
+                    ->whereBetween('targets.created_at', [$target->tanggal_awal, $target->tanggal_akhir]);
+            })
+            ->whereIn('roles.id', $salesRoleId)
+            ->groupBy('users.id', 'users.name', 'users.email')
             ->orderByDesc('total_leads')
             ->limit(3)
             ->get();
 
-        return response()->json($top3Data);
+        $leaderboardData = $leaderboardData->map(function ($item) {
+            $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+            return $item;
+        });
+
+        return response()->json($leaderboardData);
     }
 }
