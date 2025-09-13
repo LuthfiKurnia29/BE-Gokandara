@@ -53,7 +53,7 @@ class LeaderboardController extends Controller
                 $join->on('targets.role_id', '=', 'user_roles.user_id')
                     ->whereBetween('targets.created_at', [$dateStart, $dateEnd]);
             })
-            ->whereIn('roles.id', $salesRoleId)
+            ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email');
 
         // Apply pagination
@@ -152,7 +152,7 @@ class LeaderboardController extends Controller
                 $join->on('targets.role_id', '=', 'user_roles.user_id')
                     ->whereBetween('targets.created_at', [$dateStart, $dateEnd]);
             })
-            ->whereIn('roles.id', $salesRoleId)
+            ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email')
             ->orderByDesc('total_leads')
             ->limit(3)
