@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -9,10 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class LeaderboardController extends Controller
-{
-    public function getAllLeaderboard(Request $request)
-    {
+class LeaderboardController extends Controller {
+    public function getAllLeaderboard(Request $request) {
         $dateStart = $request->dateStart ?? null;
         $dateEnd = $request->dateEnd ?? null;
         $perPage = $request->per_page ?? 15;
@@ -20,7 +19,7 @@ class LeaderboardController extends Controller
 
         // Get sales role ID once
         $salesRoleId = Role::where('code', 'sls')->value('id');
-        
+
         if (!$salesRoleId) {
             return response()->json([
                 'message' => 'Sales role not found',
@@ -50,8 +49,17 @@ class LeaderboardController extends Controller
                     ->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('targets.role_id', '=', 'user_roles.user_id')
-                    ->whereBetween('targets.created_at', [$dateStart, $dateEnd]);
+                $join->on('targets.role_id', '=', 'user_roles.user_id');
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $join->where(function ($query) use ($dateStart, $dateEnd) {
+                        $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
+                            ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
+                            ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                                $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
+                                    ->where('targets.tanggal_akhir', '>=', $dateEnd);
+                            });
+                    });
+                }
             })
             ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email');
@@ -77,8 +85,7 @@ class LeaderboardController extends Controller
     /**
      * Get subquery for target transactions
      */
-    private function getTargetTransactionsSubquery($dateStart = null, $dateEnd = null)
-    {
+    private function getTargetTransactionsSubquery($dateStart = null, $dateEnd = null) {
         $query = Transaksi::select([
             'created_id',
             DB::raw('COUNT(*) as total_target')
@@ -94,22 +101,20 @@ class LeaderboardController extends Controller
     /**
      * Get subquery for approved transactions (goals)
      */
-    private function getGoalTransactionsSubquery()
-    {
+    private function getGoalTransactionsSubquery() {
         return Transaksi::select([
             'created_id',
             DB::raw('COUNT(*) as total_goal'),
             DB::raw('SUM(grand_total) as total_revenue')
         ])
-        ->where('status', 'approved')
-        ->groupBy('created_id');
+            ->where('status', 'approved')
+            ->groupBy('created_id');
     }
 
     /**
      * Get subquery for leads count
      */
-    private function getLeadsSubquery()
-    {
+    private function getLeadsSubquery() {
         return Konsumen::select([
             'created_id',
             DB::raw('COUNT(*) as total_leads')
@@ -119,14 +124,13 @@ class LeaderboardController extends Controller
     /**
      * Get top 3 leaderboard
      */
-    public function getTop3Leaderboard(Request $request)
-    {
+    public function getTop3Leaderboard(Request $request) {
         $dateStart = $request->dateStart ?? null;
         $dateEnd = $request->dateEnd ?? null;
-        
+
         // Get sales role ID once
         $salesRoleId = Role::where('code', 'sls')->value('id');
-        
+
         if (!$salesRoleId) {
             return response()->json([
                 'message' => 'Sales role not found',
@@ -162,7 +166,14 @@ class LeaderboardController extends Controller
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('targets.role_id', '=', 'user_roles.user_id');
                 if (isset($dateStart) && isset($dateEnd)) {
-                    $join->whereBetween('targets.created_at', [$dateStart, $dateEnd]);
+                    $join->where(function ($query) use ($dateStart, $dateEnd) {
+                        $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
+                            ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
+                            ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                                $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
+                                    ->where('targets.tanggal_akhir', '>=', $dateEnd);
+                            });
+                    });
                 }
             })
             ->whereIn('roles.id', [$salesRoleId])
