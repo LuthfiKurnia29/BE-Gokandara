@@ -61,6 +61,11 @@ class LeaderboardController extends Controller
 
         $data = $leaderboardData->getCollection()->map(function ($item) {
             $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+
+            $item->sales_id = $item->id;
+            $item->sales_name = $item->name;
+            $item->sales_email = $item->email;
+            $item->sales_nip = $item->nip;
             return $item;
         });
 
@@ -168,6 +173,11 @@ class LeaderboardController extends Controller
 
         $leaderboardQuery = $leaderboardQuery->map(function ($item) {
             $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+
+            $item->sales_id = $item->id;
+            $item->sales_name = $item->name;
+            $item->sales_email = $item->email;
+            $item->sales_nip = $item->nip;
             return $item;
         });
 
