@@ -39,7 +39,7 @@ class KonsumenController extends Controller
                      $query->orWhere('added_by', auth()->id());
                 }
 
-                if ($userRole->role->name === 'Admin') {
+                if ($userRole->role->name === 'Admin' && !$created_id) {
                     // Get All Sales under Admin
                     $query->orWhere('status_delete', 'pending');
                 }
