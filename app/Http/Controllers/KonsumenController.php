@@ -34,6 +34,7 @@ class KonsumenController extends Controller
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
+                    $query->orWhere('added_by', $created_id);
                 } else {
                      $query->where('created_id', auth()->id());
                      $query->orWhere('added_by', auth()->id());
