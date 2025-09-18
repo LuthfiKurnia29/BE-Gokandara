@@ -76,7 +76,7 @@ class KonsumenController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $userRoles = $user->roles->pluck('id')->toArray();
+        $userRoles = $user->roles->pluck('role_id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
         $availKonsumen = Konsumen::where('phone', $request->phone)->where('project_id', $request->project_id)->first();
