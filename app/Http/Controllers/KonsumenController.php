@@ -260,7 +260,7 @@ class KonsumenController extends Controller
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
 
-        $userRoles = $user->roles->pluck('id')->toArray();
+        $userRoles = $user->roles->pluck('role_id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
         $validate = $request->validate([
