@@ -322,7 +322,7 @@ class KonsumenController extends Controller
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
 
-        if (in_array(1, $roles) || in_array(2, $roles)) {
+        if (in_array(1, $roles) || in_array(2, $roles) || in_array(4, $roles)) {
             $konsumen = Konsumen::findOrFail($id);
             if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
                 unlink(storage_path($konsumen->gambar));
