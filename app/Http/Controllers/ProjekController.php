@@ -54,10 +54,25 @@ class ProjekController extends Controller
     {
         //
         $validate = $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'kavling_total' => 'required|integer',
+            'address' => 'required|string|max:255',
         ]);
 
-        Projek::create($validate);
+        $projek = Projek::create($validate);
+
+        // if($request['tipes']){
+        //     foreach($request['tipes'] as $tipe){
+        //         $projek->tipes()->create([
+        //             'nama_tipe' => $tipe['nama_tipe'],
+        //             'luas_tanah' => $tipe['luas_tanah'],
+        //             'luas_bangunan' => $tipe['luas_bangunan'],
+        //             'jumlah_unit' => $tipe['jumlah_unit'],
+        //             // 'jenis_pembayaran' => $tipe['jenis_pembayaran'],
+        //             'harga' => $tipe['harga'],
+        //         ]);
+        //     }
+        // }
 
         return response()->json([
             'success' => true,
