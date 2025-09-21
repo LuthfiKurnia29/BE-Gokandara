@@ -54,19 +54,16 @@ class ProjekController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        $validate = $request->validate([
-            'name' => 'required|string|max:255',
-            'kavling_total' => 'required|integer',
-            'address' => 'required|string|max:255',
+        $projek = Projek::create([
+            'name' => $request['name'],
+            'kavling_total' => $request['jumlah_kavling'],
+            'address' => $request['alamat'],
         ]);
-
-        $projek = Projek::create($validate);
 
         if($request['tipes']){
             foreach($request['tipes'] as $tipe){
                 $projek = Tipe::create([
-                    'nama_tipe' => $tipe['nama_tipe'],
+                    'nama_tipe' => $tipe['name'],
                     'luas_tanah' => $tipe['luas_tanah'],
                     'luas_bangunan' => $tipe['luas_bangunan'],
                     'jumlah_unit' => $tipe['jumlah_unit'],
@@ -88,8 +85,8 @@ class ProjekController extends Controller
         if($request['fasilitas']){
             foreach($request['fasilitas'] as $fasilitas){
                 \App\Models\Fasilitas::create([
-                    'nama_fasilitas' => $fasilitas['nama_fasilitas'],
-                    'luas_fasilitas' => $fasilitas['luas_fasilitas'],
+                    'nama_fasilitas' => $fasilitas['name'],
+                    'luas_fasilitas' => $fasilitas['luas'],
                     'projeks_id' => $projek->id,
                 ]);
             }
