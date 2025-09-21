@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PembayaranProjeks;
 use App\Models\Projek;
+use App\Models\Tipe;
 use Illuminate\Http\Request;
 
 class ProjekController extends Controller
@@ -61,18 +63,37 @@ class ProjekController extends Controller
 
         $projek = Projek::create($validate);
 
-        // if($request['tipes']){
-        //     foreach($request['tipes'] as $tipe){
-        //         $projek->tipes()->create([
-        //             'nama_tipe' => $tipe['nama_tipe'],
-        //             'luas_tanah' => $tipe['luas_tanah'],
-        //             'luas_bangunan' => $tipe['luas_bangunan'],
-        //             'jumlah_unit' => $tipe['jumlah_unit'],
-        //             // 'jenis_pembayaran' => $tipe['jenis_pembayaran'],
-        //             'harga' => $tipe['harga'],
-        //         ]);
-        //     }
-        // }
+        if($request['tipes']){
+            foreach($request['tipes'] as $tipe){
+                $projek = Tipe::create([
+                    'nama_tipe' => $tipe['nama_tipe'],
+                    'luas_tanah' => $tipe['luas_tanah'],
+                    'luas_bangunan' => $tipe['luas_bangunan'],
+                    'jumlah_unit' => $tipe['jumlah_unit'],
+                    'projeks_id' => $projek->id,
+                    'harga' => $tipe['harga'],
+                ]);
+
+                if(isset($tipe['jenis_pembayaran']) && is_array($tipe['jenis_pembayaran'])){
+                    foreach($tipe['jenis_pembayaran'] as $pembayaranId){
+                        PembayaranProjeks::create([
+                            'projek_id' => $projek->id,
+                            'skema_pembayaran_id' => $pembayaranId,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if($request['fasilitas']){
+            foreach($request['fasilitas'] as $fasilitas){
+                \App\Models\Fasilitas::create([
+                    'nama_fasilitas' => $fasilitas['nama_fasilitas'],
+                    'luas_fasilitas' => $fasilitas['luas_fasilitas'],
+                    'projeks_id' => $projek->id,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
