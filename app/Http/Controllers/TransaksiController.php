@@ -7,6 +7,7 @@ use App\Models\Properti;
 use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 use App\Models\Konsumen;
+use App\Models\Tipe;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -71,7 +72,7 @@ class TransaksiController extends Controller {
     public function createTransaksi(Request $request) {
         ini_set('post_max_size', '124M');
         ini_set('upload_max_filesize', '124M');
-        
+
         $konsumen = Konsumen::where('id', $request->konsumen_id)->first();
         if (is_null($konsumen->ktp_number)) {
             return response()->json([
@@ -81,13 +82,14 @@ class TransaksiController extends Controller {
 
         $validate = $request->validate([
             'konsumen_id' => 'required',
-            'properti_id' => 'required',
+            'projeks_id' => 'required',
             'skema_pembayaran_id' => 'required',
-            'blok_id' => 'required',
             'tipe_id' => 'required',
-            'unit_id' => 'required',
+            'kavling_dipesan' => 'required|numeric',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
+            'kelebihan_tanah' => 'nullable|numeric',
+            'harga_per_meter' => 'nullable|numeric',
             // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi',
@@ -95,6 +97,9 @@ class TransaksiController extends Controller {
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
+        $validate['kelebihan_tanah'] = $validate['kelebihan_tanah'] ?? 0;
+        $validate['harga_per_meter'] = $validate['harga_per_meter'] ?? 0;
+
         $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
         $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
 
@@ -102,7 +107,11 @@ class TransaksiController extends Controller {
         $harga = DaftarHarga::where([
             'properti_id' => $properti->id,
             'tipe_id' => $request->tipe_id,
-            'unit_id' => $request->unit_id,
+        ])->first();
+
+        $stock = Tipe::where([
+            'project_id' => $properti->id,
+            'id' => $request->tipe_id,
         ])->first();
 
         if (!$harga) {
@@ -111,16 +120,24 @@ class TransaksiController extends Controller {
             ], 400);
         }
 
+        if (!$stock) {
+            if(($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
+                return response()->json([
+                    'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
+                ], 400);
+            }
+        }
+
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $harga->harga - ($validate['diskon'] / 100) * $harga->harga;
+                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $harga->harga);
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $harga->harga - $request->diskon;
+                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan - $request->diskon;
             } else {
-                $validate['grand_total'] = $harga->harga;
+                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan;
             }
         } else {
-            $validate['grand_total'] = $harga->harga;
+            $validate['grand_total'] = $harga->harga * $request->kavling_dipesan;
         }
 
         // Set status berdasarkan role user
@@ -136,6 +153,10 @@ class TransaksiController extends Controller {
         } else {
             $validate['status'] = 'Pending';
         }
+
+        // Update stok unit
+        $stock->unit_terjual += $request->kavling_dipesan;
+        $stock->save();
 
         Transaksi::create($validate);
 
@@ -160,7 +181,7 @@ class TransaksiController extends Controller {
     public function updateTransaksi(Request $request, $id) {
         ini_set('post_max_size', '124M');
         ini_set('upload_max_filesize', '124M');
-        
+
         $validate = $request->validate([
             'konsumen_id' => 'required',
             'skema_pembayaran_id' => 'required',
