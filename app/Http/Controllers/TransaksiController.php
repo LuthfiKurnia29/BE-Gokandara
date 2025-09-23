@@ -103,22 +103,10 @@ class TransaksiController extends Controller {
         $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
         $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
 
-        $properti = Properti::where('id', $validate['properti_id'])->first();
-        $harga = DaftarHarga::where([
-            'properti_id' => $properti->id,
-            'tipe_id' => $request->tipe_id,
-        ])->first();
-
         $stock = Tipe::where([
-            'project_id' => $properti->id,
+            'project_id' => $request->projeks_id,
             'id' => $request->tipe_id,
         ])->first();
-
-        if (!$harga) {
-            return response()->json([
-                'message' => 'Daftar Harga tidak tersedia untuk opsi transaksi ini.'
-            ], 400);
-        }
 
         if (!$stock) {
             if(($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
@@ -130,14 +118,14 @@ class TransaksiController extends Controller {
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $harga->harga);
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $stock->harga);
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan - $request->diskon;
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
             } else {
-                $validate['grand_total'] = $harga->harga * $request->kavling_dipesan;
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
             }
         } else {
-            $validate['grand_total'] = $harga->harga * $request->kavling_dipesan;
+            $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
         }
 
         // Set status berdasarkan role user
@@ -173,7 +161,9 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::where('id', $id)->first();
+        $data = Transaksi::with(['konsumen', 'projeks', 'tipe', 'skemaPembayaran', 'createdBy'])
+            ->where('id', $id)
+            ->first();
         return response()->json($data);
     }
 
@@ -184,48 +174,68 @@ class TransaksiController extends Controller {
 
         $validate = $request->validate([
             'konsumen_id' => 'required',
+            'projeks_id' => 'required',
             'skema_pembayaran_id' => 'required',
-            'properti_id' => 'required',
-            'blok_id' => 'required',
             'tipe_id' => 'required',
-            'unit_id' => 'required',
+            'kavling_dipesan' => 'required|numeric',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
-            // 'skema_pembayaran' => 'required|in:Cash Keras,Cash Tempo,Kredit',
+            'kelebihan_tanah' => 'nullable|numeric',
+            'harga_per_meter' => 'nullable|numeric',
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi,' . $id,
-            'jangka_waktu' => 'nullable|integer',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
+        $validate['kelebihan_tanah'] = $validate['kelebihan_tanah'] ?? 0;
+        $validate['harga_per_meter'] = $validate['harga_per_meter'] ?? 0;
+
         $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
         $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
-        $properti = Properti::where('id', $validate['properti_id'])->first();
-        $harga = DaftarHarga::where([
-            'properti_id' => $properti->id,
-            'tipe_id' => $request->tipe_id,
-            'unit_id' => $request->unit_id,
+
+        $transaksi = Transaksi::where('id', $id)->first();
+        $old_kavling = $transaksi->kavling_dipesan;
+
+        $stock = Tipe::where([
+            'project_id' => $request->projeks_id,
+            'id' => $request->tipe_id,
         ])->first();
 
-        if (!$harga) {
+        if (($stock->jumlah_unit - $stock->unit_terjual) + $old_kavling < $request->kavling_dipesan) {
             return response()->json([
-                'message' => 'Daftar Harga tidak tersedia untuk opsi transaksi ini.'
+                'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
             ], 400);
         }
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $harga->harga - ($validate['diskon'] / 100) * $harga->harga;
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $stock->harga);
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $harga->harga - $request->diskon;
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
             } else {
-                $validate['grand_total'] = $harga->harga;
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
             }
         } else {
-            $validate['grand_total'] = $harga->harga;
+            $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
         }
 
-        $transaksi = Transaksi::where('id', $id)->first();
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('role.name')->toArray();
+
+        if (in_array('Admin', $userRoles)) {
+            $validate['status'] = 'Approved';
+        } elseif (in_array('Supervisor', $userRoles)) {
+            $validate['status'] = 'Negotiation';
+        } elseif (in_array('Mitra', $userRoles)) {
+            $validate['status'] = 'Negotiation';
+        } else {
+            $validate['status'] = 'Pending';
+        }
+
+        // Update stok unit
+        $stock->unit_terjual = $stock->unit_terjual - $old_kavling + $request->kavling_dipesan;
+        $stock->save();
+
         $transaksi->update($validate);
 
         return response()->json(
@@ -239,6 +249,11 @@ class TransaksiController extends Controller {
 
     public function deleteTransaksi($id) {
         $transaksi = Transaksi::findOrFail($id);
+        $tipe = Tipe::where('id', $transaksi->tipe_id)->first();
+        if ($tipe) {
+            $tipe->unit_terjual = max(0, ($tipe->unit_terjual ?? 0) - ($transaksi->kavling_dipesan ?? 0));
+            $tipe->save();
+        }
         $transaksi->delete();
 
         return response()->json(
