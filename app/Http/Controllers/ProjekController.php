@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\PembayaranProjeks;
 use App\Models\Projek;
+use App\Models\ProjekGambar;
 use App\Models\Tipe;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProjekController extends Controller
 {
@@ -93,6 +95,19 @@ class ProjekController extends Controller
             }
         }
 
+        // Handle multiple image uploads
+        if($request->hasFile('gambar')){
+            foreach($request->file('gambar') as $gambar){
+                $filename = time() . '_' . uniqid() . '.' . $gambar->getClientOriginalExtension();
+                $path = $gambar->storeAs('public/projek_images', $filename);
+
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => 'projek_images/' . $filename,
+                ]);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Project created successfully',
@@ -139,6 +154,13 @@ class ProjekController extends Controller
             ];
         });
 
+        $gambar = ProjekGambar::where('projek_id', $projek->id)->get()->map(function ($g) {
+            return [
+                'id' => $g->id,
+                'gambar' => asset('storage/' . $g->gambar),
+            ];
+        });
+
         $data = [
             'id' => $projek->id,
             'name' => $projek->name,
@@ -146,6 +168,7 @@ class ProjekController extends Controller
             'alamat' => $projek->address,
             'tipe' => $tipeData,
             'fasilitas' => $fasilitas,
+            'gambar' => $gambar,
         ];
 
         return response()->json($data);
@@ -209,6 +232,19 @@ class ProjekController extends Controller
             }
         }
 
+        // Handle multiple image uploads
+        if($request->hasFile('gambar')){
+            foreach($request->file('gambar') as $gambar){
+                $filename = time() . '_' . uniqid() . '.' . $gambar->getClientOriginalExtension();
+                $path = $gambar->storeAs('public/projek_images', $filename);
+
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => 'projek_images/' . $filename,
+                ]);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Project updated successfully',
@@ -229,9 +265,18 @@ class ProjekController extends Controller
             ], 404);
         }
 
+        // Delete associated images from storage
+        $gambars = ProjekGambar::where('projek_id', $projek->id)->get();
+        foreach($gambars as $gambar){
+            if(Storage::exists('public/' . $gambar->gambar)){
+                Storage::delete('public/' . $gambar->gambar);
+            }
+        }
+
         PembayaranProjeks::where('projek_id', $projek->id)->delete();
         Tipe::where('project_id', $projek->id)->delete();
         \App\Models\Fasilitas::where('projeks_id', $projek->id)->delete();
+        ProjekGambar::where('projek_id', $projek->id)->delete();
 
         $projek->delete();
 
@@ -249,5 +294,64 @@ class ProjekController extends Controller
             ->get();
 
         return response()->json($tipes);
+    }
+
+    /**
+     * Delete a specific project image
+     */
+    public function deleteImage($id)
+    {
+        $gambar = ProjekGambar::find($id);
+
+        if (!$gambar) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image not found',
+            ], 404);
+        }
+
+        // Delete image from storage
+        if(Storage::exists('public/' . $gambar->gambar)){
+            Storage::delete('public/' . $gambar->gambar);
+        }
+
+        $gambar->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully',
+        ], 200);
+    }
+
+    /**
+     * Add new images to existing project
+     */
+    public function addImages(Request $request, $id)
+    {
+        $projek = Projek::find($id);
+
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+
+        if($request->hasFile('gambar')){
+            foreach($request->file('gambar') as $gambar){
+                $filename = time() . '_' . uniqid() . '.' . $gambar->getClientOriginalExtension();
+                $path = $gambar->storeAs('public/projek_images', $filename);
+
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => 'projek_images/' . $filename,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images added successfully',
+        ], 201);
     }
 }
