@@ -96,8 +96,8 @@ class ProjekController extends Controller
         }
 
         // Handle multiple image uploads
-        if($request->hasFile('gambar')){
-            foreach($request->file('gambar') as $gambar){
+        if($request->hasFile('gambars')){
+            foreach($request->file('gambars') as $gambar){
                 $filename = time() . '_' . uniqid() . '.' . $gambar->getClientOriginalExtension();
                 $path = $gambar->storeAs('public/projek_images', $filename);
 

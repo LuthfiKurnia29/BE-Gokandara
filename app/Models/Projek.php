@@ -8,7 +8,9 @@ class Projek extends Model
 {
     protected $guarded = ['id'];
 
-    public function gambar()
+    protected $with = ['gambars'];
+
+    public function gambars()
     {
         return $this->hasMany(ProjekGambar::class);
     }
