@@ -66,6 +66,15 @@ class TransaksiController extends Controller {
             ->orderBy('id', 'desc')
             ->paginate($per);
 
+        $data = $data->map(function ($a) {
+            $stock = Tipe::where([
+                'project_id' => $a->projeks_id,
+                'id' => $a->tipe_id,
+            ])->first();
+
+            $a->harga_asli = $stock->harga;
+        });
+
         return response()->json($data);
     }
 
