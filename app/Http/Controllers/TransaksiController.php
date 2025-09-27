@@ -68,13 +68,13 @@ class TransaksiController extends Controller {
 
         $mappedData = $data->getCollection()->map(function ($item) {
             $stock = Tipe::where([
-                'project_id' => $a->projeks_id,
-                'id' => $a->tipe_id,
+                'project_id' => $item->projeks_id,
+                'id' => $item->tipe_id,
             ])->first();
 
-            $a->harga_asli = $stock->harga;
+            $item->harga_asli = $stock->harga;
 
-            return $a;
+            return $item;
         });
 
         $data->setCollection($mappedData);
