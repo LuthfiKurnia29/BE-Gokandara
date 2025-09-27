@@ -354,4 +354,16 @@ class ProjekController extends Controller
             'message' => 'Images added successfully',
         ], 201);
     }
+
+    public function getImages($id)
+    {
+        $projek = Projek::find($id);
+        return response()->json($projek->gambars);
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+    }
 }
