@@ -66,14 +66,18 @@ class TransaksiController extends Controller {
             ->orderBy('id', 'desc')
             ->paginate($per);
 
-        $data = $data->map(function ($a) {
+        $mappedData = $leaderboardData->getCollection()->map(function ($item) {
             $stock = Tipe::where([
                 'project_id' => $a->projeks_id,
                 'id' => $a->tipe_id,
             ])->first();
 
             $a->harga_asli = $stock->harga;
+
+            return $a;
         });
+
+        $data->setCollection($mappedData);
 
         return response()->json($data);
     }
