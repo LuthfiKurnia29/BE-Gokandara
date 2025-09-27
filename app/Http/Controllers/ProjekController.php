@@ -103,7 +103,7 @@ class ProjekController extends Controller
 
                 ProjekGambar::create([
                     'projek_id' => $projek->id,
-                    'gambar' => 'projek_images/' . $filename,
+                    'gambar' => $gambar->store('projek_images', 'public'),
                 ]);
             }
         }
