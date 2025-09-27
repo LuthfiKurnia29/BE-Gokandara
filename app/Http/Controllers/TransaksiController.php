@@ -66,7 +66,7 @@ class TransaksiController extends Controller {
             ->orderBy('id', 'desc')
             ->paginate($per);
 
-        $mappedData = $leaderboardData->getCollection()->map(function ($item) {
+        $mappedData = $data->getCollection()->map(function ($item) {
             $stock = Tipe::where([
                 'project_id' => $a->projeks_id,
                 'id' => $a->tipe_id,
