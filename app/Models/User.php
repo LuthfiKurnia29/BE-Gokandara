@@ -60,5 +60,25 @@ class User extends Authenticatable {
             $q->where('name', $role);
         })->exists();
     }
-    
+
+    /**
+     * Get subordinate users (for Supervisor role)
+     */
+    public function getSubordinateIds() {
+        if ($this->hasRole('Supervisor')) {
+            return User::where('parent_id', $this->id)->pluck('id')->toArray();
+        }
+        return [];
+    }
+
+    /**
+     * Get konsumen IDs assigned by this telemarketing user
+     */
+    public function getAssignedKonsumenIds() {
+        if ($this->hasRole('Telemarketing')) {
+            return Konsumen::where('added_by', $this->id)->pluck('id')->toArray();
+        }
+        return [];
+    }
+
 }
