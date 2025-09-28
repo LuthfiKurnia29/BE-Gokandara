@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::table('transaksis', function (Blueprint $table) {
-            $table->foreignId('projeks_id')->nullable();
-            $table->integer('kelebihan_tanah')->nullable();
-            $table->integer('harga_per_meter')->nullable();
-            $table->integer('kavling_dipesan')->nullable();
-        });
+        // Schema::table('transaksis', function (Blueprint $table) {
+            // $table->foreignId('projeks_id')->nullable();
+            // $table->integer('kelebihan_tanah')->nullable();
+            // $table->integer('harga_per_meter')->nullable();
+            // $table->integer('kavling_dipesan')->nullable();
+        // });
         Schema::table('tipes', function (Blueprint $table) {
-            $table->integer('jumlah_unit')->nullable();
+            // $table->integer('jumlah_unit')->nullable();
             $table->integer('unit_terjual')->nullable();
         });
     }
