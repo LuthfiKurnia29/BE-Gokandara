@@ -30,7 +30,7 @@ class KonsumenController extends Controller
         $created_id = $request->created_id;
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
-        $data = Konsumen::with(['projek', 'prospek'])
+        $data = Konsumen::with(['projek', 'prospek', 'createdBy'])
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
