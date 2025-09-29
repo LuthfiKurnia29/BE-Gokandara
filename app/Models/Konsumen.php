@@ -16,6 +16,11 @@ class Konsumen extends Model
         return asset('files/' . $this->gambar);
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_id');
+    }
+
     public function projek()
     {
         return $this->belongsTo(Projek::class, 'projek_id');
