@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PembayaranProjeks;
 use App\Models\Projek;
+use App\Models\ProjekGambar;
+use App\Models\Tipe;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProjekController extends Controller
 {
@@ -29,7 +33,7 @@ class ProjekController extends Controller
 
     public function allProject(Request $request){
         $search = $request->search;
-        $data = Projek::select('id', 'name')
+        $data = Projek::select('id', 'name', 'address')
                 ->when($search, function ($query) use ($search) {
                     $query->where('nama', 'like', "%$search%");
                 })
@@ -52,12 +56,58 @@ class ProjekController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        $validate = $request->validate([
-            'name' => 'required|string|max:255'
+        $projek = Projek::create([
+            'name' => $request['name'],
+            'kavling_total' => $request['jumlah_kavling'],
+            'address' => $request['alamat'],
         ]);
 
-        Projek::create($validate);
+        if($request['tipe']){
+            foreach($request['tipe'] as $tipe){
+                $tipeModel = Tipe::create([
+                    'name' => $tipe['name'],
+                    'luas_tanah' => $tipe['luas_tanah'],
+                    'luas_bangunan' => $tipe['luas_bangunan'],
+                    'jumlah_unit' => $tipe['jumlah_unit'],
+                    'project_id' => $projek->id,
+                    'harga' => $tipe['harga'],
+                ]);
+
+                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                    foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
+                        PembayaranProjeks::create([
+                            'projek_id' => $projek->id,
+                            'tipe_id' => $tipeModel->id,
+                            'skema_pembayaran_id' => $pembayaranId,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if($request['fasilitas']){
+            foreach($request['fasilitas'] as $fasilitas){
+                \App\Models\Fasilitas::create([
+                    'nama_fasilitas' => $fasilitas['name'],
+                    'luas_fasilitas' => $fasilitas['luas'],
+                    'projeks_id' => $projek->id,
+                ]);
+            }
+        }
+
+        // Handle multiple image uploads
+        if($request->hasFile('gambars')){
+            foreach($request->file('gambars') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
+                    continue;
+                }
+                $path = $gambar->store('projek_images', 'public');
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => $path,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -70,7 +120,57 @@ class ProjekController extends Controller
      */
     public function show(string $id)
     {
-        $data = Projek::where('id', $id)->first();
+        $projek = Projek::where('id', $id)->first();
+
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+
+        $tipes = Tipe::where('project_id', $projek->id)->get();
+        $tipeData = $tipes->map(function ($t) use ($projek) {
+            $pembayaranIds = PembayaranProjeks::where('projek_id', $projek->id)
+                ->where('tipe_id', $t->id)
+                ->pluck('skema_pembayaran_id')
+                ->unique()
+                ->values()
+                ->toArray();
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'luas_tanah' => $t->luas_tanah,
+                'luas_bangunan' => $t->luas_bangunan,
+                'jumlah_unit' => $t->jumlah_unit,
+                'harga' => $t->harga,
+                'jenis_pembayaran_ids' => $pembayaranIds,
+            ];
+        });
+
+        $fasilitas = \App\Models\Fasilitas::where('projeks_id', $projek->id)->get()->map(function ($f) {
+            return [
+                'name' => $f->nama_fasilitas,
+                'luas' => $f->luas_fasilitas,
+            ];
+        });
+
+        $gambar = ProjekGambar::where('projek_id', $projek->id)->get()->map(function ($g) {
+            return [
+                'id' => $g->id,
+                'gambar' => asset('storage/' . $g->gambar),
+            ];
+        });
+
+        $data = [
+            'id' => $projek->id,
+            'name' => $projek->name,
+            'jumlah_kavling' => $projek->kavling_total,
+            'alamat' => $projek->address,
+            'tipe' => $tipeData,
+            'fasilitas' => $fasilitas,
+            'gambar' => $gambar,
+        ];
 
         return response()->json($data);
     }
@@ -89,11 +189,78 @@ class ProjekController extends Controller
     public function update(Request $request, $id)
     {
         $projek = Projek::where('id', $id)->first();
-        $validate = $request->validate([
-            'name' => 'required|string|max:255',
+
+        $projek->update([
+            'name' => $request['name'],
+            'kavling_total' => $request['jumlah_kavling'],
+            'address' => $request['alamat'],
         ]);
 
-        $projek->update($validate);
+        if($request['tipe']){
+            Tipe::where('project_id', $projek->id)->delete();
+            PembayaranProjeks::where('projek_id', $projek->id)->delete();
+
+            foreach($request['tipe'] as $tipe){
+                $tipeModel = Tipe::create([
+                    'name' => $tipe['name'],
+                    'luas_tanah' => $tipe['luas_tanah'],
+                    'luas_bangunan' => $tipe['luas_bangunan'],
+                    'jumlah_unit' => $tipe['jumlah_unit'],
+                    'project_id' => $projek->id,
+                    'harga' => $tipe['harga'],
+                ]);
+
+                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                     foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
+                         PembayaranProjeks::create([
+                             'projek_id' => $projek->id,
+                             'tipe_id' => $tipeModel->id,
+                             'skema_pembayaran_id' => $pembayaranId,
+                         ]);
+                     }
+                 }
+            }
+        }
+
+        if($request['fasilitas']){
+            \App\Models\Fasilitas::where('projeks_id', $projek->id)->delete();
+            foreach($request['fasilitas'] as $fasilitas){
+                \App\Models\Fasilitas::create([
+                    'nama_fasilitas' => $fasilitas['name'],
+                    'luas_fasilitas' => $fasilitas['luas'],
+                    'projeks_id' => $projek->id,
+                ]);
+            }
+        }
+
+        if($request->hasFile('gambars')){
+            foreach($request->file('gambars') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
+                    continue;
+                }
+                $path = $gambar->store('projek_images', 'public');
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => $path,
+                ]);
+            }
+        }
+
+        // Handle multiple image uploads
+        //if($request->hasFile('gambars')){
+        //    $files = $request->file('gambars');
+        //    if(!is_array($files)) $files = [$files];
+        //    foreach($files as $gambar){
+        //        if(!$gambar || !$gambar->isValid()){
+        //            continue;
+        //        }
+        //        $path = $gambar->store('projek_images', 'public');
+        //        ProjekGambar::create([
+        //            'projek_id' => $projek->id,
+        //            'gambar' => $path,
+        //        ]);
+        //   }
+        //}
 
         return response()->json([
             'success' => true,
@@ -106,10 +273,126 @@ class ProjekController extends Controller
      */
     public function destroy(string $id)
     {
-        Projek::destroy($id);
+        $projek = Projek::where('id', $id)->first();
+
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+
+        // Delete associated images from storage
+        $gambars = ProjekGambar::where('projek_id', $projek->id)->get();
+        foreach($gambars as $gambar){
+            if(Storage::disk('public')->exists($gambar->gambar)){
+                Storage::disk('public')->delete($gambar->gambar);
+            }
+        }
+
+        PembayaranProjeks::where('projek_id', $projek->id)->delete();
+        Tipe::where('project_id', $projek->id)->delete();
+        \App\Models\Fasilitas::where('projeks_id', $projek->id)->delete();
+        ProjekGambar::where('projek_id', $projek->id)->delete();
+
+        $projek->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Project deleted successfully',
         ], 201);
+    }
+
+    public function tipeByProjek($id)
+    {
+        $tipes = Tipe::where('project_id', $id)
+            ->select('id', 'name', 'luas_tanah', 'luas_bangunan', 'jumlah_unit', 'harga')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json($tipes);
+    }
+
+    /**
+     * Delete a specific project image
+     */
+    public function deleteImage($id)
+    {
+        $gambar = ProjekGambar::find($id);
+
+        if (!$gambar) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image not found',
+            ], 404);
+        }
+
+        // Delete image from storage
+        if(Storage::disk('public')->exists($gambar->gambar)){
+            Storage::disk('public')->delete($gambar->gambar);
+        }
+
+        $gambar->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully',
+        ], 200);
+    }
+
+    /**
+     * Add new images to existing project
+     */
+    public function addImages(Request $request, $id)
+    {
+        $projek = Projek::find($id);
+
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+
+        if($request->hasFile('gambar')){
+
+            // Hapus semua gambar lama milik projek terlebih dahulu
+            $gambars = ProjekGambar::where('projek_id', $projek->id)->get();
+            foreach($gambars as $g){
+                if(Storage::disk('public')->exists($g->gambar)){
+                    Storage::disk('public')->delete($g->gambar);
+                }
+            }
+            ProjekGambar::where('projek_id', $projek->id)->delete();
+
+            foreach($request->file('gambar') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
+                    continue;
+                }
+                $path = $gambar->store('projek_images', 'public');
+
+                ProjekGambar::create([
+                    'projek_id' => $projek->id,
+                    'gambar' => $path,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images added successfully',
+        ], 201);
+    }
+
+    public function getImages($id)
+    {
+        $projek = Projek::find($id);
+        return response()->json($projek->gambars);
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
     }
 }

@@ -34,16 +34,17 @@ class KonsumenController extends Controller
             ->where(function ($query) use ($search, $created_id, $user, $userRole) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
+                    $query->orWhere('added_by', $created_id);
                 } else {
                      $query->where('created_id', auth()->id());
                      $query->orWhere('added_by', auth()->id());
                 }
 
-                if ($userRole->role->name === 'Admin') {
+                if ($userRole->role->name === 'Admin' && !$created_id) {
                     // Get All Sales under Admin
                     $query->orWhere('status_delete', 'pending');
                 }
-                
+
                 if ($search) {
                     $query
                         ->where('name', 'like', "%$search%")
@@ -75,7 +76,7 @@ class KonsumenController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $userRoles = $user->roles->pluck('id')->toArray();
+        $userRoles = $user->roles->pluck('role_id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
         $availKonsumen = Konsumen::where('phone', $request->phone)->where('project_id', $request->project_id)->first();
@@ -146,7 +147,7 @@ class KonsumenController extends Controller
                 }
             }
         }
-        
+
         if ($isMitra) {
             $rules['gambar'] = 'required|image|max:2048';
         } else {
@@ -223,10 +224,11 @@ class KonsumenController extends Controller
     public function allKonsumenBySales(Request $request)
     {
         $user = Auth::user();
-        // Get all konsumen created by the authenticated user
         $search = $request->search;
-        $data = Konsumen::where('added_by', auth()->user()->id)
-            ->orderBy('id', 'desc')
+        $data = Konsumen::leftJoin('users', 'users.id', '=', 'konsumens.created_id')
+            ->where('added_by', auth()->user()->id)
+            ->orderBy('konsumens.id', 'desc')
+            ->select('konsumens.*', 'users.name as assign_name')
             ->get();
 
         return response()->json($data);
@@ -259,7 +261,7 @@ class KonsumenController extends Controller
         $user = Auth::user();
         $konsumen = Konsumen::where('id', $id)->first();
 
-        $userRoles = $user->roles->pluck('id')->toArray();
+        $userRoles = $user->roles->pluck('role_id')->toArray();
         $isMitra = in_array(4, $userRoles);
 
         $validate = $request->validate([
@@ -321,7 +323,7 @@ class KonsumenController extends Controller
         $authUser = auth()->user();
         $roles = $authUser->roles->pluck('role_id')->toArray();
 
-        if (in_array(1, $roles) || in_array(2, $roles)) {
+        if (in_array(1, $roles) || in_array(2, $roles) || in_array(4, $roles)) {
             $konsumen = Konsumen::findOrFail($id);
             if ($konsumen->gambar && file_exists(storage_path($konsumen->gambar))) {
                 unlink(storage_path($konsumen->gambar));

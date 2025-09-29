@@ -57,6 +57,10 @@ Route::middleware('auth:sanctum')->get('projek/{id}', [ProjekController::class, 
 Route::middleware('auth:sanctum')->post('projek', [ProjekController::class, 'store']);
 Route::middleware('auth:sanctum')->put('projek/{id}', [ProjekController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('projek/{id}', [ProjekController::class, 'destroy']);
+Route::middleware('auth:sanctum')->get('projek/{id}/tipes', [ProjekController::class, 'tipeByProjek']);
+Route::middleware('auth:sanctum')->get('projek/{id}/images', [ProjekController::class, 'getImages']);
+Route::middleware('auth:sanctum')->post('projek/{id}/images', [ProjekController::class, 'addImages']);
+Route::middleware('auth:sanctum')->delete('projek-image/{id}', [ProjekController::class, 'deleteImage']);
 
 // Blok
 Route::middleware('auth:sanctum')->get('blok', [BlokController::class, 'index']);

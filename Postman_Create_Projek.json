@@ -1,0 +1,65 @@
+{
+  "info": {
+    "name": "Gokandara - Create Projek",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Projek",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "name", "value": "Projek A", "type": "text" },
+            { "key": "jumlah_kavling", "value": "100", "type": "text" },
+            { "key": "alamat", "value": "Jl. Contoh No.1", "type": "text" },
+
+            { "key": "tipe[0][name]", "value": "Tipe 36", "type": "text" },
+            { "key": "tipe[0][luas_tanah]", "value": "60", "type": "text" },
+            { "key": "tipe[0][luas_bangunan]", "value": "36", "type": "text" },
+            { "key": "tipe[0][jumlah_unit]", "value": "10", "type": "text" },
+            { "key": "tipe[0][harga]", "value": "250000000", "type": "text" },
+            { "key": "tipe[0][jenis_pembayaran_ids][0]", "value": "1", "type": "text" },
+            { "key": "tipe[0][jenis_pembayaran_ids][1]", "value": "2", "type": "text" },
+
+            { "key": "tipe[1][name]", "value": "Tipe 45", "type": "text" },
+            { "key": "tipe[1][luas_tanah]", "value": "72", "type": "text" },
+            { "key": "tipe[1][luas_bangunan]", "value": "45", "type": "text" },
+            { "key": "tipe[1][jumlah_unit]", "value": "8", "type": "text" },
+            { "key": "tipe[1][harga]", "value": "350000000", "type": "text" },
+
+            { "key": "fasilitas[0][name]", "value": "Kolam Renang", "type": "text" },
+            { "key": "fasilitas[0][luas]", "value": "200", "type": "text" },
+
+            { "key": "gambars[]", "type": "file", "src": "" },
+            { "key": "gambars[]", "type": "file", "src": "" }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/projek",
+          "host": ["{{base_url}}"],
+          "path": ["api", "projek"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost" },
+    { "key": "token", "value": "" }
+  ]
+}

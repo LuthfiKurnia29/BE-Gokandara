@@ -58,6 +58,11 @@ class UserController extends Controller {
                     $query->where('name', 'Admin');
                 });
             })
+            ->when(auth()->user()->hasRole('Telemarketing'), function ($query) {
+                $query->whereHas('roles.role', function ($query) {
+                    $query->where('name', '!=', 'Mitra');
+                });
+            })
             ->orderBy('id', 'desc')
             ->paginate($per);
 

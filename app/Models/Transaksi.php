@@ -19,6 +19,11 @@ class Transaksi extends Model
         return $this->belongsTo(Properti::class, 'properti_id');
     }
 
+    public function projek()
+    {
+        return $this->belongsTo(Projek::class, 'projeks_id');
+    }
+
     public function blok()
     {
         return $this->belongsTo(Blok::class, 'blok_id');
