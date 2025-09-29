@@ -9,34 +9,36 @@ use App\Models\Tipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class ProjekController extends Controller {
+class ProjekController extends Controller
+{
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
 
         $data = Projek::where(function ($query) use ($search) {
-            if ($search) {
-                $query->where('name', 'like', "%$search%");
-            }
-        })
+                if ($search) {
+                    $query->where('name', 'like', "%$search%");
+                }
+            })
             ->orderBy('id', 'desc')
             ->paginate($per);
 
         return response()->json($data);
     }
 
-    public function allProject(Request $request) {
+    public function allProject(Request $request){
         $search = $request->search;
         $data = Projek::select('id', 'name', 'address')
-            ->when($search, function ($query) use ($search) {
-                $query->where('nama', 'like', "%$search%");
-            })
-            ->orderBy('id', 'desc')
-            ->get();
+                ->when($search, function ($query) use ($search) {
+                    $query->where('nama', 'like', "%$search%");
+                })
+                ->orderBy('id', 'desc')
+                ->get();
 
         return response()->json($data);
     }
@@ -44,22 +46,24 @@ class ProjekController extends Controller {
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {
+    public function create()
+    {
         //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $projek = Projek::create([
             'name' => $request['name'],
             'kavling_total' => $request['jumlah_kavling'],
             'address' => $request['alamat'],
         ]);
 
-        if ($request['tipe']) {
-            foreach ($request['tipe'] as $tipe) {
+        if($request['tipe']){
+            foreach($request['tipe'] as $tipe){
                 $tipeModel = Tipe::create([
                     'name' => $tipe['name'],
                     'luas_tanah' => $tipe['luas_tanah'],
@@ -69,8 +73,8 @@ class ProjekController extends Controller {
                     'harga' => $tipe['harga'],
                 ]);
 
-                if (isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])) {
-                    foreach ($tipe['jenis_pembayaran_ids'] as $pembayaranId) {
+                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                    foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
                         PembayaranProjeks::create([
                             'projek_id' => $projek->id,
                             'tipe_id' => $tipeModel->id,
@@ -81,8 +85,8 @@ class ProjekController extends Controller {
             }
         }
 
-        if ($request['fasilitas']) {
-            foreach ($request['fasilitas'] as $fasilitas) {
+        if($request['fasilitas']){
+            foreach($request['fasilitas'] as $fasilitas){
                 \App\Models\Fasilitas::create([
                     'nama_fasilitas' => $fasilitas['name'],
                     'luas_fasilitas' => $fasilitas['luas'],
@@ -92,9 +96,9 @@ class ProjekController extends Controller {
         }
 
         // Handle multiple image uploads
-        if ($request->hasFile('gambars')) {
-            foreach ($request->file('gambars') as $gambar) {
-                if (!$gambar || !$gambar->isValid()) {
+        if($request->hasFile('gambars')){
+            foreach($request->file('gambars') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
                     continue;
                 }
                 $path = $gambar->store('projek_images', 'public');
@@ -114,7 +118,8 @@ class ProjekController extends Controller {
     /**
      * Display the specified resource.
      */
-    public function show(string $id) {
+    public function show(string $id)
+    {
         $projek = Projek::where('id', $id)->first();
 
         if (!$projek) {
@@ -173,14 +178,16 @@ class ProjekController extends Controller {
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Projek $projek) {
+    public function edit(Projek $projek)
+    {
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $projek = Projek::where('id', $id)->first();
 
         $projek->update([
@@ -189,11 +196,11 @@ class ProjekController extends Controller {
             'address' => $request['alamat'],
         ]);
 
-        if ($request['tipe']) {
+        if($request['tipe']){
             Tipe::where('project_id', $projek->id)->delete();
             PembayaranProjeks::where('projek_id', $projek->id)->delete();
 
-            foreach ($request['tipe'] as $tipe) {
+            foreach($request['tipe'] as $tipe){
                 $tipeModel = Tipe::create([
                     'name' => $tipe['name'],
                     'luas_tanah' => $tipe['luas_tanah'],
@@ -203,21 +210,21 @@ class ProjekController extends Controller {
                     'harga' => $tipe['harga'],
                 ]);
 
-                if (isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])) {
-                    foreach ($tipe['jenis_pembayaran_ids'] as $pembayaranId) {
-                        PembayaranProjeks::create([
-                            'projek_id' => $projek->id,
-                            'tipe_id' => $tipeModel->id,
-                            'skema_pembayaran_id' => $pembayaranId,
-                        ]);
-                    }
-                }
+                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                     foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
+                         PembayaranProjeks::create([
+                             'projek_id' => $projek->id,
+                             'tipe_id' => $tipeModel->id,
+                             'skema_pembayaran_id' => $pembayaranId,
+                         ]);
+                     }
+                 }
             }
         }
 
-        if ($request['fasilitas']) {
+        if($request['fasilitas']){
             \App\Models\Fasilitas::where('projeks_id', $projek->id)->delete();
-            foreach ($request['fasilitas'] as $fasilitas) {
+            foreach($request['fasilitas'] as $fasilitas){
                 \App\Models\Fasilitas::create([
                     'nama_fasilitas' => $fasilitas['name'],
                     'luas_fasilitas' => $fasilitas['luas'],
@@ -226,9 +233,9 @@ class ProjekController extends Controller {
             }
         }
 
-        if ($request->hasFile('gambars')) {
-            foreach ($request->file('gambars') as $gambar) {
-                if (!$gambar || !$gambar->isValid()) {
+        if($request->hasFile('gambars')){
+            foreach($request->file('gambars') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
                     continue;
                 }
                 $path = $gambar->store('projek_images', 'public');
@@ -264,7 +271,8 @@ class ProjekController extends Controller {
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id) {
+    public function destroy(string $id)
+    {
         $projek = Projek::where('id', $id)->first();
 
         if (!$projek) {
@@ -276,8 +284,8 @@ class ProjekController extends Controller {
 
         // Delete associated images from storage
         $gambars = ProjekGambar::where('projek_id', $projek->id)->get();
-        foreach ($gambars as $gambar) {
-            if (Storage::disk('public')->exists($gambar->gambar)) {
+        foreach($gambars as $gambar){
+            if(Storage::disk('public')->exists($gambar->gambar)){
                 Storage::disk('public')->delete($gambar->gambar);
             }
         }
@@ -295,7 +303,8 @@ class ProjekController extends Controller {
         ], 201);
     }
 
-    public function tipeByProjek($id) {
+    public function tipeByProjek($id)
+    {
         $tipes = Tipe::where('project_id', $id)
             ->select('id', 'name', 'luas_tanah', 'luas_bangunan', 'jumlah_unit', 'harga')
             ->orderBy('id', 'desc')
@@ -307,7 +316,8 @@ class ProjekController extends Controller {
     /**
      * Delete a specific project image
      */
-    public function deleteImage($id) {
+    public function deleteImage($id)
+    {
         $gambar = ProjekGambar::find($id);
 
         if (!$gambar) {
@@ -318,7 +328,7 @@ class ProjekController extends Controller {
         }
 
         // Delete image from storage
-        if (Storage::disk('public')->exists($gambar->gambar)) {
+        if(Storage::disk('public')->exists($gambar->gambar)){
             Storage::disk('public')->delete($gambar->gambar);
         }
 
@@ -333,7 +343,8 @@ class ProjekController extends Controller {
     /**
      * Add new images to existing project
      */
-    public function addImages(Request $request, $id) {
+    public function addImages(Request $request, $id)
+    {
         $projek = Projek::find($id);
 
         if (!$projek) {
@@ -343,19 +354,19 @@ class ProjekController extends Controller {
             ], 404);
         }
 
-        if ($request->hasFile('gambar')) {
+        if($request->hasFile('gambar')){
 
             // Hapus semua gambar lama milik projek terlebih dahulu
             $gambars = ProjekGambar::where('projek_id', $projek->id)->get();
-            foreach ($gambars as $g) {
-                if (Storage::disk('public')->exists($g->gambar)) {
+            foreach($gambars as $g){
+                if(Storage::disk('public')->exists($g->gambar)){
                     Storage::disk('public')->delete($g->gambar);
                 }
             }
             ProjekGambar::where('projek_id', $projek->id)->delete();
 
-            foreach ($request->file('gambar') as $gambar) {
-                if (!$gambar || !$gambar->isValid()) {
+            foreach($request->file('gambar') as $gambar){
+                if(!$gambar || !$gambar->isValid()){
                     continue;
                 }
                 $path = $gambar->store('projek_images', 'public');
@@ -373,7 +384,8 @@ class ProjekController extends Controller {
         ], 201);
     }
 
-    public function getImages($id) {
+    public function getImages($id)
+    {
         $projek = Projek::find($id);
         return response()->json($projek->gambars);
         if (!$projek) {

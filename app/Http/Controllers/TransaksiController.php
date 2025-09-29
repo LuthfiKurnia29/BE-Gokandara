@@ -127,11 +127,7 @@ class TransaksiController extends Controller {
         ])->first();
 
         if (!$stock) {
-<<<<<<< HEAD
             if (($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
-=======
-            if(($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
->>>>>>> origin/main
                 return response()->json([
                     'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
                 ], 400);
