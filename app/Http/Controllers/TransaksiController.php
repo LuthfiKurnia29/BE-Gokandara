@@ -126,17 +126,21 @@ class TransaksiController extends Controller {
             'id' => $request->tipe_id,
         ])->first();
 
-        if (!$stock) {
+        if ($stock) {
             if (($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
                 return response()->json([
                     'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
                 ], 400);
             }
+        } else {
+            return response()->json([
+                'message' => 'Tipe properti tidak ditemukan.'
+            ], 400);
         }
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $stock->harga);
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * ($stock->harga * $request->kavling_dipesan));
             } else if ($request->tipe_diskon == 'fixed') {
                 $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
             } else {
@@ -179,7 +183,7 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::with(['konsumen', 'projeks', 'tipe', 'skemaPembayaran', 'createdBy'])
+        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy'])
             ->where('id', $id)
             ->first();
         return response()->json($data);
@@ -208,7 +212,6 @@ class TransaksiController extends Controller {
         $validate['kelebihan_tanah'] = $validate['kelebihan_tanah'] ?? 0;
         $validate['harga_per_meter'] = $validate['harga_per_meter'] ?? 0;
 
-        $validate['created_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
         $validate['updated_id'] = isset($request->created_id) ? $request->created_id : Auth::user()->id;
 
         $transaksi = Transaksi::where('id', $id)->first();
@@ -227,7 +230,7 @@ class TransaksiController extends Controller {
 
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * $stock->harga);
+                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * ($stock->harga * $request->kavling_dipesan));
             } else if ($request->tipe_diskon == 'fixed') {
                 $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
             } else {
@@ -289,7 +292,7 @@ class TransaksiController extends Controller {
         ]);
 
         $transaksi = Transaksi::where('id', $id)->first();
-        if (!auth()->user()->hasRole('Admin')) {
+        if (!auth()->user()->hasRole('Admin') && ($validate['status'] === 'Approved' || $validate['status'] === 'Rejected')) {
             return response()->json([
                 'message' => 'Unauthorized to change status to ' . $validate['status']
             ], 403);

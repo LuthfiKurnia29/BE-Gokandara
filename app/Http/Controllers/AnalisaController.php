@@ -11,10 +11,8 @@ use App\Models\Prospek;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class AnalisaController extends Controller
-{
-    public function getNewKonsumen(Request $request)
-    {
+class AnalisaController extends Controller {
+    public function getNewKonsumen(Request $request) {
         $sales = $request->created_id;
         $user = Auth::user();
 
@@ -23,6 +21,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             $data = Konsumen::whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -35,6 +34,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             $data = Konsumen::whereIn('id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -59,8 +59,7 @@ class AnalisaController extends Controller
         return response()->json($data);
     }
 
-    public function getFollowup(Request $request)
-    {
+    public function getFollowup(Request $request) {
         $sales = $request->created_id;
         $waktu = $request->waktu; // today, tomorrow
         $user = Auth::user();
@@ -83,6 +82,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             $data = FollowupMonitoring::whereIn('sales_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -101,6 +101,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             $data = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -137,8 +138,7 @@ class AnalisaController extends Controller
         return response()->json(['count_data' => $data->count()]);
     }
 
-    public function getStatistikPenjualan(Request $request)
-    {
+    public function getStatistikPenjualan(Request $request) {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
@@ -152,6 +152,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             $query = Transaksi::whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -161,6 +162,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -214,8 +216,7 @@ class AnalisaController extends Controller
         return response()->json($result);
     }
 
-    public function getRealisasi(Request $request)
-    {
+    public function getRealisasi(Request $request) {
         $sales = $request->created_id;
         $today = now()->toDateString();
         $startOfWeek = now()->startOfWeek()->toDateString();
@@ -248,6 +249,7 @@ class AnalisaController extends Controller
         if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             if ($sales) {
                 $transaksiHariIni->where('created_id', $sales->id);
                 $transaksiMingguIni->where('created_id', $sales->id);
@@ -260,6 +262,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             if ($sales) {
                 $transaksiHariIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
                 $transaksiMingguIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
@@ -307,8 +310,7 @@ class AnalisaController extends Controller
         ]);
     }
 
-    public function getRingkasanPenjualan(Request $request)
-    {
+    public function getRingkasanPenjualan(Request $request) {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
@@ -322,6 +324,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             $query = Transaksi::with(['konsumen.prospek'])
                 ->whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
@@ -332,6 +335,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             $query = Transaksi::with(['konsumen.prospek'])
                 ->whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
@@ -376,8 +380,7 @@ class AnalisaController extends Controller
         return response()->json($result);
     }
 
-    public function getStatistikPemesanan(Request $request)
-    {
+    public function getStatistikPemesanan(Request $request) {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
@@ -391,6 +394,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
             $query = Transaksi::whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -400,6 +404,7 @@ class AnalisaController extends Controller
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
             $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
