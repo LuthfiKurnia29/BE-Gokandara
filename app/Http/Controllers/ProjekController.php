@@ -8,6 +8,7 @@ use App\Models\ProjekGambar;
 use App\Models\Tipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProjekController extends Controller
 {
@@ -70,15 +71,26 @@ class ProjekController extends Controller
                     'luas_bangunan' => $tipe['luas_bangunan'],
                     'jumlah_unit' => $tipe['jumlah_unit'],
                     'project_id' => $projek->id,
-                    'harga' => $tipe['harga'],
+                    'harga' => $tipe['harga'] ?? null,
                 ]);
 
-                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                // Support harga per jenis pembayaran
+                if(isset($tipe['jenis_pembayaran']) && is_array($tipe['jenis_pembayaran'])){
+                    foreach($tipe['jenis_pembayaran'] as $jp){
+                        PembayaranProjeks::create([
+                            'projek_id' => $projek->id,
+                            'tipe_id' => $tipeModel->id,
+                            'skema_pembayaran_id' => $jp['id'] ?? null,
+                            'harga' => $jp['harga'] ?? null,
+                        ]);
+                    }
+                } elseif(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
                     foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
                         PembayaranProjeks::create([
                             'projek_id' => $projek->id,
                             'tipe_id' => $tipeModel->id,
                             'skema_pembayaran_id' => $pembayaranId,
+                            'harga' => null,
                         ]);
                     }
                 }
@@ -131,12 +143,17 @@ class ProjekController extends Controller
 
         $tipes = Tipe::where('project_id', $projek->id)->get();
         $tipeData = $tipes->map(function ($t) use ($projek) {
-            $pembayaranIds = PembayaranProjeks::where('projek_id', $projek->id)
+            $pembayaran = PembayaranProjeks::where('projek_id', $projek->id)
                 ->where('tipe_id', $t->id)
-                ->pluck('skema_pembayaran_id')
-                ->unique()
-                ->values()
-                ->toArray();
+                ->get(['skema_pembayaran_id', 'harga'])
+                ->map(function ($p) {
+                    return [
+                        'id' => $p->skema_pembayaran_id,
+                        'harga' => $p->harga,
+                    ];
+                })
+                ->values();
+
             return [
                 'id' => $t->id,
                 'name' => $t->name,
@@ -144,7 +161,7 @@ class ProjekController extends Controller
                 'luas_bangunan' => $t->luas_bangunan,
                 'jumlah_unit' => $t->jumlah_unit,
                 'harga' => $t->harga,
-                'jenis_pembayaran_ids' => $pembayaranIds,
+                'jenis_pembayaran' => $pembayaran,
             ];
         });
 
@@ -207,18 +224,29 @@ class ProjekController extends Controller
                     'luas_bangunan' => $tipe['luas_bangunan'],
                     'jumlah_unit' => $tipe['jumlah_unit'],
                     'project_id' => $projek->id,
-                    'harga' => $tipe['harga'],
+                    'harga' => $tipe['harga'] ?? null,
                 ]);
 
-                if(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
-                     foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
-                         PembayaranProjeks::create([
-                             'projek_id' => $projek->id,
-                             'tipe_id' => $tipeModel->id,
-                             'skema_pembayaran_id' => $pembayaranId,
-                         ]);
-                     }
-                 }
+                // Support harga per jenis pembayaran
+                if(isset($tipe['jenis_pembayaran']) && is_array($tipe['jenis_pembayaran'])){
+                    foreach($tipe['jenis_pembayaran'] as $jp){
+                        PembayaranProjeks::create([
+                            'projek_id' => $projek->id,
+                            'tipe_id' => $tipeModel->id,
+                            'skema_pembayaran_id' => $jp['id'] ?? null,
+                            'harga' => $jp['harga'] ?? null,
+                        ]);
+                    }
+                } elseif(isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])){
+                    foreach($tipe['jenis_pembayaran_ids'] as $pembayaranId){
+                        PembayaranProjeks::create([
+                            'projek_id' => $projek->id,
+                            'tipe_id' => $tipeModel->id,
+                            'skema_pembayaran_id' => $pembayaranId,
+                            'harga' => null,
+                        ]);
+                    }
+                }
             }
         }
 
@@ -394,5 +422,25 @@ class ProjekController extends Controller
                 'message' => 'Project not found',
             ], 404);
         }
+    }
+
+    /**
+     * Get list of payment schemes with prices by project and type.
+     */
+    public function pembayaranByTipe(Request $request, $projekId, $tipeId)
+    {
+        $items = DB::table('pembayaran_projeks')
+            ->join('skema_pembayarans', 'pembayaran_projeks.skema_pembayaran_id', '=', 'skema_pembayarans.id')
+            ->where('pembayaran_projeks.projek_id', $projekId)
+            ->where('pembayaran_projeks.tipe_id', $tipeId)
+            ->select([
+                'skema_pembayarans.id as id',
+                'skema_pembayarans.nama as nama',
+                'pembayaran_projeks.harga as harga',
+            ])
+            ->orderBy('skema_pembayarans.id', 'asc')
+            ->get();
+
+        return response()->json($items);
     }
 }

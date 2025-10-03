@@ -8,6 +8,8 @@ use App\Models\DaftarHarga;
 use App\Models\Transaksi;
 use App\Models\Konsumen;
 use App\Models\Tipe;
+use App\Models\PembayaranProjek;
+use App\Models\PembayaranProjeks;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -68,17 +70,14 @@ class TransaksiController extends Controller {
             ->paginate($per);
 
         $mappedData = $data->getCollection()->map(function ($item) {
-            $stock = Tipe::where([
-                'project_id' => $item->projeks_id,
-                'id' => $item->tipe_id,
-            ])->first();
+            // Ambil harga dari pembayaran_projeks untuk proyek, tipe, dan skema pembayaran transaksi
+            $harga = PembayaranProjeks::where([
+                'projek_id' => $item->projeks_id,
+                'tipe_id' => $item->tipe_id,
+                'skema_pembayaran_id' => $item->skema_pembayaran_id,
+            ])->value('harga');
 
-            if ($stock) {
-                $item->harga_asli = $stock->harga;
-            } else {
-                $item->harga_asli = 0;
-            }
-
+            $item->harga = $harga; // bisa null bila tidak ada harga khusus
             return $item;
         });
 
@@ -103,7 +102,7 @@ class TransaksiController extends Controller {
             'projeks_id' => 'required',
             'skema_pembayaran_id' => 'required',
             'tipe_id' => 'required',
-            'kavling_dipesan' => 'required|numeric',
+            'kavling_dipesan' => 'required',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
             'kelebihan_tanah' => 'nullable|numeric',
@@ -126,8 +125,14 @@ class TransaksiController extends Controller {
             'id' => $request->tipe_id,
         ])->first();
 
+        $harga = PembayaranProjeks::where([
+            'projek_id' => $request->projeks_id,
+            'tipe_id' => $request->tipe_id,
+            'skema_pembayaran_id' => $request->skema_pembayaran_id,
+        ])->first();
+
         if ($stock) {
-            if (($stock->jumlah_unit - $stock->unit_terjual) < $request->kavling_dipesan) {
+            if (($stock->jumlah_unit - $stock->unit_terjual) < 1) {
                 return response()->json([
                     'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
                 ], 400);
@@ -138,16 +143,17 @@ class TransaksiController extends Controller {
             ], 400);
         }
 
+        // Hitung grand_total per unit (kavling_dipesan adalah nomor kavling)
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * ($stock->harga * $request->kavling_dipesan));
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']) - (($validate['diskon'] / 100) * ($harga->harga + $validate['kelebihan_tanah'] + $validate['harga_per_meter']));
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']) - $request->diskon;
             } else {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']);
             }
         } else {
-            $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
+            $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']);
         }
 
         // Set status berdasarkan role user
@@ -164,8 +170,8 @@ class TransaksiController extends Controller {
             $validate['status'] = 'Pending';
         }
 
-        // Update stok unit
-        $stock->unit_terjual += $request->kavling_dipesan;
+        // Update stok unit: selalu satu unit per transaksi
+        $stock->unit_terjual += 1;
         $stock->save();
 
         Transaksi::create($validate);
@@ -186,6 +192,14 @@ class TransaksiController extends Controller {
         $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy'])
             ->where('id', $id)
             ->first();
+        if ($data) {
+            $harga = \App\Models\PembayaranProjeks::where([
+                'projek_id' => $data->projeks_id,
+                'tipe_id' => $data->tipe_id,
+                'skema_pembayaran_id' => $data->skema_pembayaran_id,
+            ])->value('harga');
+            $data->harga = $harga;
+        }
         return response()->json($data);
     }
 
@@ -199,7 +213,7 @@ class TransaksiController extends Controller {
             'projeks_id' => 'required',
             'skema_pembayaran_id' => 'required',
             'tipe_id' => 'required',
-            'kavling_dipesan' => 'required|numeric',
+            'kavling_dipesan' => 'required',
             'diskon' => 'nullable',
             'tipe_diskon' => 'nullable|in:percent,fixed',
             'kelebihan_tanah' => 'nullable|numeric',
@@ -216,28 +230,39 @@ class TransaksiController extends Controller {
 
         $transaksi = Transaksi::where('id', $id)->first();
         $old_kavling = $transaksi->kavling_dipesan;
+        $oldTipeId = $transaksi->tipe_id;
 
         $stock = Tipe::where([
             'project_id' => $request->projeks_id,
             'id' => $request->tipe_id,
         ])->first();
 
-        if (($stock->jumlah_unit - $stock->unit_terjual) + $old_kavling < $request->kavling_dipesan) {
-            return response()->json([
-                'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
-            ], 400);
+        $harga = PembayaranProjeks::where([
+            'projek_id' => $request->projeks_id,
+            'tipe_id' => $request->tipe_id,
+            'skema_pembayaran_id' => $request->skema_pembayaran_id,
+        ])->first();
+
+        // Cek stok hanya jika pindah ke tipe baru; transaksi selalu satu unit
+        if ($request->tipe_id != $oldTipeId) {
+            if (($stock->jumlah_unit - $stock->unit_terjual) < 1) {
+                return response()->json([
+                    'message' => 'Stok tidak tersedia untuk opsi transaksi ini.'
+                ], 400);
+            }
         }
 
+        // Hitung grand_total per unit (kavling_dipesan adalah nomor kavling)
         if ($request->diskon) {
             if ($request->tipe_diskon == 'percent') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - (($validate['diskon'] / 100) * ($stock->harga * $request->kavling_dipesan));
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']) - (($validate['diskon'] / 100) * ($harga->harga + $validate['kelebihan_tanah'] + $validate['harga_per_meter']));
             } else if ($request->tipe_diskon == 'fixed') {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan - $request->diskon;
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']) - $request->diskon;
             } else {
-                $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
+                $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']);
             }
         } else {
-            $validate['grand_total'] = $stock->harga * $request->kavling_dipesan;
+            $validate['grand_total'] = $harga->harga + ($validate['kelebihan_tanah'] * $validate['harga_per_meter']);
         }
 
         $user = Auth::user();
@@ -253,9 +278,20 @@ class TransaksiController extends Controller {
             $validate['status'] = 'Pending';
         }
 
-        // Update stok unit
-        $stock->unit_terjual = $stock->unit_terjual - $old_kavling + $request->kavling_dipesan;
-        $stock->save();
+        // Update stok unit per perubahan tipe: satu unit per transaksi
+        if ($request->tipe_id != $oldTipeId) {
+            $oldStock = Tipe::where([
+                'project_id' => $transaksi->projeks_id,
+                'id' => $oldTipeId,
+            ])->first();
+            if ($oldStock) {
+                $oldStock->unit_terjual = max(0, ($oldStock->unit_terjual ?? 0) - 1);
+                $oldStock->save();
+            }
+
+            $stock->unit_terjual = ($stock->unit_terjual ?? 0) + 1;
+            $stock->save();
+        }
 
         $transaksi->update($validate);
 
@@ -272,7 +308,8 @@ class TransaksiController extends Controller {
         $transaksi = Transaksi::findOrFail($id);
         $tipe = Tipe::where('id', $transaksi->tipe_id)->first();
         if ($tipe) {
-            $tipe->unit_terjual = max(0, ($tipe->unit_terjual ?? 0) - ($transaksi->kavling_dipesan ?? 0));
+            // Kurangi satu unit yang dilepas karena penghapusan transaksi
+            $tipe->unit_terjual = max(0, ($tipe->unit_terjual ?? 0) - 1);
             $tipe->save();
         }
         $transaksi->delete();
