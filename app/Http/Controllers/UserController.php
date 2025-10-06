@@ -256,6 +256,51 @@ class UserController extends Controller {
         ], 200);
     }
 
+    public function getUserSpvMitra() {
+        $roleSpv = Role::where("code", "spv")->first();
+        $roleMitra = Role::where("code", "mtr")->first();
+
+        $users = User::with(['roles.role'])
+            ->whereHas('roles', function ($q) use ($roleSpv, $roleMitra) {
+                $q->whereIn('role_id', [$roleSpv->id, $roleMitra->id]);
+            })
+            ->when(auth()->user()->hasRole('Supervisor'), function ($query) {
+                $query->where('parent_id', auth()->user()->id);
+            })
+            ->select('id', 'name')
+            ->get()
+            ->map(function ($user) use ($roleSpv, $roleMitra) {
+                $matchedRole = $user->roles->first(function ($ur) use ($roleSpv, $roleMitra) {
+                    return in_array($ur->role_id, [$roleSpv->id, $roleMitra->id]);
+                });
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'role_code' => $matchedRole ? $matchedRole->role->code : null,
+                    'role_name' => $matchedRole ? $matchedRole->role->name : null,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get Supervisor and Mitra',
+            'data' => $users
+        ], 200);
+    }
+
+    public function getUsersByParentId(string $parentId) {
+        $users = User::where('parent_id', $parentId)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get users by parent_id',
+            'data' => $users
+        ], 200);
+    }
+
     private function syncAccessMenuAdmin($userRole) {
         UserMenuAccess::create([
             'user_role_id' => $userRole,
