@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->get('user', [UserController::class, 'index'])
 Route::middleware('auth:sanctum')->get('user-spv', [UserController::class, 'getUserSpv']);
 Route::middleware('auth:sanctum')->get('user-spv-sales', [UserController::class, 'getUserSpvSales']);
 Route::middleware('auth:sanctum')->get('user-spv-sales-mitra', [UserController::class, 'getUserSpvSalesMitra']);
+Route::middleware('auth:sanctum')->get('user-spv-mitra', [UserController::class, 'getUserSpvMitra']);
+Route::middleware('auth:sanctum')->get('user-by-parent/{parentId}', [UserController::class, 'getUsersByParentId']);
 Route::middleware('auth:sanctum')->get('user/{id}', [UserController::class, 'show']);
 Route::middleware('auth:sanctum')->post('user', [UserController::class, 'store']);
 Route::middleware('auth:sanctum')->put('user/{id}', [UserController::class, 'update']);
@@ -45,6 +47,7 @@ Route::middleware('auth:sanctum')->delete('user/{id}', [UserController::class, '
 
 // Konsumen
 Route::middleware('auth:sanctum')->get('konsumen', [KonsumenController::class, 'index']);
+Route::middleware('auth:sanctum')->get('konsumen-by-created/{createdId}', [KonsumenController::class, 'getKonsumenByCreatedId']);
 Route::middleware('auth:sanctum')->get('konsumen/{id}', [KonsumenController::class, 'show']);
 Route::middleware('auth:sanctum')->post('konsumen', [KonsumenController::class, 'store']);
 Route::middleware('auth:sanctum')->put('konsumen/{id}', [KonsumenController::class, 'update']);

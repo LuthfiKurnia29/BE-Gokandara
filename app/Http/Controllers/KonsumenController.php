@@ -61,6 +61,22 @@ class KonsumenController extends Controller {
     }
 
     /**
+     * Select list konsumen by created_id
+     */
+    public function getKonsumenByCreatedId(string $createdId) {
+        $data = Konsumen::where('created_id', $createdId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'success get konsumen by created_id',
+            'data' => $data
+        ], 200);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create() {
