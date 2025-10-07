@@ -49,9 +49,7 @@ class KonsumenController extends Controller {
                         ->orWhere('address', 'like', "%$search%")
                         ->orWhere('ktp_number', 'like', "%$search%")
                         ->orWhere('phone', 'like', "%$search%")
-                        ->orWhere('email', 'like', "%$search%")
-                        ->orWhere('pengalaman', 'like', "%$search%")
-                        ->orWhere('materi_fu', 'like', "%$search%");
+                        ->orWhere('email', 'like', "%$search%");
                 }
             })
             ->orderBy('id', 'desc')
