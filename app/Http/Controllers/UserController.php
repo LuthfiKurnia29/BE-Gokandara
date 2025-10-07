@@ -42,7 +42,10 @@ class UserController extends Controller {
         $data = User::with('roles.role')->where(function ($query) use ($search) {
             if ($search) {
                 $query->where('name', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
+                    ->orWhere('email', 'like', "%$search%")
+                    ->orWhereHas('roles.role', function ($query) use ($search) {
+                       $query->where('name', 'like', "%$search%");
+                    });
             }
         })
             ->when(isset($request->roles), function ($query) use ($request) {
