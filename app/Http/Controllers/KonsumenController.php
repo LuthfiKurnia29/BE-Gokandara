@@ -103,7 +103,7 @@ class KonsumenController extends Controller {
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Konsumen with this Phone number already exists in this project.',
+                    'message' => 'Konsumen dengan Nomer Telepon ini sudah ada di Projek yang dipilih.',
                 ],
                 400,
             );
