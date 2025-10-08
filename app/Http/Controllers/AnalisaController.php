@@ -192,25 +192,52 @@ class AnalisaController extends Controller {
             $grouped = $data->groupBy(function ($item) {
                 return $item->created_at->format('Y-m-d');
             });
+
+            // Generate all dates in the last 7 days
+            $periods = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
         } elseif ($filter == 'mingguan') {
             $grouped = $data->groupBy(function ($item) {
                 return $item->created_at->format('Y-m-d');
             });
+
+            // Generate all dates in the last 30 days
+            $periods = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
         } else {
             // bulanan
             $grouped = $data->groupBy(function ($item) {
                 return $item->created_at->format('Y-m');
             });
+
+            // Generate all months in the last 12 months
+            $periods = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $periods[] = now()->subMonths($i)->format('Y-m');
+            }
         }
 
-        // Format hasil
+        // Format hasil with placeholders
         $result = [];
-        foreach ($grouped as $key => $items) {
-            $result[] = [
-                'periode' => $key,
-                'grand_total' => $items->sum('grand_total'),
-                'transaksis' => $items,
-            ];
+        foreach ($periods as $period) {
+            if (isset($grouped[$period])) {
+                $result[] = [
+                    'periode' => $period,
+                    'grand_total' => $grouped[$period]->sum('grand_total'),
+                    'transaksis' => $grouped[$period],
+                ];
+            } else {
+                // Placeholder for missing data
+                $result[] = [
+                    'periode' => $period,
+                    'grand_total' => 0,
+                    'transaksis' => [],
+                ];
+            }
         }
 
         return response()->json($result);
@@ -433,25 +460,56 @@ class AnalisaController extends Controller {
         $data = $query->orderBy('created_at', 'desc')->get();
 
         // Grouping berdasarkan filter
-        if ($filter == 'harian' || $filter == 'mingguan') {
+        if ($filter == 'harian') {
             $grouped = $data->groupBy(function ($item) {
                 return $item->created_at->format('Y-m-d');
             });
+
+            // Generate all dates in the last 7 days
+            $periods = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
+        } elseif ($filter == 'mingguan') {
+            $grouped = $data->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d');
+            });
+
+            // Generate all dates in the last 30 days
+            $periods = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
         } else {
             // bulanan
             $grouped = $data->groupBy(function ($item) {
                 return $item->created_at->format('Y-m');
             });
+
+            // Generate all months in the last 12 months
+            $periods = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $periods[] = now()->subMonths($i)->format('Y-m');
+            }
         }
 
-        // Format hasil
+        // Format hasil with placeholders
         $result = [];
-        foreach ($grouped as $key => $items) {
-            $result[] = [
-                'periode' => $key,
-                'total_pemesanan' => $items->count(),
-                'transaksis' => $items,
-            ];
+        foreach ($periods as $period) {
+            if (isset($grouped[$period])) {
+                $result[] = [
+                    'periode' => $period,
+                    'total_pemesanan' => $grouped[$period]->count(),
+                    'transaksis' => $grouped[$period],
+                ];
+            } else {
+                // Placeholder for missing data
+                $result[] = [
+                    'periode' => $period,
+                    'total_pemesanan' => 0,
+                    'transaksis' => [],
+                ];
+            }
         }
 
         return response()->json($result);
