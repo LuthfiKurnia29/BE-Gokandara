@@ -50,6 +50,11 @@ class User extends Authenticatable {
         return $this->hasMany(Chatting::class, 'user_penerima_id');
     }
 
+    public function parent()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
     public function hasRole($role) {
         if (is_array($role)) {
             return $this->roles()->whereHas('role', function ($q) use ($role) {

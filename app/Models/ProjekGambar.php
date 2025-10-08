@@ -4,17 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProjekGambar extends Model
-{
+class ProjekGambar extends Model {
     protected $guarded = ['id'];
     protected $appends = ['gambar_url'];
 
     public function getGambarUrlAttribute() {
-        return asset('storage/' . $this->gambar);
+        return asset('files/' . $this->gambar);
     }
 
-    public function projek()
-    {
+    public function projek() {
         return $this->belongsTo(Projek::class);
     }
 }
