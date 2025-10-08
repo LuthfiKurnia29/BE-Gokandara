@@ -155,6 +155,7 @@ class ProjekController extends Controller {
                 'luas_tanah' => $t->luas_tanah,
                 'luas_bangunan' => $t->luas_bangunan,
                 'jumlah_unit' => $t->jumlah_unit,
+                'unit_terjual' => $t->unit_terjual,
                 'harga' => $t->harga,
                 'jenis_pembayaran' => $pembayaran,
             ];
@@ -170,7 +171,7 @@ class ProjekController extends Controller {
         $gambar = ProjekGambar::where('projek_id', $projek->id)->get()->map(function ($g) {
             return [
                 'id' => $g->id,
-                'gambar' => asset('storage/' . $g->gambar),
+                'gambar' => asset('files/' . $g->gambar),
             ];
         });
 
@@ -325,7 +326,7 @@ class ProjekController extends Controller {
 
     public function tipeByProjek($id) {
         $tipes = Tipe::with('jenisPembayaran')->where('project_id', $id)
-            ->select('id', 'name', 'luas_tanah', 'luas_bangunan', 'jumlah_unit', 'harga')
+            ->select('id', 'name', 'luas_tanah', 'luas_bangunan', 'jumlah_unit', 'harga', 'unit_terjual')
             ->orderBy('id', 'desc')
             ->get();
 
