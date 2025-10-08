@@ -37,9 +37,9 @@ class AnalisaController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $data = Konsumen::whereIn('id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
+                    // if ($sales) {
+                    //     $query->where('created_id', $sales);
+                    // }
                 })
                 ->orderBy('created_at', 'desc')
                 ->get()
@@ -104,9 +104,9 @@ class AnalisaController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $data = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('sales_id', $sales);
-                    }
+                    // if ($sales) {
+                    //     $query->where('sales_id', $sales);
+                    // }
                 })
                 ->where(function ($query) use ($waktu) {
                     if ($waktu == 'today') {
@@ -165,9 +165,9 @@ class AnalisaController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
+                    // if ($sales) {
+                    //     $query->where('created_id', $sales);
+                    // }
                 });
         } else {
             $query = Transaksi::where('created_id', Auth::id())->where(function ($query) use ($sales) {
@@ -263,15 +263,18 @@ class AnalisaController extends Controller {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            if ($sales) {
-                $transaksiHariIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-                $transaksiMingguIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-                $transaksiBulanIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-            } else {
-                $transaksiHariIni->whereIn('konsumen_id', $assignedKonsumenIds);
-                $transaksiMingguIni->whereIn('konsumen_id', $assignedKonsumenIds);
-                $transaksiBulanIni->whereIn('konsumen_id', $assignedKonsumenIds);
-            }
+            // if ($sales) {
+            //     $transaksiHariIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
+            //     $transaksiMingguIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
+            //     $transaksiBulanIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
+            // } else {
+            //     $transaksiHariIni->whereIn('konsumen_id', $assignedKonsumenIds);
+            //     $transaksiMingguIni->whereIn('konsumen_id', $assignedKonsumenIds);
+            //     $transaksiBulanIni->whereIn('konsumen_id', $assignedKonsumenIds);
+            // }
+            $transaksiHariIni->whereIn('konsumen_id', $assignedKonsumenIds);
+            $transaksiMingguIni->whereIn('konsumen_id', $assignedKonsumenIds);
+            $transaksiBulanIni->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
             if ($sales) {
                 $transaksiHariIni->where('created_id', $sales->id);
@@ -339,9 +342,9 @@ class AnalisaController extends Controller {
             $query = Transaksi::with(['konsumen.prospek'])
                 ->whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
+                    // if ($sales) {
+                    //     $query->where('created_id', $sales);
+                    // }
                 });
         } else {
             $query = Transaksi::with(['konsumen.prospek'])
@@ -407,9 +410,9 @@ class AnalisaController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
+                    // if ($sales) {
+                    //     $query->where('created_id', $sales);
+                    // }
                 });
         } else {
             $query = Transaksi::where('created_id', Auth::id())->where(function ($query) use ($sales) {
