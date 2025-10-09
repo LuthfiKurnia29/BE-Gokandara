@@ -73,14 +73,12 @@ class LeaderboardController extends Controller {
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
 
         $data = $leaderboardData->getCollection()->map(function ($item) use ($dateStart, $dateEnd) {
-            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
-                $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
-                    ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
-                    ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
-                        $subQuery->where('tanggal_awal', '<=', $dateStart)
-                            ->where('tanggal_akhir', '>=', $dateEnd);
-                    });
-            })->sum('min_penjualan');
+            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
+                ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
+                ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                    $subQuery->where('tanggal_awal', '<=', $dateStart)
+                        ->where('tanggal_akhir', '>=', $dateEnd);
+                })->sum('min_penjualan');
             $item->target_percentage = $minPenjualan > 0 ? $item->total_revenue / $minPenjualan * 100 : 0;
 
             $item->sales_id = $item->id;
@@ -196,14 +194,12 @@ class LeaderboardController extends Controller {
             ->get();
 
         $leaderboardQuery = $leaderboardQuery->map(function ($item) use ($dateStart, $dateEnd) {
-            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
-                $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
-                    ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
-                    ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
-                        $subQuery->where('tanggal_awal', '<=', $dateStart)
-                            ->where('tanggal_akhir', '>=', $dateEnd);
-                    });
-            })->sum('min_penjualan');
+            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
+                ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
+                ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                    $subQuery->where('tanggal_awal', '<=', $dateStart)
+                        ->where('tanggal_akhir', '>=', $dateEnd);
+                })->sum('min_penjualan');
             $item->target_percentage = $minPenjualan > 0 ? $item->total_revenue / $minPenjualan * 100 : 0;
 
             $item->sales_id = $item->id;
