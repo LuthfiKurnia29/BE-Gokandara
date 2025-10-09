@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->delete('projek/{id}', [ProjekController::clas
 Route::middleware('auth:sanctum')->get('projek/{id}/tipes', [ProjekController::class, 'tipeByProjek']);
 Route::middleware('auth:sanctum')->get('projek/{id}/images', [ProjekController::class, 'getImages']);
 Route::middleware('auth:sanctum')->post('projek/{id}/images', [ProjekController::class, 'addImages']);
+Route::middleware('auth:sanctum')->post('projek/{id}/logo', [ProjekController::class, 'addLogo']);
 Route::middleware('auth:sanctum')->delete('projek-image/{id}', [ProjekController::class, 'deleteImage']);
 // Jenis Pembayaran by Projek & Tipe
 Route::middleware('auth:sanctum')->get('projek/{projekId}/tipe/{tipeId}/pembayaran', [ProjekController::class, 'pembayaranByTipe']);

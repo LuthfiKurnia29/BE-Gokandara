@@ -57,6 +57,9 @@ class ProjekController extends Controller {
             'name' => $request['name'],
             'kavling_total' => $request['jumlah_kavling'],
             'address' => $request['alamat'],
+            'kamar_tidur' => $request['kamar_tidur'],
+            'kamar_mandi' => $request['kamar_mandi'],
+            'wifi' => $request['wifi'],
         ]);
 
         if ($request['tipe']) {
@@ -214,6 +217,9 @@ class ProjekController extends Controller {
             'name' => $request['name'],
             'kavling_total' => $request['jumlah_kavling'],
             'address' => $request['alamat'],
+            'kamar_tidur' => $request['kamar_tidur'],
+            'kamar_mandi' => $request['kamar_mandi'],
+            'wifi' => $request['wifi'],
         ]);
 
         if ($request['tipe']) {
@@ -444,13 +450,13 @@ class ProjekController extends Controller {
 
     public function getImages($id) {
         $projek = Projek::find($id);
-        return response()->json($projek->gambars);
         if (!$projek) {
             return response()->json([
                 'success' => false,
                 'message' => 'Project not found',
             ], 404);
         }
+        return response()->json($projek->gambars);
     }
 
     /**
