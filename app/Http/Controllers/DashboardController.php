@@ -19,7 +19,12 @@ class DashboardController extends Controller {
         $today = Carbon::today()->format('Y-m-d');
         $user = Auth::user();
 
-        if ($user->hasRole('Admin')) {
+        if (isset($request->created_id)) {
+            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
+                ->whereDate('followup_date', $today)
+                ->with('konsumen')
+                ->get();
+        } else if ($user->hasRole('Admin')) {
             $followUps = FollowupMonitoring::whereDate('followup_date', $today)
                 ->with('konsumen')
                 ->get();
@@ -36,11 +41,6 @@ class DashboardController extends Controller {
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
             $followUps = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
-                ->whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
-        } else if (isset($request->created_id)) {
-            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
                 ->whereDate('followup_date', $today)
                 ->with('konsumen')
                 ->get();
@@ -66,7 +66,12 @@ class DashboardController extends Controller {
         $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
         $user = Auth::user();
 
-        if ($user->hasRole('Admin')) {
+        if (isset($request->created_id)) {
+            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
+                ->whereDate('followup_date', $tomorrow)
+                ->with('konsumen')
+                ->get();
+        } else if ($user->hasRole('Admin')) {
             $followUps = FollowupMonitoring::whereDate('followup_date', $tomorrow)
                 ->with('konsumen')
                 ->get();
@@ -83,11 +88,6 @@ class DashboardController extends Controller {
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
             $followUps = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
-                ->whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
-        } else if (isset($request->created_id)) {
-            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
                 ->whereDate('followup_date', $tomorrow)
                 ->with('konsumen')
                 ->get();
@@ -111,7 +111,11 @@ class DashboardController extends Controller {
     public function getNewKonsumens() {
         $user = Auth::user();
 
-        if ($user->hasRole('Admin')) {
+        if (isset($request->created_id)) {
+            $newKonsumens = Konsumen::where('created_id', $request->created_id)
+                ->whereDate('created_at', Carbon::today())
+                ->get();
+        } else if ($user->hasRole('Admin')) {
             $newKonsumens = Konsumen::whereDate('created_at', Carbon::today())->get();
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
@@ -125,10 +129,6 @@ class DashboardController extends Controller {
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
             $newKonsumens = Konsumen::whereIn('id', $assignedKonsumenIds)
-                ->whereDate('created_at', Carbon::today())
-                ->get();
-        } else if (isset($request->created_id)) {
-            $newKonsumens = Konsumen::where('created_id', $request->created_id)
                 ->whereDate('created_at', Carbon::today())
                 ->get();
         } else {
@@ -151,7 +151,12 @@ class DashboardController extends Controller {
         $user = Auth::user();
 
         // Get count of konsumen grouped by prospek_id
-        if ($user->hasRole('Admin')) {
+        if (isset($request->created_id)) {
+            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
+                ->where('created_id', $request->created_id)
+                ->groupBy('prospek_id')
+                ->get();
+        } else if ($user->hasRole('Admin')) {
             $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
                 ->groupBy('prospek_id')
                 ->get();
@@ -169,11 +174,6 @@ class DashboardController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
                 ->whereIn('id', $assignedKonsumenIds)
-                ->groupBy('prospek_id')
-                ->get();
-        } else if (isset($request->created_id)) {
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->where('created_id', $request->created_id)
                 ->groupBy('prospek_id')
                 ->get();
         } else {
@@ -253,7 +253,17 @@ class DashboardController extends Controller {
             }
 
             // Get total terjual (sum of transaksi grand_total) for this month
-            if ($user->hasRole('Admin')) {
+            if (isset($request->created_id)) {
+                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->where('created_id', $request->created_id)
+                    ->sum('grand_total');
+
+                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                    ->whereMonth('created_at', $monthNumber)
+                    ->where('created_id', $request->created_id)
+                    ->count();
+            } else if ($user->hasRole('Admin')) {
                 // Admin: tampilkan semua data
                 $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
@@ -287,16 +297,6 @@ class DashboardController extends Controller {
                 $dipesan = Konsumen::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->whereIn('id', $assignedKonsumenIds)
-                    ->count();
-            } else if (isset($request->created_id)) {
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', $request->created_id)
-                    ->sum('grand_total');
-
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', $request->created_id)
                     ->count();
             } else {
                 // Selain admin: tampilkan data sesuai yang login
@@ -363,7 +363,12 @@ class DashboardController extends Controller {
         $user = Auth::user();
 
         // Get count of transaksi grouped by projeks_id
-        if ($user->hasRole('Admin')) {
+        if (isset($request->created_id)) {
+            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
+                ->where('created_id', $request->created_id)
+                ->groupBy('projeks_id')
+                ->get();
+        } else if ($user->hasRole('Admin')) {
             // Admin: tampilkan semua data
             $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
                 ->groupBy('projeks_id')
@@ -382,11 +387,6 @@ class DashboardController extends Controller {
             $assignedKonsumenIds[] = $user->id;
             $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
                 ->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->groupBy('projeks_id')
-                ->get();
-        } else if (isset($request->created_id)) {
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->where('created_id', $request->created_id)
                 ->groupBy('projeks_id')
                 ->get();
         } else {
