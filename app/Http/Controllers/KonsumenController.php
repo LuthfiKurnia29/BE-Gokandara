@@ -56,21 +56,17 @@ class KonsumenController extends Controller {
                         ->orWhere('phone', 'like', "%$search%")
                         ->orWhere('email', 'like', "%$search%");
                 }
-
-                if ($dateStart && $dateEnd) {
-                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-                }
-
-                if ($prospek_id) {
-                    $query->where('prospek_id', $prospek_id);
-                }
-
-                // check if konsumen has transaksi status itj
-                if ($status) {
-                    $query->whereHas('transaksi', function ($q) use ($status) {
-                        $q->where('status', $status);
-                    });
-                }
+            })
+            ->when($dateStart && $dateEnd, function ($query) use ($dateStart, $dateEnd) {
+                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+            })
+            ->when($prospek_id, function ($query) use ($prospek_id) {
+                $query->where('prospek_id', $prospek_id);
+            })
+            ->when($status, function ($query) use ($status) {
+                $query->whereHas('transaksi', function ($q) use ($status) {
+                    $q->where('status', $status);
+                });
             })
             ->orderBy('id', 'desc')
             ->paginate($per);
