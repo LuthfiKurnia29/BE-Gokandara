@@ -202,13 +202,13 @@ Route::middleware('auth:sanctum')->get('followup', [FollowupMonitoringController
 
 // Target
 Route::middleware('auth:sanctum')->prefix('target')->group(function () {
+    Route::get('count-achieved', [TargetController::class, 'getCountAchievedUser']);
     Route::post('', [TargetController::class, 'store']);
     Route::get('', [TargetController::class, 'index']);
     Route::get('{id}', [TargetController::class, 'show']);
     Route::put('{id}', [TargetController::class, 'update']);
     Route::delete('{id}', [TargetController::class, 'destroy']);
     Route::get('{id}/achieved', [TargetController::class, 'getAchievedUser']);
-    Route::get('count-achieved', [TargetController::class, 'getCountAchievedUser']);
     Route::post('{id}/claim', [TargetController::class, 'claimBonus']);
 });
 
