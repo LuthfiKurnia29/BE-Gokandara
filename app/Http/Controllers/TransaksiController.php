@@ -33,8 +33,8 @@ class TransaksiController extends Controller {
                             });
                     } else if ($user->hasRole('Telemarketing')) {
                         $query->where('created_id', $created_id)
-                            ->orWhereHas('konsumen', function ($q) use ($id) {
-                                $q->where('added_by', $id);
+                            ->orWhereHas('konsumen', function ($q) use ($created_id) {
+                                $q->where('added_by', $created_id);
                             });
                     } else {
                         $query->where('created_id', $created_id);
