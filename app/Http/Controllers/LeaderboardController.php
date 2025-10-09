@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Konsumen;
 use App\Models\Role;
+use App\Models\Target;
 use App\Models\Transaksi;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class LeaderboardController extends Controller {
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
             DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
             DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
-            DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
+            // DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
@@ -52,27 +53,35 @@ class LeaderboardController extends Controller {
                     $join->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
                 }
             })
-            ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('targets.role_id', '=', 'user_roles.role_id');
-                if (isset($dateStart) && isset($dateEnd)) {
-                    $join->where(function ($query) use ($dateStart, $dateEnd) {
-                        $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
-                            ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
-                            ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
-                                $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
-                                    ->where('targets.tanggal_akhir', '>=', $dateEnd);
-                            });
-                    });
-                }
-            })
+            // ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
+            //     $join->on('targets.role_id', '=', 'user_roles.role_id');
+            //     if (isset($dateStart) && isset($dateEnd)) {
+            //         $join->where(function ($query) use ($dateStart, $dateEnd) {
+            //             $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
+            //                 ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
+            //                 ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+            //                     $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
+            //                         ->where('targets.tanggal_akhir', '>=', $dateEnd);
+            //                 });
+            //         });
+            //     }
+            // })
             ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email');
 
         // Apply pagination
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
 
-        $data = $leaderboardData->getCollection()->map(function ($item) {
-            $item->target_percentage = $item->total_target > 0 ? $item->total_revenue / $item->total_target * 100 : 0;
+        $data = $leaderboardData->getCollection()->map(function ($item) use ($dateStart, $dateEnd) {
+            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
+                $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
+                    ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
+                    ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                        $subQuery->where('tanggal_awal', '<=', $dateStart)
+                            ->where('tanggal_akhir', '>=', $dateEnd);
+                    });
+            })->sum('min_penjualan');
+            $item->target_percentage = $minPenjualan > 0 ? $item->total_revenue / $minPenjualan * 100 : 0;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
@@ -150,7 +159,7 @@ class LeaderboardController extends Controller {
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
             DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
             DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
-            DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
+            // DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
@@ -167,27 +176,35 @@ class LeaderboardController extends Controller {
                     $join->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
                 }
             })
-            ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('targets.role_id', '=', 'user_roles.role_id');
-                if (isset($dateStart) && isset($dateEnd)) {
-                    $join->where(function ($query) use ($dateStart, $dateEnd) {
-                        $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
-                            ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
-                            ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
-                                $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
-                                    ->where('targets.tanggal_akhir', '>=', $dateEnd);
-                            });
-                    });
-                }
-            })
+            // ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
+            //     $join->on('targets.role_id', '=', 'user_roles.role_id');
+            //     if (isset($dateStart) && isset($dateEnd)) {
+            //         $join->where(function ($query) use ($dateStart, $dateEnd) {
+            //             $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
+            //                 ->orWhereBetween('targets.tanggal_akhir', [$dateStart, $dateEnd])
+            //                 ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+            //                     $subQuery->where('targets.tanggal_awal', '<=', $dateStart)
+            //                         ->where('targets.tanggal_akhir', '>=', $dateEnd);
+            //                 });
+            //         });
+            //     }
+            // })
             ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email')
             ->orderByDesc('total_leads')
             ->limit(3)
             ->get();
 
-        $leaderboardQuery = $leaderboardQuery->map(function ($item) {
-            $item->target_percentage = $item->total_target > 0 ? $item->total_revenue / $item->total_target * 100 : 0;
+        $leaderboardQuery = $leaderboardQuery->map(function ($item) use ($dateStart, $dateEnd) {
+            $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
+                $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
+                    ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd])
+                    ->orWhere(function ($subQuery) use ($dateStart, $dateEnd) {
+                        $subQuery->where('tanggal_awal', '<=', $dateStart)
+                            ->where('tanggal_akhir', '>=', $dateEnd);
+                    });
+            })->sum('min_penjualan');
+            $item->target_percentage = $minPenjualan > 0 ? $item->total_revenue / $minPenjualan * 100 : 0;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
