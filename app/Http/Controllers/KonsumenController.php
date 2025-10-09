@@ -29,13 +29,12 @@ class KonsumenController extends Controller {
         $dateEnd = $request->dateEnd;
         $created_id = $request->created_id;
         $prospek_id = $request->prospek_id;
-        $itj = $request->itj;
-        $akad = $request->akad;
+        $status = $request->status;
 
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek', 'createdBy'])
-            ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $itj, $akad) {
+            ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $status) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
                     $query->orWhere('added_by', $created_id);
@@ -67,15 +66,9 @@ class KonsumenController extends Controller {
                 }
 
                 // check if konsumen has transaksi status itj
-                if ($itj) {
-                    $query->whereHas('transaksi', function ($q) {
-                        $q->where('status', 'itj');
-                    });
-                }
-
-                if ($akad) {
-                    $query->whereHas('transaksi', function ($q) {
-                        $q->where('status', 'akad');
+                if ($status) {
+                    $query->whereHas('transaksi', function ($q) use ($status) {
+                        $q->where('status', $status);
                     });
                 }
             })
