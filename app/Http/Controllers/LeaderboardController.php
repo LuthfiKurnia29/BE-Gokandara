@@ -72,7 +72,7 @@ class LeaderboardController extends Controller {
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
 
         $data = $leaderboardData->getCollection()->map(function ($item) {
-            $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+            $item->target_percentage = $item->total_target > 0 ? $item->total_revenue / $item->total_target * 100 : 0;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
@@ -187,7 +187,7 @@ class LeaderboardController extends Controller {
             ->get();
 
         $leaderboardQuery = $leaderboardQuery->map(function ($item) {
-            $item->target_percentage = $item->total_target > 0 ? $item->total_goal / $item->total_target * 100 : 0;
+            $item->target_percentage = $item->total_target > 0 ? $item->total_revenue / $item->total_target * 100 : 0;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
