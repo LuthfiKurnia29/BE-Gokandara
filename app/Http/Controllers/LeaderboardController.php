@@ -53,7 +53,7 @@ class LeaderboardController extends Controller {
                 }
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('targets.role_id', '=', 'user_roles.user_id');
+                $join->on('targets.role_id', '=', 'user_roles.role_id');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->where(function ($query) use ($dateStart, $dateEnd) {
                         $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
@@ -168,7 +168,7 @@ class LeaderboardController extends Controller {
                 }
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('targets.role_id', '=', 'user_roles.user_id');
+                $join->on('targets.role_id', '=', 'user_roles.role_id');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->where(function ($query) use ($dateStart, $dateEnd) {
                         $query->whereBetween('targets.tanggal_awal', [$dateStart, $dateEnd])
