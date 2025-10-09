@@ -44,7 +44,7 @@ class UserController extends Controller {
                 $query->where('name', 'like', "%$search%")
                     ->orWhere('email', 'like', "%$search%")
                     ->orWhereHas('roles.role', function ($query) use ($search) {
-                       $query->where('name', 'like', "%$search%");
+                        $query->where('name', 'like', "%$search%");
                     });
             }
         })
@@ -197,6 +197,42 @@ class UserController extends Controller {
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully',
+        ], 201);
+    }
+
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function updateProfile(Request $request) {
+        $user = User::where('id', Auth::user()->id)->first();
+        $validate = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . Auth::user()->id,
+            'nip' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ], [
+            'email.unique' => 'Email yang diinput sudah ada.'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image')->store('images', 'public');
+            $validate['image'] = $image;
+        }
+
+        if ($request['password']) {
+            $hashedPass = Hash::make($request['password']);
+            $validate['password'] = $hashedPass;
+
+            $encPass = Crypt::encryptString($request['password']);
+            $validate['enc_pw'] = $encPass;
+        }
+
+        $user->update($validate);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
         ], 201);
     }
 

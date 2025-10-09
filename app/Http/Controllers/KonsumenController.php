@@ -25,11 +25,17 @@ class KonsumenController extends Controller {
         $per = $request->per ?? 10;
         $page = $request->page ?? 1;
         $search = $request->search;
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
         $created_id = $request->created_id;
+        $prospek_id = $request->prospek_id;
+        $itj = $request->itj;
+        $akad = $request->akad;
+
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek', 'createdBy'])
-            ->where(function ($query) use ($search, $created_id, $user, $userRole) {
+            ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $itj, $akad) {
                 if ($created_id) {
                     $query->where('created_id', $created_id);
                     $query->orWhere('added_by', $created_id);
@@ -50,6 +56,27 @@ class KonsumenController extends Controller {
                         ->orWhere('ktp_number', 'like', "%$search%")
                         ->orWhere('phone', 'like', "%$search%")
                         ->orWhere('email', 'like', "%$search%");
+                }
+
+                if ($dateStart && $dateEnd) {
+                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                }
+
+                if ($prospek_id) {
+                    $query->where('prospek_id', $prospek_id);
+                }
+
+                // check if konsumen has transaksi status itj
+                if ($itj) {
+                    $query->whereHas('transaksi', function ($q) {
+                        $q->where('status', 'itj');
+                    });
+                }
+
+                if ($akad) {
+                    $query->whereHas('transaksi', function ($q) {
+                        $q->where('status', 'akad');
+                    });
                 }
             })
             ->orderBy('id', 'desc')

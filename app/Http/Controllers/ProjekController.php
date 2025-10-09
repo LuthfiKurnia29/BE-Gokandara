@@ -117,6 +117,14 @@ class ProjekController extends Controller {
             }
         }
 
+        // Handle logo uploads
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('projek_logo', 'public');
+            $projek->update([
+                'logo' => $path,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Project created successfully',
@@ -183,6 +191,7 @@ class ProjekController extends Controller {
             'tipe' => $tipeData,
             'fasilitas' => $fasilitas,
             'gambar' => $gambar,
+            'logo' => $projek->logo_url,
         ];
 
         return response()->json($data);
@@ -266,6 +275,13 @@ class ProjekController extends Controller {
                     'gambar' => $path,
                 ]);
             }
+        }
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('projek_logo', 'public');
+            $projek->update([
+                'logo' => $path,
+            ]);
         }
 
         // Handle multiple image uploads
@@ -401,6 +417,30 @@ class ProjekController extends Controller {
             'message' => 'Images added successfully',
         ], 201);
     }
+
+    public function addLogo(Request $request, $id) {
+        $projek = Projek::find($id);
+
+        if (!$projek) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project not found',
+            ], 404);
+        }
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('projek_logo', 'public');
+            $projek->update([
+                'logo' => $path,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logo added successfully',
+        ], 201);
+    }
+
 
     public function getImages($id) {
         $projek = Projek::find($id);

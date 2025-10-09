@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\FollowupMonitoring;
 use App\Models\Konsumen;
+use App\Models\Projek;
 use App\Models\Properti;
 use App\Models\Prospek;
 use App\Models\Transaksi;
@@ -235,7 +236,7 @@ class DashboardController extends Controller {
             // Get total terjual (sum of transaksi grand_total) for this month
             if ($user->hasRole('Admin')) {
                 // Admin: tampilkan semua data
-                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->sum('grand_total');
 
@@ -246,7 +247,7 @@ class DashboardController extends Controller {
                 // Supervisor: tampilkan data dari subordinate sales
                 $subordinateIds = $user->getSubordinateIds();
                 $subordinateIds[] = $user->id;
-                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->whereIn('created_id', $subordinateIds)
                     ->sum('grand_total');
@@ -259,7 +260,7 @@ class DashboardController extends Controller {
                 // Telemarketing: tampilkan data dari konsumen yang di-assign
                 $assignedKonsumenIds = $user->getAssignedKonsumenIds();
                 $assignedKonsumenIds[] = $user->id;
-                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->whereIn('konsumen_id', $assignedKonsumenIds)
                     ->sum('grand_total');
@@ -270,7 +271,7 @@ class DashboardController extends Controller {
                     ->count();
             } else {
                 // Selain admin: tampilkan data sesuai yang login
-                $terjual = Transaksi::whereYear('created_at', $queryYear)
+                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->where('created_id', Auth::id())
                     ->sum('grand_total');
@@ -332,38 +333,38 @@ class DashboardController extends Controller {
     public function getTransaksiByProperti() {
         $user = Auth::user();
 
-        // Get count of transaksi grouped by properti_id
+        // Get count of transaksi grouped by projeks_id
         if ($user->hasRole('Admin')) {
             // Admin: tampilkan semua data
-            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
-                ->groupBy('properti_id')
+            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
+                ->groupBy('projeks_id')
                 ->get();
         } elseif ($user->hasRole('Supervisor')) {
             // Supervisor: tampilkan data dari subordinate sales
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
+            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
                 ->whereIn('created_id', $subordinateIds)
-                ->groupBy('properti_id')
+                ->groupBy('projeks_id')
                 ->get();
         } elseif ($user->hasRole('Telemarketing')) {
             // Telemarketing: tampilkan data dari konsumen yang di-assign
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
+            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
                 ->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->groupBy('properti_id')
+                ->groupBy('projeks_id')
                 ->get();
         } else {
             // Selain admin: tampilkan data sesuai yang login
-            $transaksiByProperti = Transaksi::select('properti_id', DB::raw('count(*) as total'))
+            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
                 ->where('created_id', Auth::id())
-                ->groupBy('properti_id')
+                ->groupBy('projeks_id')
                 ->get();
         }
 
         // Get all properti data to include names
-        $propertis = Properti::all();
+        $propertis = Projek::all();
 
         // Format data for chart
         $chartData = [];
@@ -388,7 +389,7 @@ class DashboardController extends Controller {
         foreach ($propertis as $properti) {
             $count = 0;
             foreach ($transaksiByProperti as $item) {
-                if ($item->properti_id == $properti->id) {
+                if ($item->projeks_id == $properti->id) {
                     $count = $item->total;
                     break;
                 }

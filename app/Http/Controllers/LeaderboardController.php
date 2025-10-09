@@ -43,12 +43,13 @@ class LeaderboardController extends Controller {
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('transaksis.created_id', '=', 'users.id');
+                $join->where('status', 'Akad');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
                 }
             })
             ->leftJoin('konsumens', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.konsumen_id', '=', 'konsumens.id');
+                $join->on('konsumens.created_id', '=', 'users.id');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
                 }
@@ -162,12 +163,13 @@ class LeaderboardController extends Controller {
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('transaksis.created_id', '=', 'users.id');
+                $join->where('status', 'Akad');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
                 }
             })
             ->leftJoin('konsumens', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.konsumen_id', '=', 'konsumens.id');
+                $join->on('konsumens.created_id', '=', 'users.id');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
                 }
@@ -196,7 +198,7 @@ class LeaderboardController extends Controller {
                 $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
                     ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd]);
             })->sum('min_penjualan');
-            $item->target_percentage = $minPenjualan > 0 ? $item->total_revenue / $minPenjualan * 100 : 0;
+            $item->target_percentage = $minPenjualan > 0 ? number_format($item->total_revenue / $minPenjualan * 100, 2) : 0;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;

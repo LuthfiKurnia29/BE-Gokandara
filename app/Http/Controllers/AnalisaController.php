@@ -144,7 +144,7 @@ class AnalisaController extends Controller {
         $user = Auth::user();
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::where(function ($query) use ($sales) {
+            $query = Transaksi::where('status', 'Akad')->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
                 }
@@ -153,7 +153,7 @@ class AnalisaController extends Controller {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::whereIn('created_id', $subordinateIds)
+            $query = Transaksi::where('status', 'Akad')->whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('created_id', $sales);
@@ -163,14 +163,14 @@ class AnalisaController extends Controller {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
+            $query = Transaksi::where('status', 'Akad')->whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     // if ($sales) {
                     //     $query->where('created_id', $sales);
                     // }
                 });
         } else {
-            $query = Transaksi::where('created_id', Auth::id())->where(function ($query) use ($sales) {
+            $query = Transaksi::where('status', 'Akad')->where('created_id', Auth::id())->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
                 }
@@ -269,9 +269,9 @@ class AnalisaController extends Controller {
         $targetBulanIni = $targetBulanIni->sum('min_penjualan');
 
         // Penjualan (Transaksi)
-        $transaksiHariIni = Transaksi::whereDate('created_at', $today);
-        $transaksiMingguIni = Transaksi::whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
-        $transaksiBulanIni = Transaksi::whereMonth('created_at', $month)->whereYear('created_at', $year);
+        $transaksiHariIni = Transaksi::where('status', 'Akad')->whereDate('created_at', $today);
+        $transaksiMingguIni = Transaksi::where('status', 'Akad')->whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
+        $transaksiBulanIni = Transaksi::where('status', 'Akad')->whereMonth('created_at', $month)->whereYear('created_at', $year);
 
         if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs

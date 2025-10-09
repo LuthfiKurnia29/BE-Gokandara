@@ -19,7 +19,7 @@ class TargetController extends Controller {
             $per = $request->per ?? 10;
             $page = $request->page ?? 1;
             $search = $request->search;
-    
+
             $data = Target::with(['role'])->where(function ($query) use ($search) {
                 if ($search) {
                     $query->whereHas('role', function ($query) use ($search) {
@@ -31,7 +31,7 @@ class TargetController extends Controller {
             })
                 ->orderBy('id', 'desc')
                 ->paginate($per);
-    
+
             return response()->json($data);
         }
 
@@ -59,8 +59,8 @@ class TargetController extends Controller {
                     $query->whereHas('role', function ($q) use ($search) {
                         $q->where('name', 'like', "%$search%");
                     })
-                    ->orWhere('min_penjualan', 'like', "%$search%")
-                    ->orWhere('hadiah', 'like', "%$search%");
+                        ->orWhere('min_penjualan', 'like', "%$search%")
+                        ->orWhere('hadiah', 'like', "%$search%");
                 }
             })
             ->get()
@@ -82,7 +82,7 @@ class TargetController extends Controller {
                 $target->total_penjualan = $totalPenjualan;
                 $target->is_achieved = $isAchieved;
                 $target->has_claimed = $hasClaimed;
-                $target->percentage = $target->min_penjualan > 0 ? 
+                $target->percentage = $target->min_penjualan > 0 ?
                     round(($totalPenjualan / $target->min_penjualan) * 100, 2) : 0;
 
                 return $target;
@@ -217,6 +217,12 @@ class TargetController extends Controller {
             ->paginate();
 
         return response()->json($users);
+    }
+
+    public function getCountAchievedUser(Request $request) {
+        $count = Notifikasi::where('jenis_notifikasi', 'claim')->where('is_read', false)->count();
+
+        return response()->json($count);
     }
 
     public function claimBonus(Request $request, $id) {

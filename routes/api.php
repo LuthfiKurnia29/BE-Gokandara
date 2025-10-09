@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->get('role', [RoleController::class, 'getAllRo
 
 // User
 Route::middleware('auth:sanctum')->get('user', [UserController::class, 'index']);
+Route::middleware('auth:sanctum')->post('user-profile', [UserController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->get('user-spv', [UserController::class, 'getUserSpv']);
 Route::middleware('auth:sanctum')->get('user-spv-sales', [UserController::class, 'getUserSpvSales']);
 Route::middleware('auth:sanctum')->get('user-spv-sales-mitra', [UserController::class, 'getUserSpvSalesMitra']);
@@ -206,6 +207,7 @@ Route::middleware('auth:sanctum')->prefix('target')->group(function () {
     Route::put('{id}', [TargetController::class, 'update']);
     Route::delete('{id}', [TargetController::class, 'destroy']);
     Route::get('{id}/achieved', [TargetController::class, 'getAchievedUser']);
+    Route::get('count-achieved', [TargetController::class, 'getCountAchievedUser']);
     Route::post('{id}/claim', [TargetController::class, 'claimBonus']);
 });
 
