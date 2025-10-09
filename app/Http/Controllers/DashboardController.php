@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller {
-    public function getFollowUpToday() {
+    public function getFollowUpToday(Request $request) {
         $today = Carbon::today()->format('Y-m-d');
         $user = Auth::user();
 
@@ -62,7 +62,7 @@ class DashboardController extends Controller {
         );
     }
 
-    public function getFollowUpTomorrow() {
+    public function getFollowUpTomorrow(Request $request) {
         $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
         $user = Auth::user();
 
@@ -108,7 +108,7 @@ class DashboardController extends Controller {
         );
     }
 
-    public function getNewKonsumens() {
+    public function getNewKonsumens(Request $request) {
         $user = Auth::user();
 
         if (isset($request->created_id)) {
@@ -147,7 +147,7 @@ class DashboardController extends Controller {
         );
     }
 
-    public function getKonsumenByProspek() {
+    public function getKonsumenByProspek(Request $request) {
         $user = Auth::user();
 
         // Get count of konsumen grouped by prospek_id
@@ -359,7 +359,7 @@ class DashboardController extends Controller {
         );
     }
 
-    public function getTransaksiByProperti() {
+    public function getTransaksiByProperti(Request $request) {
         $user = Auth::user();
 
         // Get count of transaksi grouped by projeks_id
