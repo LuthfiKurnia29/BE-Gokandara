@@ -41,12 +41,16 @@ class LeaderboardController extends Controller {
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.created_id', '=', 'users.id')
-                    ->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
+                $join->on('transaksis.created_id', '=', 'users.id');
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $join->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
+                }
             })
             ->leftJoin('konsumens', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.konsumen_id', '=', 'konsumens.id')
-                    ->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
+                $join->on('transaksis.konsumen_id', '=', 'konsumens.id');
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $join->whereBetween('konsumens.created_at', [$dateStart, $dateEnd]);
+                }
             })
             ->leftJoin('targets', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('targets.role_id', '=', 'user_roles.user_id');

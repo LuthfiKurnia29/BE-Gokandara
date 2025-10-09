@@ -24,7 +24,21 @@ class TransaksiController extends Controller {
         $data = Transaksi::with(['konsumen', 'properti', 'blok', 'tipe', 'unit', 'createdBy.parent', 'projek'])
             ->where(function ($query) use ($search, $created_id, $id) {
                 if ($created_id) {
-                    $query->where('created_id', $created_id);
+                    // Check if created_id is Supervisor or Telemarketing
+                    $user = User::find($created_id);
+                    if ($user->hasRole('Supervisor')) {
+                        $query->where('created_id', $created_id)
+                            ->orWhereHas('createdBy', function ($q) use ($created_id) {
+                                $q->where('parent_id', $created_id);
+                            });
+                    } else if ($user->hasRole('Telemarketing')) {
+                        $query->where('created_id', $created_id)
+                            ->orWhereHas('konsumen', function ($q) use ($id) {
+                                $q->where('added_by', $id);
+                            });
+                    } else {
+                        $query->where('created_id', $created_id);
+                    }
                 } else if (auth()->user()->hasRole('Admin')) {
                     $query->where('status', '==', 'Negotiation')
                         ->orWhere('created_id', $id);
