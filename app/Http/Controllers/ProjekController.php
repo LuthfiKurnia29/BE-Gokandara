@@ -195,6 +195,9 @@ class ProjekController extends Controller {
             'fasilitas' => $fasilitas,
             'gambar' => $gambar,
             'logo_url' => $projek->logo_url,
+            'kamar_tidur' => $projek->kamar_tidur,
+            'kamar_mandi' => $projek->kamar_mandi,
+            'wifi' => $projek->wifi,
         ];
 
         return response()->json($data);
