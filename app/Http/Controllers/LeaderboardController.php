@@ -101,8 +101,8 @@ class LeaderboardController extends Controller {
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
             $item->total_revenue = $item->transaksis_sum_grand_total;
-            $item->total_goal = $item->transaksis_count_id;
-            $item->total_leads = $item->konsumens_sum_id;
+            $item->total_goal = $item->transaksis_count;
+            $item->total_leads = $item->konsumens_count;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
@@ -245,8 +245,8 @@ class LeaderboardController extends Controller {
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
             $item->total_revenue = $item->transaksis_sum_grand_total;
-            $item->total_goal = $item->transaksis_count_id;
-            $item->total_leads = $item->konsumens_sum_id;
+            $item->total_goal = $item->transaksis_count;
+            $item->total_leads = $item->konsumens_count;
 
             $item->sales_id = $item->id;
             $item->sales_name = $item->name;
