@@ -65,6 +65,10 @@ class User extends Authenticatable {
         return $this->hasMany(Transaksi::class, 'created_id');
     }
 
+    public function konsumens() {
+        return $this->hasMany(Konsumen::class, 'created_id');
+    }
+
     public function hasRole($role) {
         if (is_array($role)) {
             return $this->roles()->whereHas('role', function ($q) use ($role) {
