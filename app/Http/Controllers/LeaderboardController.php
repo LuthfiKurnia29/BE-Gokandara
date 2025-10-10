@@ -77,11 +77,18 @@ class LeaderboardController extends Controller {
             if (isset($dateStart) && isset($dateEnd)) {
                 $query->whereBetween('created_at', [$dateStart, $dateEnd]);
             }
-        }], 'grand_total')->withSum(['konsumens' => function ($query) use ($dateStart, $dateEnd) {
-            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-        }], 'konsumens.id')->whereHas('roles', function ($query) use ($salesRoleId) {
-            $query->where('role_id', $salesRoleId);
-        })->groupBy('users.id', 'users.name', 'users.email');
+        }], 'grand_total')
+            ->withCount(['transaksis' => function ($query) use ($dateStart, $dateEnd) {
+                $query->where('status', 'Akad');
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                }
+            }], 'id')
+            ->withCount(['konsumens' => function ($query) use ($dateStart, $dateEnd) {
+                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+            }], 'id')->whereHas('roles', function ($query) use ($salesRoleId) {
+                $query->where('role_id', $salesRoleId);
+            })->groupBy('users.id', 'users.name', 'users.email');
 
         // Apply pagination
         $leaderboardData = $leaderboardQuery->paginate($perPage, ['*'], 'page', $page);
@@ -94,7 +101,7 @@ class LeaderboardController extends Controller {
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
             $item->total_revenue = $item->transaksis_sum_grand_total;
-            $item->total_goal = $item->konsumens_sum_id;
+            $item->total_goal = $item->transaksis_count_id;
             $item->total_leads = $item->konsumens_sum_id;
 
             $item->sales_id = $item->id;
@@ -217,11 +224,18 @@ class LeaderboardController extends Controller {
             if (isset($dateStart) && isset($dateEnd)) {
                 $query->whereBetween('created_at', [$dateStart, $dateEnd]);
             }
-        }], 'grand_total')->withSum(['konsumens' => function ($query) use ($dateStart, $dateEnd) {
-            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-        }], 'konsumens.id')->whereHas('roles', function ($query) use ($salesRoleId) {
-            $query->where('role_id', $salesRoleId);
-        })->groupBy('users.id', 'users.name', 'users.email')->limit(3)->get()->sortByDesc('transaksis_sum_grand_total');
+        }], 'grand_total')
+            ->withCount(['transaksis' => function ($query) use ($dateStart, $dateEnd) {
+                $query->where('status', 'Akad');
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                }
+            }], 'id')
+            ->withCount(['konsumens' => function ($query) use ($dateStart, $dateEnd) {
+                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+            }], 'id')->whereHas('roles', function ($query) use ($salesRoleId) {
+                $query->where('role_id', $salesRoleId);
+            })->groupBy('users.id', 'users.name', 'users.email')->get();
 
         $leaderboardQuery = $leaderboardQuery->map(function ($item) use ($dateStart, $dateEnd) {
             $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
@@ -231,7 +245,7 @@ class LeaderboardController extends Controller {
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
             $item->total_revenue = $item->transaksis_sum_grand_total;
-            $item->total_goal = $item->konsumens_sum_id;
+            $item->total_goal = $item->transaksis_count_id;
             $item->total_leads = $item->konsumens_sum_id;
 
             $item->sales_id = $item->id;
@@ -239,7 +253,7 @@ class LeaderboardController extends Controller {
             $item->sales_email = $item->email;
             $item->sales_nip = $item->nip;
             return $item;
-        });
+        })->sortByDesc('transaksis_sum_grand_total')->take(3)->values();
 
         return response()->json($leaderboardQuery);
     }
