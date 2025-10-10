@@ -4,48 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Transaksi extends Model
-{
+class Transaksi extends Model {
     protected $guarded = ['id'];
     protected $with = ['skemaPembayaran'];
 
-    public function konsumen()
-    {
+    public function konsumen() {
         return $this->belongsTo(Konsumen::class, 'konsumen_id');
     }
 
-    public function properti()
-    {
+    public function properti() {
         return $this->belongsTo(Properti::class, 'properti_id');
     }
 
-    public function projek()
-    {
+    public function projek() {
         return $this->belongsTo(Projek::class, 'projeks_id');
     }
 
-    public function blok()
-    {
+    public function blok() {
         return $this->belongsTo(Blok::class, 'blok_id');
     }
 
-    public function tipe()
-    {
+    public function tipe() {
         return $this->belongsTo(Tipe::class, 'tipe_id');
     }
 
-    public function unit()
-    {
+    public function unit() {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    public function skemaPembayaran()
-    {
+    public function skemaPembayaran() {
         return $this->belongsTo(SkemaPembayaran::class, 'skema_pembayaran_id');
     }
-    
-    public function createdBy()
-    {
+
+    public function detailPembayaran() {
+        return $this->hasMany(TransaksiDetailPembayaran::class);
+    }
+
+    public function createdBy() {
         return $this->belongsTo(User::class, 'created_id');
     }
 }

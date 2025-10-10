@@ -125,6 +125,10 @@ class TransaksiController extends Controller {
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi',
             'jangka_waktu' => 'nullable|integer',
+            'detail_pembayaran' => 'required|array',
+            'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.tanggal' => 'required|date',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -203,7 +207,7 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy'])
+        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy', 'detailPembayaran'])
             ->where('id', $id)
             ->first();
         if ($data) {
