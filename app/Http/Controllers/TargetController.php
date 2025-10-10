@@ -216,6 +216,12 @@ class TargetController extends Controller {
             ->havingRaw('COALESCE(SUM(transaksis.grand_total), 0) >= ?', [$target->min_penjualan])
             ->paginate();
 
+        // Get users id
+        $usersId = $users->pluck('id')->toArray();
+
+        // Get users notifikasi
+        $notifikasi = Notifikasi::where('target_id', $id)->whereIn('user_id', $usersId)->update(['is_read' => true]);
+
         return response()->json($users);
     }
 
