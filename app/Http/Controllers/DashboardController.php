@@ -259,7 +259,7 @@ class DashboardController extends Controller {
                     ->where('created_id', $request->created_id)
                     ->sum('grand_total');
 
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                $dipesan = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->where('created_id', $request->created_id)
                     ->count();
@@ -269,7 +269,7 @@ class DashboardController extends Controller {
                     ->whereMonth('created_at', $monthNumber)
                     ->sum('grand_total');
 
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                $dipesan = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->count();
             } elseif ($user->hasRole('Supervisor')) {
@@ -281,7 +281,7 @@ class DashboardController extends Controller {
                     ->whereIn('created_id', $subordinateIds)
                     ->sum('grand_total');
 
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                $dipesan = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->whereIn('created_id', $subordinateIds)
                     ->count();
@@ -294,7 +294,7 @@ class DashboardController extends Controller {
                     ->whereIn('konsumen_id', $assignedKonsumenIds)
                     ->sum('grand_total');
 
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                $dipesan = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->whereIn('id', $assignedKonsumenIds)
                     ->count();
@@ -305,7 +305,7 @@ class DashboardController extends Controller {
                     ->where('created_id', Auth::id())
                     ->sum('grand_total');
 
-                $dipesan = Konsumen::whereYear('created_at', $queryYear)
+                $dipesan = Transaksi::whereYear('created_at', $queryYear)
                     ->whereMonth('created_at', $monthNumber)
                     ->where('created_id', Auth::id())
                     ->count();
