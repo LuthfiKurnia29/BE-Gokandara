@@ -19,7 +19,7 @@ class LeaderboardController extends Controller {
         $page = $request->page ?? 1;
 
         // Get sales role ID once
-        $salesRoleId = Role::where('code', 'sls')->value('id');
+        $salesRoleId = Role::where('code', 'sls')->first()->id;
 
         if (!$salesRoleId) {
             return response()->json([
@@ -67,7 +67,9 @@ class LeaderboardController extends Controller {
             //         });
             //     }
             // })
-            ->whereIn('roles.id', [$salesRoleId])
+            ->whereHas('roles', function ($query) use ($salesRoleId) {
+                $query->where('roles.role_id', $salesRoleId);
+            })
             ->groupBy('users.id', 'users.name', 'users.email');
 
         // Apply pagination
@@ -139,7 +141,7 @@ class LeaderboardController extends Controller {
         $dateEnd = $request->dateEnd ?? null;
 
         // Get sales role ID once
-        $salesRoleId = Role::where('code', 'sls')->value('id');
+        $salesRoleId = Role::where('code', 'sls')->first()->id;
 
         if (!$salesRoleId) {
             return response()->json([
@@ -187,7 +189,9 @@ class LeaderboardController extends Controller {
             //         });
             //     }
             // })
-            ->whereIn('roles.id', [$salesRoleId])
+            ->whereHas('roles', function ($query) use ($salesRoleId) {
+                $query->where('roles.role_id', $salesRoleId);
+            })
             ->groupBy('users.id', 'users.name', 'users.email')
             ->orderByDesc('total_revenue')
             ->limit(3)
