@@ -68,7 +68,7 @@ class LeaderboardController extends Controller {
             //     }
             // })
             ->whereHas('roles', function ($query) use ($salesRoleId) {
-                $query->where('roles.role_id', $salesRoleId);
+                $query->where('role_id', $salesRoleId);
             })
             ->groupBy('users.id', 'users.name', 'users.email');
 
@@ -190,7 +190,7 @@ class LeaderboardController extends Controller {
             //     }
             // })
             ->whereHas('roles', function ($query) use ($salesRoleId) {
-                $query->where('roles.role_id', $salesRoleId);
+                $query->where('role_id', $salesRoleId);
             })
             ->groupBy('users.id', 'users.name', 'users.email')
             ->orderByDesc('total_revenue')
