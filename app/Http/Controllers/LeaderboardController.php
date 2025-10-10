@@ -244,7 +244,7 @@ class LeaderboardController extends Controller {
             })->sum('min_penjualan');
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
-            $item->total_revenue = $item->transaksis_sum_grand_total;
+            $item->total_revenue = $item->transaksis_sum_grand_total ?? 0;
             $item->total_goal = $item->transaksis_count;
             $item->total_leads = $item->konsumens_count;
 
