@@ -466,16 +466,10 @@ class ProjekController extends Controller {
      * Get list of payment schemes with prices by project and type.
      */
     public function pembayaranByTipe(Request $request, $projekId, $tipeId) {
-        $items = DB::table('pembayaran_projeks')
-            ->join('skema_pembayarans', 'pembayaran_projeks.skema_pembayaran_id', '=', 'skema_pembayarans.id')
-            ->where('pembayaran_projeks.projek_id', $projekId)
-            ->where('pembayaran_projeks.tipe_id', $tipeId)
-            ->select([
-                'skema_pembayarans.id as id',
-                'skema_pembayarans.nama as nama',
-                'pembayaran_projeks.harga as harga',
-            ])
-            ->orderBy('skema_pembayarans.id', 'asc')
+        $items = PembayaranProjeks::with(['skemaPembayaran.details'])
+            ->where('projek_id', $projekId)
+            ->where('tipe_id', $tipeId)
+            ->orderBy('skema_pembayaran_id', 'asc')
             ->get();
 
         return response()->json($items);
