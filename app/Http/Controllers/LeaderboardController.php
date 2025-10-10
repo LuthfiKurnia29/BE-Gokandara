@@ -34,13 +34,13 @@ class LeaderboardController extends Controller {
             'users.name',
             'users.email', // Add other user fields you need
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
-            DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
-            DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
+            DB::raw('COALESCE(COUNT(DISTINCT transaksis.id), 0) as total_goal'),
+            DB::raw('COALESCE(COUNT(DISTINCT konsumens.id), 0) as total_leads'),
             // DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
-            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
-            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+            // ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            // ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('transaksis.created_id', '=', 'users.id')
                     ->where('transaksis.status', '=', 'Akad');
@@ -154,13 +154,13 @@ class LeaderboardController extends Controller {
             'users.name',
             'users.email', // Add other user fields you need
             DB::raw('COALESCE(SUM(transaksis.grand_total), 0) as total_revenue'),
-            DB::raw('COALESCE(COUNT(transaksis.id), 0) as total_goal'),
-            DB::raw('COALESCE(COUNT(konsumens.id), 0) as total_leads'),
+            DB::raw('COALESCE(COUNT(DISTINCT transaksis.id), 0) as total_goal'),
+            DB::raw('COALESCE(COUNT(DISTINCT konsumens.id), 0) as total_leads'),
             // DB::raw('COALESCE(SUM(targets.min_penjualan), 0) as total_target'),
         ])
             ->with(['roles.role'])
-            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
-            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
+            // ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            // ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
                 $join->on('transaksis.created_id', '=', 'users.id')
                     ->where('transaksis.status', '=', 'Akad');
