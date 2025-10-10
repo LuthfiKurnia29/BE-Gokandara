@@ -64,7 +64,7 @@ class KonsumenController extends Controller {
                 $query->where('prospek_id', $prospek_id);
             })
             ->when($status, function ($query) use ($status) {
-                $query->whereHas('transaksi', function ($q) use ($status) {
+                $query->whereHas('latestTransaksi', function ($q) use ($status) {
                     $q->where('status', $status);
                 });
             })

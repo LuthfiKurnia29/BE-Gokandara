@@ -42,8 +42,8 @@ class LeaderboardController extends Controller {
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.created_id', '=', 'users.id');
-                $join->where('status', 'Akad');
+                $join->on('transaksis.created_id', '=', 'users.id')
+                    ->where('transaksis.status', '=', 'Akad');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
                 }
@@ -162,8 +162,8 @@ class LeaderboardController extends Controller {
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
             ->leftJoin('transaksis', function ($join) use ($dateStart, $dateEnd) {
-                $join->on('transaksis.created_id', '=', 'users.id');
-                $join->where('status', 'Akad');
+                $join->on('transaksis.created_id', '=', 'users.id')
+                    ->where('transaksis.status', '=', 'Akad');
                 if (isset($dateStart) && isset($dateEnd)) {
                     $join->whereBetween('transaksis.created_at', [$dateStart, $dateEnd]);
                 }
@@ -189,7 +189,7 @@ class LeaderboardController extends Controller {
             // })
             ->whereIn('roles.id', [$salesRoleId])
             ->groupBy('users.id', 'users.name', 'users.email')
-            ->orderByDesc('total_leads')
+            ->orderByDesc('total_revenue')
             ->limit(3)
             ->get();
 
