@@ -307,7 +307,7 @@ class AnalisaController extends Controller {
                 $transaksiHariIni->where('created_id', $sales->id);
                 $transaksiMingguIni->where('created_id', $sales->id);
                 $transaksiBulanIni->where('created_id', $sales->id);
-            } else {
+            } else if (!$user->hasRole('Admin')) {
                 $transaksiHariIni->where('created_id', Auth::id());
                 $transaksiMingguIni->where('created_id', Auth::id());
                 $transaksiBulanIni->where('created_id', Auth::id());
