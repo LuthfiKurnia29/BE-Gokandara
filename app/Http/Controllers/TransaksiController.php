@@ -193,7 +193,7 @@ class TransaksiController extends Controller {
         $stock->save();
 
         $transaksi = Transaksi::create($validate);
-        $transaksi->detailPembayaran->createMany($validate['detail_pembayaran']);
+        $transaksi->detailPembayaran()->createMany($validate['detail_pembayaran']);
 
         return response()->json(
             [
@@ -317,8 +317,8 @@ class TransaksiController extends Controller {
         }
 
         $transaksi->update($validate);
-        $transaksi->detailPembayaran->delete();
-        $transaksi->detailPembayaran->createMany($validate['detail_pembayaran']);
+        $transaksi->detailPembayaran()->delete();
+        $transaksi->detailPembayaran()->createMany($validate['detail_pembayaran']);
 
         return response()->json(
             [
