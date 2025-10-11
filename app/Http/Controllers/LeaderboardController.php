@@ -232,15 +232,19 @@ class LeaderboardController extends Controller {
                 }
             }], 'id')
             ->withCount(['konsumens' => function ($query) use ($dateStart, $dateEnd) {
-                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                }
             }], 'id')->whereHas('roles', function ($query) use ($salesRoleId) {
                 $query->where('role_id', $salesRoleId);
             })->groupBy('users.id', 'users.name', 'users.email')->get();
 
         $leaderboardQuery = $leaderboardQuery->map(function ($item) use ($dateStart, $dateEnd) {
             $minPenjualan = Target::where('role_id', $item->roles[0]->role_id)->where(function ($query) use ($dateStart, $dateEnd) {
-                $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
-                    ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd]);
+                if (isset($dateStart) && isset($dateEnd)) {
+                    $query->whereBetween('tanggal_awal', [$dateStart, $dateEnd])
+                        ->orWhereBetween('tanggal_akhir', [$dateStart, $dateEnd]);
+                }
             })->sum('min_penjualan');
             $item->target_percentage = $minPenjualan > 0 ? number_format($item->transaksis_sum_grand_total / $minPenjualan * 100, 2) : 0;
 
