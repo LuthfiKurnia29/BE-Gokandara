@@ -207,7 +207,7 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy', 'detailPembayaran'])
+        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy.roles', 'detailPembayaran'])
             ->where('id', $id)
             ->first();
         if ($data) {
