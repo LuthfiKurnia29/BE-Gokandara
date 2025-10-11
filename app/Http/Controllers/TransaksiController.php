@@ -192,7 +192,8 @@ class TransaksiController extends Controller {
         $stock->unit_terjual += 1;
         $stock->save();
 
-        Transaksi::create($validate);
+        $transaksi = Transaksi::create($validate);
+        $transaksi->detailPembayaran->createMany($validate['detail_pembayarans']);
 
         return response()->json(
             [
@@ -238,6 +239,10 @@ class TransaksiController extends Controller {
             'harga_per_meter' => 'nullable|numeric',
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi,' . $id,
+            'detail_pembayaran' => 'required|array',
+            'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.tanggal' => 'required|date',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -312,6 +317,7 @@ class TransaksiController extends Controller {
         }
 
         $transaksi->update($validate);
+        $transaksi->detailPembayaran->createMany($validate['detail_pembayarans']);
 
         return response()->json(
             [
