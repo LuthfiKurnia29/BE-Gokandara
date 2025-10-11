@@ -317,6 +317,7 @@ class TransaksiController extends Controller {
         }
 
         $transaksi->update($validate);
+        $transaksi->detailPembayaran->delete();
         $transaksi->detailPembayaran->createMany($validate['detail_pembayarans']);
 
         return response()->json(
