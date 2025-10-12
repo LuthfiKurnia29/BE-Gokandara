@@ -398,7 +398,7 @@ class DashboardController extends Controller {
         }
 
         // Get all properti data to include names
-        $propertis = Projek::all();
+        $propertis = Projek::withSum('tipes', 'jumlah_unit')->get();
 
         // Format data for chart
         $chartData = [];
@@ -440,6 +440,7 @@ class DashboardController extends Controller {
             $chartData[] = [
                 'name' => $properti->name ?? 'Properti ' . $properti->id,
                 'value' => $count,
+                'total_unit' => $properti->tipes_sum_jumlah_unit,
                 'percentage' => $percentage . '%',
                 'color' => $color,
             ];
