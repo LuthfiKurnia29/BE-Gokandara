@@ -346,7 +346,7 @@ class AnalisaController extends Controller {
         $user = Auth::user();
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::with(['konsumen.prospek'])->where(function ($query) use ($sales) {
+            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
                 }
@@ -355,7 +355,7 @@ class AnalisaController extends Controller {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::with(['konsumen.prospek'])
+            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
                 ->whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -366,7 +366,7 @@ class AnalisaController extends Controller {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::with(['konsumen.prospek'])
+            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
                 ->whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     // if ($sales) {
@@ -374,7 +374,7 @@ class AnalisaController extends Controller {
                     // }
                 });
         } else {
-            $query = Transaksi::with(['konsumen.prospek'])
+            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
                 ->where('created_id', Auth::id())
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
@@ -416,7 +416,7 @@ class AnalisaController extends Controller {
         $user = Auth::user();
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::where(function ($query) use ($sales) {
+            $query = Transaksi::where('status', 'Akad')->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
                 }
@@ -425,7 +425,7 @@ class AnalisaController extends Controller {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::whereIn('created_id', $subordinateIds)
+            $query = Transaksi::where('status', 'Akad')->whereIn('created_id', $subordinateIds)
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('created_id', $sales);
@@ -435,14 +435,14 @@ class AnalisaController extends Controller {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::whereIn('konsumen_id', $assignedKonsumenIds)
+            $query = Transaksi::where('status', 'Akad')->whereIn('konsumen_id', $assignedKonsumenIds)
                 ->where(function ($query) use ($sales) {
                     // if ($sales) {
                     //     $query->where('created_id', $sales);
                     // }
                 });
         } else {
-            $query = Transaksi::where('created_id', Auth::id())->where(function ($query) use ($sales) {
+            $query = Transaksi::where('status', 'Akad')->where('created_id', Auth::id())->where(function ($query) use ($sales) {
                 if ($sales) {
                     $query->where('created_id', $sales);
                 }
