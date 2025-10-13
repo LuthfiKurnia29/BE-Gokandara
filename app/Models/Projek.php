@@ -17,4 +17,8 @@ class Projek extends Model {
     public function gambars() {
         return $this->hasMany(ProjekGambar::class);
     }
+
+    public function tipes() {
+        return $this->hasMany(Tipe::class, 'project_id');
+    }
 }

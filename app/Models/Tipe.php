@@ -14,4 +14,8 @@ class Tipe extends Model {
     public function jenisPembayaran() {
         return $this->hasMany(PembayaranProjeks::class, 'tipe_id');
     }
+
+    public function projek() {
+        return $this->belongsTo(Projek::class, 'project_id');
+    }
 }

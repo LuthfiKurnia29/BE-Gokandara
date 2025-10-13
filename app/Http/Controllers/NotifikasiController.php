@@ -11,7 +11,7 @@ class NotifikasiController extends Controller {
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Notifikasi::with(['konsumen', 'chatting.pengirim', 'target', 'user'])
+        $data = Notifikasi::with(['konsumen.createdBy', 'chatting.pengirim', 'target', 'user'])
             ->where('penerima_id', auth()->user()->id)
             ->where(function ($query) use ($search) {
                 if ($search) {
@@ -29,7 +29,7 @@ class NotifikasiController extends Controller {
         $page = $request->page ?? 1;
         $search = $request->search;
 
-        $data = Notifikasi::with(['konsumen', 'chatting.pengirim', 'target', 'user'])
+        $data = Notifikasi::with(['konsumen.createdBy', 'chatting.pengirim', 'target', 'user'])
             ->where('penerima_id', auth()->user()->id)
             ->where('is_read', false)
             ->where(function ($query) use ($search) {

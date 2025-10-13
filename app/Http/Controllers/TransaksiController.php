@@ -125,6 +125,10 @@ class TransaksiController extends Controller {
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi',
             'jangka_waktu' => 'nullable|integer',
+            'detail_pembayaran' => 'required|array',
+            'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.tanggal' => 'required|date',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -188,7 +192,8 @@ class TransaksiController extends Controller {
         $stock->unit_terjual += 1;
         $stock->save();
 
-        Transaksi::create($validate);
+        $transaksi = Transaksi::create($validate);
+        $transaksi->detailPembayaran()->createMany($validate['detail_pembayaran']);
 
         return response()->json(
             [
@@ -203,7 +208,7 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy'])
+        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy.roles', 'detailPembayaran'])
             ->where('id', $id)
             ->first();
         if ($data) {
@@ -234,6 +239,10 @@ class TransaksiController extends Controller {
             'harga_per_meter' => 'nullable|numeric',
             'dp' => 'nullable|numeric',
             'no_transaksi' => 'required|numeric|unique:transaksis,no_transaksi,' . $id,
+            'detail_pembayaran' => 'required|array',
+            'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
+            'detail_pembayaran.*.tanggal' => 'required|date',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -308,6 +317,8 @@ class TransaksiController extends Controller {
         }
 
         $transaksi->update($validate);
+        $transaksi->detailPembayaran()->delete();
+        $transaksi->detailPembayaran()->createMany($validate['detail_pembayaran']);
 
         return response()->json(
             [
