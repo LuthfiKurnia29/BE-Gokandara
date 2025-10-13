@@ -359,7 +359,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad';
 
         $query = Transaksi::with(['konsumen.prospek']);
 
@@ -436,7 +436,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad';
 
         $query = Transaksi::query();
 
