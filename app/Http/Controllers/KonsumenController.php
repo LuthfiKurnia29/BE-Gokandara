@@ -439,126 +439,318 @@ class KonsumenController extends Controller {
         $prospek_id = $request->prospek_id;
         $status = $request->status;
 
-        // Build query with same logic as index method
-        $konsumenData = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
-            ->where(function ($query) use ($search, $created_id, $user, $userRole) {
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
-                    $query->orWhere('added_by', $created_id);
-                } else {
-                    $query->where('created_id', $user->id);
-                    $query->orWhere('added_by', $user->id);
+        // Set file name
+        $fileName = 'konsumen_' . date('Y-m-d_His') . '.xlsx';
+
+        // Create response with streamed content
+        return new StreamedResponse(
+            function () use ($search, $dateStart, $dateEnd, $created_id, $prospek_id, $status, $user, $userRole) {
+                // Create new Spreadsheet
+                $spreadsheet = new Spreadsheet();
+                $sheet = $spreadsheet->getActiveSheet();
+
+                // Set document properties
+                $spreadsheet->getProperties()
+                    ->setCreator('BE-Gokandara')
+                    ->setTitle('Data Konsumen')
+                    ->setSubject('Export Data Konsumen')
+                    ->setDescription('Data konsumen exported from system');
+
+                // Define headers
+                $headers = [
+                    'ID',
+                    'Nama',
+                    'Email',
+                    'Telepon',
+                    'No. KTP',
+                    'Alamat',
+                    'Projek',
+                    'Prospek',
+                    'Kesiapan Dana',
+                    'Pengalaman',
+                    'Deskripsi',
+                    'Status Transaksi',
+                    'Dibuat Oleh',
+                    'Tanggal Dibuat',
+                    'Tanggal Diupdate'
+                ];
+
+                // Set headers
+                $column = 'A';
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($column . '1', $header);
+                    $column++;
                 }
 
-                if ($userRole->role->name === 'Admin' && !$created_id) {
-                    // Get All Sales under Admin
-                    $query->orWhere('status_delete', 'pending');
-                }
+                // Style header row
+                $headerStyle = $sheet->getStyle('A1:O1');
+                $headerStyle->getFont()->setBold(true);
+                $headerStyle->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFE0E0E0');
+                $headerStyle->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
 
-                if ($search) {
-                    $query
-                        ->where('name', 'like', "%$search%")
-                        ->orWhere('address', 'like', "%$search%")
-                        ->orWhere('ktp_number', 'like', "%$search%")
-                        ->orWhere('phone', 'like', "%$search%")
-                        ->orWhere('email', 'like', "%$search%");
-                }
-            })
-            ->when($dateStart && $dateEnd, function ($query) use ($dateStart, $dateEnd) {
-                $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-            })
-            ->when($prospek_id, function ($query) use ($prospek_id) {
-                $query->where('prospek_id', $prospek_id);
-            })
-            ->when($status, function ($query) use ($status) {
-                $query->whereHas('latestTransaksi', function ($q) use ($status) {
-                    $q->where('status', $status);
+                // Process data in chunks to avoid memory issues
+                $row = 2;
+                $chunkSize = 100; // Process 100 records at a time
+
+                // Build base query
+                $baseQuery = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
+                    ->where(function ($query) use ($search, $created_id, $user, $userRole) {
+                        if ($created_id) {
+                            $query->where('created_id', $created_id);
+                            $query->orWhere('added_by', $created_id);
+                        } else {
+                            $query->where('created_id', $user->id);
+                            $query->orWhere('added_by', $user->id);
+                        }
+
+                        if ($userRole->role->name === 'Admin' && !$created_id) {
+                            // Get All Sales under Admin
+                            $query->orWhere('status_delete', 'pending');
+                        }
+
+                        if ($search) {
+                            $query
+                                ->where('name', 'like', "%$search%")
+                                ->orWhere('address', 'like', "%$search%")
+                                ->orWhere('ktp_number', 'like', "%$search%")
+                                ->orWhere('phone', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%");
+                        }
+                    })
+                    ->when($dateStart && $dateEnd, function ($query) use ($dateStart, $dateEnd) {
+                        $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                    })
+                    ->when($prospek_id, function ($query) use ($prospek_id) {
+                        $query->where('prospek_id', $prospek_id);
+                    })
+                    ->when($status, function ($query) use ($status) {
+                        $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                            $q->where('status', $status);
+                        });
+                    })
+                    ->orderBy('id', 'desc');
+
+                // Process data in chunks
+                $baseQuery->chunk($chunkSize, function ($konsumenChunk) use ($sheet, &$row) {
+                    foreach ($konsumenChunk as $konsumen) {
+                        $sheet->setCellValue('A' . $row, $konsumen->id);
+                        $sheet->setCellValue('B' . $row, $konsumen->name);
+                        $sheet->setCellValue('C' . $row, $konsumen->email ?? '-');
+                        $sheet->setCellValue('D' . $row, $konsumen->phone);
+                        $sheet->setCellValue('E' . $row, $konsumen->ktp_number ?? '-');
+                        $sheet->setCellValue('F' . $row, $konsumen->address);
+                        $sheet->setCellValue('G' . $row, $konsumen->projek->name ?? '-');
+                        $sheet->setCellValue('H' . $row, $konsumen->prospek->name ?? '-');
+                        $sheet->setCellValue('I' . $row, 'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'));
+                        $sheet->setCellValue('J' . $row, $konsumen->pengalaman ?? '-');
+                        $sheet->setCellValue('K' . $row, $konsumen->description ?? '-');
+                        $sheet->setCellValue('L' . $row, $konsumen->latestTransaksi->status ?? 'Belum Ada Transaksi');
+                        $sheet->setCellValue('M' . $row, $konsumen->createdBy->name ?? '-');
+                        $sheet->setCellValue('N' . $row, $konsumen->created_at->format('d-m-Y H:i:s'));
+                        $sheet->setCellValue('O' . $row, $konsumen->updated_at->format('d-m-Y H:i:s'));
+                        $row++;
+                    }
+
+                    // Clear memory after each chunk
+                    unset($konsumenChunk);
+                    gc_collect_cycles();
                 });
-            })
-            ->orderBy('id', 'desc')
-            ->get();
 
-        // Create new Spreadsheet
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+                // Auto-size columns
+                foreach (range('A', 'O') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
 
-        // Set document properties
-        $spreadsheet->getProperties()
-            ->setCreator('BE-Gokandara')
-            ->setTitle('Data Konsumen')
-            ->setSubject('Export Data Konsumen')
-            ->setDescription('Data konsumen exported from system');
+                // Write to output
+                $writer = new Xlsx($spreadsheet);
+                $writer->save('php://output');
 
-        // Define headers
-        $headers = [
-            'ID',
-            'Nama',
-            'Email',
-            'Telepon',
-            'No. KTP',
-            'Alamat',
-            'Projek',
-            'Prospek',
-            'Kesiapan Dana',
-            'Pengalaman',
-            'Deskripsi',
-            'Status Transaksi',
-            'Dibuat Oleh',
-            'Tanggal Dibuat',
-            'Tanggal Diupdate'
-        ];
+                // Clean up
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+                gc_collect_cycles();
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'Cache-Control' => 'max-age=0',
+            ]
+        );
+    }
 
-        // Set headers
-        $column = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue($column . '1', $header);
-            $column++;
-        }
+    /**
+     * Export konsumen to Excel with same filters as index (Memory Optimized)
+     */
+    public function exportOptimized(Request $request) {
+        $user = Auth::user();
+        $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
-        // Style header row
-        $headerStyle = $sheet->getStyle('A1:O1');
-        $headerStyle->getFont()->setBold(true);
-        $headerStyle->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFE0E0E0');
-        $headerStyle->getAlignment()
-            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-            ->setVertical(Alignment::VERTICAL_CENTER);
-
-        // Add data
-        $row = 2;
-        foreach ($konsumenData as $konsumen) {
-            $sheet->setCellValue('A' . $row, $konsumen->id);
-            $sheet->setCellValue('B' . $row, $konsumen->name);
-            $sheet->setCellValue('C' . $row, $konsumen->email ?? '-');
-            $sheet->setCellValue('D' . $row, $konsumen->phone);
-            $sheet->setCellValue('E' . $row, $konsumen->ktp_number ?? '-');
-            $sheet->setCellValue('F' . $row, $konsumen->address);
-            $sheet->setCellValue('G' . $row, $konsumen->projek->name ?? '-');
-            $sheet->setCellValue('H' . $row, $konsumen->prospek->name ?? '-');
-            $sheet->setCellValue('I' . $row, 'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'));
-            $sheet->setCellValue('J' . $row, $konsumen->pengalaman ?? '-');
-            $sheet->setCellValue('K' . $row, $konsumen->description ?? '-');
-            $sheet->setCellValue('L' . $row, $konsumen->latestTransaksi->status ?? 'Belum Ada Transaksi');
-            $sheet->setCellValue('M' . $row, $konsumen->createdBy->name ?? '-');
-            $sheet->setCellValue('N' . $row, $konsumen->created_at->format('d-m-Y H:i:s'));
-            $sheet->setCellValue('O' . $row, $konsumen->updated_at->format('d-m-Y H:i:s'));
-            $row++;
-        }
-
-        // Auto-size columns
-        foreach (range('A', 'O') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+        // Get filters from request
+        $search = $request->search;
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $created_id = $request->created_id;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
 
         // Set file name
         $fileName = 'konsumen_' . date('Y-m-d_His') . '.xlsx';
 
         // Create response with streamed content
         return new StreamedResponse(
-            function () use ($spreadsheet) {
+            function () use ($search, $dateStart, $dateEnd, $created_id, $prospek_id, $status, $user, $userRole) {
+                // Create new Spreadsheet
+                $spreadsheet = new Spreadsheet();
+                $sheet = $spreadsheet->getActiveSheet();
+
+                // Set document properties
+                $spreadsheet->getProperties()
+                    ->setCreator('BE-Gokandara')
+                    ->setTitle('Data Konsumen')
+                    ->setSubject('Export Data Konsumen')
+                    ->setDescription('Data konsumen exported from system');
+
+                // Define headers
+                $headers = [
+                    'ID',
+                    'Nama',
+                    'Email',
+                    'Telepon',
+                    'No. KTP',
+                    'Alamat',
+                    'Projek',
+                    'Prospek',
+                    'Kesiapan Dana',
+                    'Pengalaman',
+                    'Deskripsi',
+                    'Status Transaksi',
+                    'Dibuat Oleh',
+                    'Tanggal Dibuat',
+                    'Tanggal Diupdate'
+                ];
+
+                // Set headers
+                $column = 'A';
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($column . '1', $header);
+                    $column++;
+                }
+
+                // Style header row
+                $headerStyle = $sheet->getStyle('A1:O1');
+                $headerStyle->getFont()->setBold(true);
+                $headerStyle->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFE0E0E0');
+                $headerStyle->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+
+                // Process data using cursor for maximum memory efficiency
+                $row = 2;
+
+                // Build base query without eager loading to reduce memory usage
+                $baseQuery = Konsumen::select(
+                    'id',
+                    'name',
+                    'email',
+                    'phone',
+                    'ktp_number',
+                    'address',
+                    'project_id',
+                    'prospek_id',
+                    'kesiapan_dana',
+                    'pengalaman',
+                    'description',
+                    'created_id',
+                    'created_at',
+                    'updated_at'
+                )
+                    ->where(function ($query) use ($search, $created_id, $user, $userRole) {
+                        if ($created_id) {
+                            $query->where('created_id', $created_id);
+                            $query->orWhere('added_by', $created_id);
+                        } else {
+                            $query->where('created_id', $user->id);
+                            $query->orWhere('added_by', $user->id);
+                        }
+
+                        if ($userRole->role->name === 'Admin' && !$created_id) {
+                            $query->orWhere('status_delete', 'pending');
+                        }
+
+                        if ($search) {
+                            $query
+                                ->where('name', 'like', "%$search%")
+                                ->orWhere('address', 'like', "%$search%")
+                                ->orWhere('ktp_number', 'like', "%$search%")
+                                ->orWhere('phone', 'like', "%$search%")
+                                ->orWhere('email', 'like', "%$search%");
+                        }
+                    })
+                    ->when($dateStart && $dateEnd, function ($query) use ($dateStart, $dateEnd) {
+                        $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+                    })
+                    ->when($prospek_id, function ($query) use ($prospek_id) {
+                        $query->where('prospek_id', $prospek_id);
+                    })
+                    ->when($status, function ($query) use ($status) {
+                        $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                            $q->where('status', $status);
+                        });
+                    })
+                    ->orderBy('id', 'desc');
+
+                // Use cursor for memory-efficient processing
+                $baseQuery->cursor()->each(function ($konsumen) use ($sheet, &$row) {
+                    // Load relationships only when needed
+                    $projek = \App\Models\Projek::find($konsumen->project_id);
+                    $prospek = \App\Models\Prospek::find($konsumen->prospek_id);
+                    $createdBy = \App\Models\User::find($konsumen->created_id);
+                    $latestTransaksi = \App\Models\Transaksi::where('konsumen_id', $konsumen->id)
+                        ->orderBy('id', 'desc')->first();
+
+                    $sheet->setCellValue('A' . $row, $konsumen->id);
+                    $sheet->setCellValue('B' . $row, $konsumen->name);
+                    $sheet->setCellValue('C' . $row, $konsumen->email ?? '-');
+                    $sheet->setCellValue('D' . $row, $konsumen->phone);
+                    $sheet->setCellValue('E' . $row, $konsumen->ktp_number ?? '-');
+                    $sheet->setCellValue('F' . $row, $konsumen->address);
+                    $sheet->setCellValue('G' . $row, $projek->name ?? '-');
+                    $sheet->setCellValue('H' . $row, $prospek->name ?? '-');
+                    $sheet->setCellValue('I' . $row, 'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'));
+                    $sheet->setCellValue('J' . $row, $konsumen->pengalaman ?? '-');
+                    $sheet->setCellValue('K' . $row, $konsumen->description ?? '-');
+                    $sheet->setCellValue('L' . $row, $latestTransaksi->status ?? 'Belum Ada Transaksi');
+                    $sheet->setCellValue('M' . $row, $createdBy->name ?? '-');
+                    $sheet->setCellValue('N' . $row, $konsumen->created_at->format('d-m-Y H:i:s'));
+                    $sheet->setCellValue('O' . $row, $konsumen->updated_at->format('d-m-Y H:i:s'));
+                    $row++;
+
+                    // Force garbage collection every 50 records
+                    if ($row % 50 === 0) {
+                        gc_collect_cycles();
+                    }
+                });
+
+                // Auto-size columns
+                foreach (range('A', 'O') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                // Write to output
                 $writer = new Xlsx($spreadsheet);
                 $writer->save('php://output');
+
+                // Clean up
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+                gc_collect_cycles();
             },
             200,
             [
