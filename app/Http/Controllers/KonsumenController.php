@@ -13,11 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
@@ -425,7 +420,7 @@ class KonsumenController extends Controller {
     }
 
     /**
-     * Export konsumen to Excel with same filters as index
+     * Export konsumen to CSV with same filters as index
      */
     public function export(Request $request) {
         $user = Auth::user();
@@ -440,21 +435,16 @@ class KonsumenController extends Controller {
         $status = $request->status;
 
         // Set file name
-        $fileName = 'konsumen_' . date('Y-m-d_His') . '.xlsx';
+        $fileName = 'konsumen_' . date('Y-m-d_His') . '.csv';
 
         // Create response with streamed content
         return new StreamedResponse(
             function () use ($search, $dateStart, $dateEnd, $created_id, $prospek_id, $status, $user, $userRole) {
-                // Create new Spreadsheet
-                $spreadsheet = new Spreadsheet();
-                $sheet = $spreadsheet->getActiveSheet();
+                // Open output stream
+                $handle = fopen('php://output', 'w');
 
-                // Set document properties
-                $spreadsheet->getProperties()
-                    ->setCreator('BE-Gokandara')
-                    ->setTitle('Data Konsumen')
-                    ->setSubject('Export Data Konsumen')
-                    ->setDescription('Data konsumen exported from system');
+                // Add BOM for UTF-8 to ensure proper encoding in Excel
+                fwrite($handle, "\xEF\xBB\xBF");
 
                 // Define headers
                 $headers = [
@@ -475,26 +465,8 @@ class KonsumenController extends Controller {
                     'Tanggal Diupdate'
                 ];
 
-                // Set headers
-                $column = 'A';
-                foreach ($headers as $header) {
-                    $sheet->setCellValue($column . '1', $header);
-                    $column++;
-                }
-
-                // Style header row
-                $headerStyle = $sheet->getStyle('A1:O1');
-                $headerStyle->getFont()->setBold(true);
-                $headerStyle->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFE0E0E0');
-                $headerStyle->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER);
-
-                // Process data in chunks to avoid memory issues
-                $row = 2;
-                $chunkSize = 100; // Process 100 records at a time
+                // Write headers
+                fputcsv($handle, $headers);
 
                 // Build base query
                 $baseQuery = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
@@ -535,24 +507,27 @@ class KonsumenController extends Controller {
                     ->orderBy('id', 'desc');
 
                 // Process data in chunks
-                $baseQuery->chunk($chunkSize, function ($konsumenChunk) use ($sheet, &$row) {
+                $baseQuery->chunk(100, function ($konsumenChunk) use ($handle) {
                     foreach ($konsumenChunk as $konsumen) {
-                        $sheet->setCellValue('A' . $row, $konsumen->id);
-                        $sheet->setCellValue('B' . $row, $konsumen->name);
-                        $sheet->setCellValue('C' . $row, $konsumen->email ?? '-');
-                        $sheet->setCellValue('D' . $row, $konsumen->phone);
-                        $sheet->setCellValue('E' . $row, $konsumen->ktp_number ?? '-');
-                        $sheet->setCellValue('F' . $row, $konsumen->address);
-                        $sheet->setCellValue('G' . $row, $konsumen->projek->name ?? '-');
-                        $sheet->setCellValue('H' . $row, $konsumen->prospek->name ?? '-');
-                        $sheet->setCellValue('I' . $row, 'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'));
-                        $sheet->setCellValue('J' . $row, $konsumen->pengalaman ?? '-');
-                        $sheet->setCellValue('K' . $row, $konsumen->description ?? '-');
-                        $sheet->setCellValue('L' . $row, $konsumen->latestTransaksi->status ?? 'Belum Ada Transaksi');
-                        $sheet->setCellValue('M' . $row, $konsumen->createdBy->name ?? '-');
-                        $sheet->setCellValue('N' . $row, $konsumen->created_at->format('d-m-Y H:i:s'));
-                        $sheet->setCellValue('O' . $row, $konsumen->updated_at->format('d-m-Y H:i:s'));
-                        $row++;
+                        $row = [
+                            $konsumen->id,
+                            $konsumen->name,
+                            $konsumen->email ?? '-',
+                            $konsumen->phone,
+                            $konsumen->ktp_number ?? '-',
+                            $konsumen->address,
+                            $konsumen->projek->name ?? '-',
+                            $konsumen->prospek->name ?? '-',
+                            'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'),
+                            $konsumen->pengalaman ?? '-',
+                            $konsumen->description ?? '-',
+                            $konsumen->latestTransaksi->status ?? 'Belum Ada Transaksi',
+                            $konsumen->createdBy->name ?? '-',
+                            $konsumen->created_at->format('d-m-Y H:i:s'),
+                            $konsumen->updated_at->format('d-m-Y H:i:s')
+                        ];
+
+                        fputcsv($handle, $row);
                     }
 
                     // Clear memory after each chunk
@@ -560,23 +535,12 @@ class KonsumenController extends Controller {
                     gc_collect_cycles();
                 });
 
-                // Auto-size columns
-                foreach (range('A', 'O') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
-                }
-
-                // Write to output
-                $writer = new Xlsx($spreadsheet);
-                $writer->save('php://output');
-
-                // Clean up
-                $spreadsheet->disconnectWorksheets();
-                unset($spreadsheet);
-                gc_collect_cycles();
+                // Close handle
+                fclose($handle);
             },
             200,
             [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Type' => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
                 'Cache-Control' => 'max-age=0',
             ]
@@ -584,7 +548,7 @@ class KonsumenController extends Controller {
     }
 
     /**
-     * Export konsumen to Excel with same filters as index (Memory Optimized)
+     * Export konsumen to CSV with same filters as index (Memory Optimized)
      */
     public function exportOptimized(Request $request) {
         $user = Auth::user();
@@ -599,21 +563,16 @@ class KonsumenController extends Controller {
         $status = $request->status;
 
         // Set file name
-        $fileName = 'konsumen_' . date('Y-m-d_His') . '.xlsx';
+        $fileName = 'konsumen_' . date('Y-m-d_His') . '.csv';
 
         // Create response with streamed content
         return new StreamedResponse(
             function () use ($search, $dateStart, $dateEnd, $created_id, $prospek_id, $status, $user, $userRole) {
-                // Create new Spreadsheet
-                $spreadsheet = new Spreadsheet();
-                $sheet = $spreadsheet->getActiveSheet();
+                // Open output stream
+                $handle = fopen('php://output', 'w');
 
-                // Set document properties
-                $spreadsheet->getProperties()
-                    ->setCreator('BE-Gokandara')
-                    ->setTitle('Data Konsumen')
-                    ->setSubject('Export Data Konsumen')
-                    ->setDescription('Data konsumen exported from system');
+                // Add BOM for UTF-8 to ensure proper encoding in Excel
+                fwrite($handle, "\xEF\xBB\xBF");
 
                 // Define headers
                 $headers = [
@@ -634,25 +593,8 @@ class KonsumenController extends Controller {
                     'Tanggal Diupdate'
                 ];
 
-                // Set headers
-                $column = 'A';
-                foreach ($headers as $header) {
-                    $sheet->setCellValue($column . '1', $header);
-                    $column++;
-                }
-
-                // Style header row
-                $headerStyle = $sheet->getStyle('A1:O1');
-                $headerStyle->getFont()->setBold(true);
-                $headerStyle->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFE0E0E0');
-                $headerStyle->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER);
-
-                // Process data using cursor for maximum memory efficiency
-                $row = 2;
+                // Write headers
+                fputcsv($handle, $headers);
 
                 // Build base query without eager loading to reduce memory usage
                 $baseQuery = Konsumen::select(
@@ -707,7 +649,7 @@ class KonsumenController extends Controller {
                     ->orderBy('id', 'desc');
 
                 // Use cursor for memory-efficient processing
-                $baseQuery->cursor()->each(function ($konsumen) use ($sheet, &$row) {
+                $baseQuery->cursor()->each(function ($konsumen) use ($handle) {
                     // Load relationships only when needed
                     $projek = \App\Models\Projek::find($konsumen->project_id);
                     $prospek = \App\Models\Prospek::find($konsumen->prospek_id);
@@ -715,46 +657,39 @@ class KonsumenController extends Controller {
                     $latestTransaksi = \App\Models\Transaksi::where('konsumen_id', $konsumen->id)
                         ->orderBy('id', 'desc')->first();
 
-                    $sheet->setCellValue('A' . $row, $konsumen->id);
-                    $sheet->setCellValue('B' . $row, $konsumen->name);
-                    $sheet->setCellValue('C' . $row, $konsumen->email ?? '-');
-                    $sheet->setCellValue('D' . $row, $konsumen->phone);
-                    $sheet->setCellValue('E' . $row, $konsumen->ktp_number ?? '-');
-                    $sheet->setCellValue('F' . $row, $konsumen->address);
-                    $sheet->setCellValue('G' . $row, $projek->name ?? '-');
-                    $sheet->setCellValue('H' . $row, $prospek->name ?? '-');
-                    $sheet->setCellValue('I' . $row, 'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'));
-                    $sheet->setCellValue('J' . $row, $konsumen->pengalaman ?? '-');
-                    $sheet->setCellValue('K' . $row, $konsumen->description ?? '-');
-                    $sheet->setCellValue('L' . $row, $latestTransaksi->status ?? 'Belum Ada Transaksi');
-                    $sheet->setCellValue('M' . $row, $createdBy->name ?? '-');
-                    $sheet->setCellValue('N' . $row, $konsumen->created_at->format('d-m-Y H:i:s'));
-                    $sheet->setCellValue('O' . $row, $konsumen->updated_at->format('d-m-Y H:i:s'));
-                    $row++;
+                    $row = [
+                        $konsumen->id,
+                        $konsumen->name,
+                        $konsumen->email ?? '-',
+                        $konsumen->phone,
+                        $konsumen->ktp_number ?? '-',
+                        $konsumen->address,
+                        $projek->name ?? '-',
+                        $prospek->name ?? '-',
+                        'Rp ' . number_format($konsumen->kesiapan_dana ?? 0, 0, ',', '.'),
+                        $konsumen->pengalaman ?? '-',
+                        $konsumen->description ?? '-',
+                        $latestTransaksi->status ?? 'Belum Ada Transaksi',
+                        $createdBy->name ?? '-',
+                        $konsumen->created_at->format('d-m-Y H:i:s'),
+                        $konsumen->updated_at->format('d-m-Y H:i:s')
+                    ];
+
+                    fputcsv($handle, $row);
 
                     // Force garbage collection every 50 records
-                    if ($row % 50 === 0) {
+                    static $counter = 0;
+                    if (++$counter % 50 === 0) {
                         gc_collect_cycles();
                     }
                 });
 
-                // Auto-size columns
-                foreach (range('A', 'O') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
-                }
-
-                // Write to output
-                $writer = new Xlsx($spreadsheet);
-                $writer->save('php://output');
-
-                // Clean up
-                $spreadsheet->disconnectWorksheets();
-                unset($spreadsheet);
-                gc_collect_cycles();
+                // Close handle
+                fclose($handle);
             },
             200,
             [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Type' => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
                 'Cache-Control' => 'max-age=0',
             ]
