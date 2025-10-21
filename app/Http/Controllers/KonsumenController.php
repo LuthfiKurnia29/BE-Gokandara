@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\KonsumenExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class KonsumenController extends Controller {
@@ -416,5 +418,26 @@ class KonsumenController extends Controller {
             'data' => $data,
             'message' => 'Konsumen retrieved successfully',
         ]);
+    }
+
+    /**
+     * Export konsumen to Excel with same filters as index
+     */
+    public function export(Request $request) {
+        $user = Auth::user();
+        $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
+
+        $filters = [
+            'search' => $request->search,
+            'dateStart' => $request->dateStart,
+            'dateEnd' => $request->dateEnd,
+            'created_id' => $request->created_id,
+            'prospek_id' => $request->prospek_id,
+            'status' => $request->status,
+        ];
+
+        $fileName = 'konsumen_' . date('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new KonsumenExport($filters, $user, $userRole), $fileName);
     }
 }

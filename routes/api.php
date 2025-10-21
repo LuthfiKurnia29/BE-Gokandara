@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->delete('user/{id}', [UserController::class, '
 
 // Konsumen
 Route::middleware('auth:sanctum')->get('konsumen', [KonsumenController::class, 'index']);
+Route::middleware('auth:sanctum')->get('konsumen-export', [KonsumenController::class, 'export']);
 Route::middleware('auth:sanctum')->get('konsumen-by-created/{createdId}', [KonsumenController::class, 'getKonsumenByCreatedId']);
 Route::middleware('auth:sanctum')->get('konsumen/{id}', [KonsumenController::class, 'show']);
 Route::middleware('auth:sanctum')->post('konsumen', [KonsumenController::class, 'store']);
