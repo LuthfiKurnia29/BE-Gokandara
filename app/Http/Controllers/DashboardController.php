@@ -18,38 +18,51 @@ class DashboardController extends Controller {
     public function getFollowUpToday(Request $request) {
         $today = Carbon::today()->format('Y-m-d');
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = FollowupMonitoring::query();
 
         if (isset($request->created_id)) {
-            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
-                ->whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
+            $query->where('sales_id', $request->created_id);
         } else if ($user->hasRole('Admin')) {
-            $followUps = FollowupMonitoring::whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
+            // Admin sees all
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $followUps = FollowupMonitoring::whereIn('sales_id', $subordinateIds)
-                ->whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
+            $query->whereIn('sales_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $followUps = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
-                ->whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $followUps = FollowupMonitoring::where('sales_id', Auth::id())
-                ->whereDate('followup_date', $today)
-                ->with('konsumen')
-                ->get();
+            $query->where('sales_id', Auth::id());
         }
+
+        $query->whereDate('followup_date', $today);
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->whereHas('konsumen.latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $followUps = $query->with('konsumen')->get();
         // This method can be used to return a dashboard view or data
         return response()->json(
             [
@@ -65,38 +78,51 @@ class DashboardController extends Controller {
     public function getFollowUpTomorrow(Request $request) {
         $tomorrow = Carbon::now()->addDay()->format('Y-m-d');
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = FollowupMonitoring::query();
 
         if (isset($request->created_id)) {
-            $followUps = FollowupMonitoring::where('sales_id', $request->created_id)
-                ->whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
+            $query->where('sales_id', $request->created_id);
         } else if ($user->hasRole('Admin')) {
-            $followUps = FollowupMonitoring::whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
+            // Admin sees all
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $followUps = FollowupMonitoring::whereIn('sales_id', $subordinateIds)
-                ->whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
+            $query->whereIn('sales_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $followUps = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
-                ->whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $followUps = FollowupMonitoring::where('sales_id', Auth::id())
-                ->whereDate('followup_date', $tomorrow)
-                ->with('konsumen')
-                ->get();
+            $query->where('sales_id', Auth::id());
         }
+
+        $query->whereDate('followup_date', $tomorrow);
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->whereHas('konsumen.latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $followUps = $query->with('konsumen')->get();
         return response()->json(
             [
                 'message' => 'successfully retrieved follow-ups for this week',
@@ -110,32 +136,49 @@ class DashboardController extends Controller {
 
     public function getNewKonsumens(Request $request) {
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = Konsumen::query();
 
         if (isset($request->created_id)) {
-            $newKonsumens = Konsumen::where('created_id', $request->created_id)
-                ->whereDate('created_at', Carbon::today())
-                ->get();
+            $query->where('created_id', $request->created_id);
         } else if ($user->hasRole('Admin')) {
-            $newKonsumens = Konsumen::whereDate('created_at', Carbon::today())->get();
+            // Admin sees all
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $newKonsumens = Konsumen::whereIn('created_id', $subordinateIds)
-                ->whereDate('created_at', Carbon::today())
-                ->get();
+            $query->whereIn('created_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $newKonsumens = Konsumen::whereIn('id', $assignedKonsumenIds)
-                ->whereDate('created_at', Carbon::today())
-                ->get();
+            $query->whereIn('id', $assignedKonsumenIds);
         } else {
-            $newKonsumens = Konsumen::where('created_id', Auth::id())
-                ->whereDate('created_at', Carbon::today())
-                ->get();
+            $query->where('created_id', Auth::id());
         }
+
+        $query->whereDate('created_at', Carbon::today());
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->where('prospek_id', $prospek_id);
+        }
+
+        if ($status) {
+            $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $newKonsumens = $query->get();
         return response()->json(
             [
                 'message' => 'successfully retrieved new konsumens',
@@ -149,39 +192,48 @@ class DashboardController extends Controller {
 
     public function getKonsumenByProspek(Request $request) {
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = Konsumen::select('prospek_id', DB::raw('count(*) as total'));
 
         // Get count of konsumen grouped by prospek_id
         if (isset($request->created_id)) {
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->where('created_id', $request->created_id)
-                ->groupBy('prospek_id')
-                ->get();
+            $query->where('created_id', $request->created_id);
         } else if ($user->hasRole('Admin')) {
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->groupBy('prospek_id')
-                ->get();
+            // Admin sees all
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->whereIn('created_id', $subordinateIds)
-                ->groupBy('prospek_id')
-                ->get();
+            $query->whereIn('created_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->whereIn('id', $assignedKonsumenIds)
-                ->groupBy('prospek_id')
-                ->get();
+            $query->whereIn('id', $assignedKonsumenIds);
         } else {
-            $konsumenByProspek = Konsumen::select('prospek_id', DB::raw('count(*) as total'))
-                ->where('created_id', Auth::id())
-                ->groupBy('prospek_id')
-                ->get();
+            $query->where('created_id', Auth::id());
         }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->where('prospek_id', $prospek_id);
+        }
+
+        if ($status) {
+            $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $konsumenByProspek = $query->groupBy('prospek_id')->get();
 
         // Get all prospek data to include names
         $prospeks = Prospek::all();
@@ -230,6 +282,10 @@ class DashboardController extends Controller {
         // Get year from request, default to current year
         $year = $request->input('year', Carbon::now()->year);
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
 
         // Define months for the chart
         $months = ['April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret'];
@@ -252,64 +308,57 @@ class DashboardController extends Controller {
                 $queryYear = $year + 1;
             }
 
-            // Get total terjual (sum of transaksi grand_total) for this month
-            if (isset($request->created_id)) {
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', $request->created_id)
-                    ->sum('grand_total');
+            // Build base query for terjual
+            $terjualQuery = Transaksi::where('status', $status)
+                ->whereYear('created_at', $queryYear)
+                ->whereMonth('created_at', $monthNumber);
 
-                $dipesan = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', $request->created_id)
-                    ->count();
+            // Build base query for dipesan
+            $dipesanQuery = Transaksi::where('status', $status)
+                ->whereYear('created_at', $queryYear)
+                ->whereMonth('created_at', $monthNumber);
+
+            // Apply role-based filtering
+            if (isset($request->created_id)) {
+                $terjualQuery->where('created_id', $request->created_id);
+                $dipesanQuery->where('created_id', $request->created_id);
             } else if ($user->hasRole('Admin')) {
                 // Admin: tampilkan semua data
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->sum('grand_total');
-
-                $dipesan = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->count();
             } elseif ($user->hasRole('Supervisor')) {
                 // Supervisor: tampilkan data dari subordinate sales
                 $subordinateIds = $user->getSubordinateIds();
                 $subordinateIds[] = $user->id;
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->whereIn('created_id', $subordinateIds)
-                    ->sum('grand_total');
-
-                $dipesan = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->whereIn('created_id', $subordinateIds)
-                    ->count();
+                $terjualQuery->whereIn('created_id', $subordinateIds);
+                $dipesanQuery->whereIn('created_id', $subordinateIds);
             } elseif ($user->hasRole('Telemarketing')) {
                 // Telemarketing: tampilkan data dari konsumen yang di-assign
                 $assignedKonsumenIds = $user->getAssignedKonsumenIds();
                 $assignedKonsumenIds[] = $user->id;
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->whereIn('konsumen_id', $assignedKonsumenIds)
-                    ->sum('grand_total');
-
-                $dipesan = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->whereIn('id', $assignedKonsumenIds)
-                    ->count();
+                $terjualQuery->whereIn('konsumen_id', $assignedKonsumenIds);
+                $dipesanQuery->whereIn('konsumen_id', $assignedKonsumenIds);
             } else {
                 // Selain admin: tampilkan data sesuai yang login
-                $terjual = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', Auth::id())
-                    ->sum('grand_total');
-
-                $dipesan = Transaksi::where('status', 'Akad')->whereYear('created_at', $queryYear)
-                    ->whereMonth('created_at', $monthNumber)
-                    ->where('created_id', Auth::id())
-                    ->count();
+                $terjualQuery->where('created_id', Auth::id());
+                $dipesanQuery->where('created_id', Auth::id());
             }
+
+            // Apply additional filters
+            if ($dateStart && $dateEnd) {
+                $terjualQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+                $dipesanQuery->whereBetween('created_at', [$dateStart, $dateEnd]);
+            }
+
+            if ($prospek_id) {
+                $terjualQuery->whereHas('konsumen', function ($q) use ($prospek_id) {
+                    $q->where('prospek_id', $prospek_id);
+                });
+                $dipesanQuery->whereHas('konsumen', function ($q) use ($prospek_id) {
+                    $q->where('prospek_id', $prospek_id);
+                });
+            }
+
+            $terjual = $terjualQuery->sum('grand_total');
+            $dipesan = $dipesanQuery->count();
 
             $totalTerjual[] = $terjual;
             $totalDipesan[] = $dipesan;
@@ -361,41 +410,49 @@ class DashboardController extends Controller {
 
     public function getTransaksiByProperti(Request $request) {
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = Transaksi::select('projeks_id', DB::raw('count(*) as total'));
 
         // Get count of transaksi grouped by projeks_id
         if (isset($request->created_id)) {
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->where('created_id', $request->created_id)
-                ->groupBy('projeks_id')
-                ->get();
+            $query->where('created_id', $request->created_id);
         } else if ($user->hasRole('Admin')) {
             // Admin: tampilkan semua data
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->groupBy('projeks_id')
-                ->get();
         } elseif ($user->hasRole('Supervisor')) {
             // Supervisor: tampilkan data dari subordinate sales
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->whereIn('created_id', $subordinateIds)
-                ->groupBy('projeks_id')
-                ->get();
+            $query->whereIn('created_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Telemarketing: tampilkan data dari konsumen yang di-assign
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->groupBy('projeks_id')
-                ->get();
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
             // Selain admin: tampilkan data sesuai yang login
-            $transaksiByProperti = Transaksi::select('projeks_id', DB::raw('count(*) as total'))
-                ->where('created_id', Auth::id())
-                ->groupBy('projeks_id')
-                ->get();
+            $query->where('created_id', Auth::id());
         }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $transaksiByProperti = $query->groupBy('projeks_id')->get();
 
         // Get all properti data to include names
         $propertis = Projek::withSum('tipes', 'jumlah_unit')->get();

@@ -15,46 +15,53 @@ class AnalisaController extends Controller {
     public function getNewKonsumen(Request $request) {
         $sales = $request->created_id;
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = Konsumen::query();
 
         if ($user->hasRole('Admin')) {
-            $data = Konsumen::orderBy('created_at', 'desc')->get()->take(4);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $data = Konsumen::whereIn('created_id', $subordinateIds)
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->take(4);
+            $query->whereIn('created_id', $subordinateIds);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $data = Konsumen::whereIn('id', $assignedKonsumenIds)
-                ->where(function ($query) use ($sales) {
-                    // if ($sales) {
-                    //     $query->where('created_id', $sales);
-                    // }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->take(4);
+            $query->whereIn('id', $assignedKonsumenIds);
         } else {
-            $data = Konsumen::where('created_id', Auth::id())
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->take(4);
+            $query->where('created_id', Auth::id());
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->where('prospek_id', $prospek_id);
+        }
+
+        if ($status) {
+            $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->get()->take(4);
 
         return response()->json($data);
     }
@@ -63,77 +70,61 @@ class AnalisaController extends Controller {
         $sales = $request->created_id;
         $waktu = $request->waktu; // today, tomorrow
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = FollowupMonitoring::query();
 
         if ($user->hasRole('Admin')) {
-            $data = FollowupMonitoring::where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('sales_id', $sales);
-                }
-            })
-                ->where(function ($query) use ($waktu) {
-                    if ($waktu == 'today') {
-                        $query->whereDate('followup_date', now()->toDateString());
-                    } elseif ($waktu == 'tomorrow') {
-                        $query->whereDate('followup_date', now()->addDay()->toDateString());
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            if ($sales) {
+                $query->where('sales_id', $sales);
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $data = FollowupMonitoring::whereIn('sales_id', $subordinateIds)
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('sales_id', $sales);
-                    }
-                })
-                ->where(function ($query) use ($waktu) {
-                    if ($waktu == 'today') {
-                        $query->whereDate('followup_date', now()->toDateString());
-                    } elseif ($waktu == 'tomorrow') {
-                        $query->whereDate('followup_date', now()->addDay()->toDateString());
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->whereIn('sales_id', $subordinateIds);
+            if ($sales) {
+                $query->where('sales_id', $sales);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $data = FollowupMonitoring::whereIn('konsumen_id', $assignedKonsumenIds)
-                ->where(function ($query) use ($sales) {
-                    // if ($sales) {
-                    //     $query->where('sales_id', $sales);
-                    // }
-                })
-                ->where(function ($query) use ($waktu) {
-                    if ($waktu == 'today') {
-                        $query->whereDate('followup_date', now()->toDateString());
-                    } elseif ($waktu == 'tomorrow') {
-                        $query->whereDate('followup_date', now()->addDay()->toDateString());
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $data = FollowupMonitoring::where('sales_id', Auth::id())
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('sales_id', $sales);
-                    }
-                })
-                ->where(function ($query) use ($waktu) {
-                    if ($waktu == 'today') {
-                        $query->whereDate('followup_date', now()->toDateString());
-                    } elseif ($waktu == 'tomorrow') {
-                        $query->whereDate('followup_date', now()->addDay()->toDateString());
-                    }
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->where('sales_id', Auth::id());
+            if ($sales) {
+                $query->where('sales_id', $sales);
+            }
         }
+
+        if ($waktu == 'today') {
+            $query->whereDate('followup_date', now()->toDateString());
+        } elseif ($waktu == 'tomorrow') {
+            $query->whereDate('followup_date', now()->addDay()->toDateString());
+        }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->whereHas('konsumen.latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json(['count_data' => $data->count()]);
     }
@@ -142,39 +133,35 @@ class AnalisaController extends Controller {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
+
+        $query = Transaksi::where('status', $status);
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::where('status', 'Akad')->where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('created_id', $sales);
-                }
-            });
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->whereIn('created_id', $subordinateIds)
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                });
+            $query->whereIn('created_id', $subordinateIds);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->where(function ($query) use ($sales) {
-                    // if ($sales) {
-                    //     $query->where('created_id', $sales);
-                    // }
-                });
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $query = Transaksi::where('status', 'Akad')->where('created_id', Auth::id())->where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('created_id', $sales);
-                }
-            });
+            $query->where('created_id', Auth::id());
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         }
 
         if ($filter == 'harian') {
@@ -183,6 +170,17 @@ class AnalisaController extends Controller {
             $query->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()]);
         } else {
             $query->whereBetween('created_at', [now()->subYear()->startOfDay(), now()->endOfDay()]);
+        }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
         }
 
         $data = $query->orderBy('created_at', 'desc')->get();
@@ -251,6 +249,10 @@ class AnalisaController extends Controller {
         $month = now()->month;
         $year = now()->year;
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
 
         // Target
         $targetHariIni = Target::whereDate('tanggal_awal', $today);
@@ -269,9 +271,9 @@ class AnalisaController extends Controller {
         $targetBulanIni = $targetBulanIni->sum('min_penjualan');
 
         // Penjualan (Transaksi)
-        $transaksiHariIni = Transaksi::where('status', 'Akad')->whereDate('created_at', $today);
-        $transaksiMingguIni = Transaksi::where('status', 'Akad')->whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
-        $transaksiBulanIni = Transaksi::where('status', 'Akad')->whereMonth('created_at', $month)->whereYear('created_at', $year);
+        $transaksiHariIni = Transaksi::where('status', $status)->whereDate('created_at', $today);
+        $transaksiMingguIni = Transaksi::where('status', $status)->whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
+        $transaksiBulanIni = Transaksi::where('status', $status)->whereMonth('created_at', $month)->whereYear('created_at', $year);
 
         if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
@@ -290,15 +292,6 @@ class AnalisaController extends Controller {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            // if ($sales) {
-            //     $transaksiHariIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-            //     $transaksiMingguIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-            //     $transaksiBulanIni->where('created_id', $sales->id)->whereIn('konsumen_id', $assignedKonsumenIds);
-            // } else {
-            //     $transaksiHariIni->whereIn('konsumen_id', $assignedKonsumenIds);
-            //     $transaksiMingguIni->whereIn('konsumen_id', $assignedKonsumenIds);
-            //     $transaksiBulanIni->whereIn('konsumen_id', $assignedKonsumenIds);
-            // }
             $transaksiHariIni->whereIn('konsumen_id', $assignedKonsumenIds);
             $transaksiMingguIni->whereIn('konsumen_id', $assignedKonsumenIds);
             $transaksiBulanIni->whereIn('konsumen_id', $assignedKonsumenIds);
@@ -312,6 +305,25 @@ class AnalisaController extends Controller {
                 $transaksiMingguIni->where('created_id', Auth::id());
                 $transaksiBulanIni->where('created_id', Auth::id());
             }
+        }
+
+        // Apply additional filters to all transaksi queries
+        if ($dateStart && $dateEnd) {
+            $transaksiHariIni->whereBetween('created_at', [$dateStart, $dateEnd]);
+            $transaksiMingguIni->whereBetween('created_at', [$dateStart, $dateEnd]);
+            $transaksiBulanIni->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $transaksiHariIni->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+            $transaksiMingguIni->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+            $transaksiBulanIni->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
         }
 
         $penjualanHariIni = $transaksiHariIni->sum('grand_total');
@@ -344,43 +356,35 @@ class AnalisaController extends Controller {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status ?? 'Akad';
+
+        $query = Transaksi::with(['konsumen.prospek']);
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])->where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('created_id', $sales);
-                }
-            });
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
-                ->whereIn('created_id', $subordinateIds)
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                });
+            $query->whereIn('created_id', $subordinateIds);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
-                ->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->where(function ($query) use ($sales) {
-                    // if ($sales) {
-                    //     $query->where('created_id', $sales);
-                    // }
-                });
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $query = Transaksi::where('status', 'Akad')->with(['konsumen.prospek'])
-                ->where('created_id', Auth::id())
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                });
+            $query->where('created_id', Auth::id());
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         }
 
         if ($filter == 'harian') {
@@ -389,6 +393,21 @@ class AnalisaController extends Controller {
             $query->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()]);
         } else {
             $query->whereBetween('created_at', [now()->subYear()->startOfDay(), now()->endOfDay()]);
+        }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
         }
 
         $data = $query->get();
@@ -414,39 +433,35 @@ class AnalisaController extends Controller {
         $sales = $request->created_id;
         $filter = $request->filter; // harian, mingguan, bulanan
         $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status ?? 'Akad';
+
+        $query = Transaksi::query();
 
         if ($user->hasRole('Admin')) {
-            $query = Transaksi::where('status', 'Akad')->where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('created_id', $sales);
-                }
-            });
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
             $subordinateIds = $user->getSubordinateIds();
             $subordinateIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->whereIn('created_id', $subordinateIds)
-                ->where(function ($query) use ($sales) {
-                    if ($sales) {
-                        $query->where('created_id', $sales);
-                    }
-                });
+            $query->whereIn('created_id', $subordinateIds);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query = Transaksi::where('status', 'Akad')->whereIn('konsumen_id', $assignedKonsumenIds)
-                ->where(function ($query) use ($sales) {
-                    // if ($sales) {
-                    //     $query->where('created_id', $sales);
-                    // }
-                });
+            $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
-            $query = Transaksi::where('status', 'Akad')->where('created_id', Auth::id())->where(function ($query) use ($sales) {
-                if ($sales) {
-                    $query->where('created_id', $sales);
-                }
-            });
+            $query->where('created_id', Auth::id());
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
         }
 
         if ($filter == 'harian') {
@@ -455,6 +470,21 @@ class AnalisaController extends Controller {
             $query->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()]);
         } else {
             $query->whereBetween('created_at', [now()->subYear()->startOfDay(), now()->endOfDay()]);
+        }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->whereHas('konsumen', function ($q) use ($prospek_id) {
+                $q->where('prospek_id', $prospek_id);
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
         }
 
         $data = $query->orderBy('created_at', 'desc')->get();
