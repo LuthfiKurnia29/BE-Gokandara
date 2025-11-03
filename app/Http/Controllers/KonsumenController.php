@@ -31,22 +31,37 @@ class KonsumenController extends Controller {
         $created_id = $request->created_id;
         $prospek_id = $request->prospek_id;
         $status = $request->status;
-
+        // var_dump($search);
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
-            ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $status) {
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
-                    $query->orWhere('added_by', $created_id);
-                } else {
-                    $query->where('created_id', auth()->id());
-                    $query->orWhere('added_by', auth()->id());
-                }
-
+                ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $status) {
                 if ($userRole->role->name === 'Admin' && !$created_id) {
                     // Get All Sales under Admin
                     $query->orWhere('status_delete', 'pending');
+                    if ($search) {
+                    $query
+                            ->where('name', 'like', "%$search%")
+                            ->orWhere('address', 'like', "%$search%")
+                            ->orWhere('ktp_number', 'like', "%$search%")
+                            ->orWhere('phone', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    }
+                }
+                if ($created_id) {
+                    $query->where('created_id', $created_id);
+                    $query->orWhere('added_by', $created_id);
+                    if ($search) {
+                    $query
+                            ->where('name', 'like', "$search")
+                            ->orWhere('address', 'like', "%$search%")
+                            ->orWhere('ktp_number', 'like', "%$search%")
+                            ->orWhere('phone', 'like', "%$search%")
+                            ->orWhere('email', 'like', "%$search%");
+                    }
+                } else {
+                    $query->where('created_id', auth()->id());
+                    $query->orWhere('added_by', auth()->id());
                 }
 
                 if ($search) {
