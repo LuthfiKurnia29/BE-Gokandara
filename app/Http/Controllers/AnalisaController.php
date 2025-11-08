@@ -136,9 +136,13 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
+        $status = $request->status;
 
-        $query = Transaksi::where('status', $status);
+        if ($status) {
+            $query = Transaksi::where('status', $status);
+        } else {
+            $query = Transaksi::query();
+        }
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
@@ -252,7 +256,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
+        $status = $request->status;
 
         // Target
         $targetHariIni = Target::whereDate('tanggal_awal', $today);
@@ -271,9 +275,17 @@ class AnalisaController extends Controller {
         $targetBulanIni = $targetBulanIni->sum('min_penjualan');
 
         // Penjualan (Transaksi)
-        $transaksiHariIni = Transaksi::where('status', $status)->whereDate('created_at', $today);
-        $transaksiMingguIni = Transaksi::where('status', $status)->whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
-        $transaksiBulanIni = Transaksi::where('status', $status)->whereMonth('created_at', $month)->whereYear('created_at', $year);
+        if($status)
+        {
+            $transaksi = Transaksi::where('status', $status);
+        }else {
+            //Get all transaksi
+            $transaksi = Transaksi::query();
+        }
+
+        $transaksiHariIni = $transaksi->whereDate('created_at', $today);
+        $transaksiMingguIni = $transaksi->whereDate('created_at', '>=', $startOfWeek)->whereDate('created_at', '<=', $endOfWeek);
+        $transaksiBulanIni = $transaksi->whereMonth('created_at', $month)->whereYear('created_at', $year);
 
         if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
@@ -359,7 +371,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status ?? 'Akad';
+        $status = $request->status;
 
         $query = Transaksi::with(['konsumen.prospek']);
 
@@ -436,7 +448,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status ?? 'Akad';
+        $status = $request->status;
 
         $query = Transaksi::query();
 

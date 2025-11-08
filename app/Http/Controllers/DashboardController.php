@@ -285,7 +285,7 @@ class DashboardController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
+        $status = $request->status; // Default to 'Akad' if no status provided
 
         // Define months for the chart
         $months = ['April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret'];
@@ -308,14 +308,18 @@ class DashboardController extends Controller {
                 $queryYear = $year + 1;
             }
 
+            if($status){
+                $transaksi = Transaksi::where('status', $status);
+            }else {
+                $transaksi = Transaksi::query();
+            }
+
             // Build base query for terjual
-            $terjualQuery = Transaksi::where('status', $status)
-                ->whereYear('created_at', $queryYear)
+            $terjualQuery = $transaksi->whereYear('created_at', $queryYear)
                 ->whereMonth('created_at', $monthNumber);
 
             // Build base query for dipesan
-            $dipesanQuery = Transaksi::where('status', $status)
-                ->whereYear('created_at', $queryYear)
+            $dipesanQuery = $transaksi->whereYear('created_at', $queryYear)
                 ->whereMonth('created_at', $monthNumber);
 
             // Apply role-based filtering
