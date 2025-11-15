@@ -136,7 +136,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad';
 
         if ($status) {
             $query = Transaksi::where('status', $status);
@@ -371,9 +371,9 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad';
 
-        $query = Transaksi::with(['konsumen.prospek']);
+        $query = Transaksi::with(['konsumen.prospek', 'projek', 'tipe']);
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
@@ -438,7 +438,18 @@ class AnalisaController extends Controller {
             ];
         }
 
-        return response()->json($result);
+        $detailPenjualan = $data->map(function ($transaksi) {
+            return [
+                'projek' => optional($transaksi->projek)->name,
+                'tipe' => optional($transaksi->tipe)->name,
+                'harga' => $transaksi->grand_total,
+            ];
+        });
+
+        return response()->json([
+            'ringkasan' => $result,
+            'detail_penjualan' => $detailPenjualan,
+        ]);
     }
 
     public function getStatistikPemesanan(Request $request) {
@@ -448,7 +459,7 @@ class AnalisaController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad';
 
         $query = Transaksi::query();
 

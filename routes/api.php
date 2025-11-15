@@ -159,6 +159,7 @@ Route::middleware('auth:sanctum')->get('get-transaksi/{id}', [TransaksiControlle
 Route::middleware('auth:sanctum')->put('update-transaksi/{id}', [TransaksiController::class, 'updateTransaksi']);
 Route::middleware('auth:sanctum')->delete('delete-transaksi/{id}', [TransaksiController::class, 'deleteTransaksi']);
 Route::middleware('auth:sanctum')->post('update-status-transaksi/{id}', [TransaksiController::class, 'updateStatusTransaksi']);
+Route::middleware('auth:sanctum')->patch('update-catatan-transaksi/{id}', [TransaksiController::class, 'updateCatatanTransaksi']);
 
 // History Penjualan/Transaksi
 Route::middleware('auth:sanctum')->get('history-transaksi/{properti_id}', [TransaksiController::class, 'historyTransaksi']);

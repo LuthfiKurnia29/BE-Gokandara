@@ -129,6 +129,7 @@ class TransaksiController extends Controller {
             'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.tanggal' => 'required|date',
+            'catatan' => 'nullable|string',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -243,6 +244,7 @@ class TransaksiController extends Controller {
             'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.tanggal' => 'required|date',
+            'catatan' => 'nullable|string',
         ]);
 
         $validate['diskon'] = $validate['diskon'] ?? 0;
@@ -367,6 +369,31 @@ class TransaksiController extends Controller {
                 'message' => 'Transaction status successfully changed',
             ],
             201,
+        );
+    }
+
+    public function updateCatatanTransaksi(Request $request, $id) {
+        $validate = $request->validate([
+            'catatan' => 'nullable|string'
+        ]);
+
+        $transaksi = Transaksi::findOrFail($id);
+
+        // Track updater for auditing consistency
+        $transaksi->catatan = $validate['catatan'] ?? null;
+        $transaksi->updated_id = Auth::id();
+        $transaksi->save();
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Catatan transaksi updated successfully',
+                'data' => [
+                    'id' => $transaksi->id,
+                    'catatan' => $transaksi->catatan,
+                ],
+            ],
+            200,
         );
     }
 

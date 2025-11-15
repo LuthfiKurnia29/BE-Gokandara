@@ -285,7 +285,7 @@ class DashboardController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status; // Default to 'Akad' if no status provided
+        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
 
         // Define months for the chart
         $months = ['April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret'];
@@ -417,7 +417,7 @@ class DashboardController extends Controller {
         $dateStart = $request->dateStart;
         $dateEnd = $request->dateEnd;
         $prospek_id = $request->prospek_id;
-        $status = $request->status;
+        $status = $request->status ?? 'Akad'; // Default to 'Akad' if no status provided
 
         $query = Transaksi::select('projeks_id', DB::raw('count(*) as total'));
 
