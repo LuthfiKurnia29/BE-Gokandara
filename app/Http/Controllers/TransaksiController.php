@@ -12,6 +12,7 @@ use App\Models\PembayaranProjek;
 use App\Models\PembayaranProjeks;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DetailSkemaPembayaran;
 
 class TransaksiController extends Controller {
     public function listTransaksi(Request $request) {
@@ -40,7 +41,7 @@ class TransaksiController extends Controller {
                         $query->where('created_id', $created_id);
                     }
                 } else if (auth()->user()->hasRole('Admin')) {
-                    $query->where('status', '==', 'Negotiation')
+                    $query->where('status', '!=', 'Akad')
                         ->orWhere('created_id', $id);
                 } else {
                     if (auth()->user()->hasRole('Supervisor')) {
@@ -129,6 +130,8 @@ class TransaksiController extends Controller {
             'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.tanggal' => 'required|date',
+            'detail_pembayaran.*.nama' => 'required|string',
+            'detail_pembayaran.*.persentase' => 'required|numeric',
             'catatan' => 'nullable|string',
         ]);
 
@@ -209,17 +212,55 @@ class TransaksiController extends Controller {
      * Display the specified resource.
      */
     public function getTransaksi(string $id) {
-        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy.roles', 'detailPembayaran'])
+        // Eager load detailSkemaPembayaran so we can fallback when transaksi detail's nama/persentase are empty
+        $data = Transaksi::with(['konsumen', 'projek', 'tipe', 'skemaPembayaran', 'createdBy.roles', 'detailPembayaran.detailSkemaPembayaran'])
             ->where('id', $id)
             ->first();
+
         if ($data) {
+            // Ambil harga khusus jika ada
             $harga = \App\Models\PembayaranProjeks::where([
                 'projek_id' => $data->projeks_id,
                 'tipe_id' => $data->tipe_id,
                 'skema_pembayaran_id' => $data->skema_pembayaran_id,
             ])->value('harga');
             $data->harga = $harga;
+
+            // Untuk setiap detail pembayaran, gunakan nilai dari transaksi_detail_pembayarans
+            // jika kolom nama dan persentase tidak kosong; jika kosong fallback ke detailSkemaPembayaran
+            $mapped = $data->detailPembayaran->map(function ($d) {
+                // Normalize empty checks: treat null/empty-string as empty
+                $hasNama = isset($d->nama) && trim((string) $d->nama) !== '';
+                $hasPersentase = $d->persentase !== null && $d->persentase !== '';
+
+                if ($hasNama && $hasPersentase) {
+                    // already populated in transaksi detail
+                    return $d;
+                }
+
+                // Try to get from loaded relation
+                if ($d->detailSkemaPembayaran) {
+                    $d->nama = $d->nama && trim((string) $d->nama) !== '' ? $d->nama : $d->detailSkemaPembayaran->nama;
+                    $d->persentase = ($d->persentase !== null && $d->persentase !== '') ? $d->persentase : $d->detailSkemaPembayaran->persentase;
+                    return $d;
+                }
+
+                // Fallback: fetch directly by id if relation wasn't loaded for some reason
+                if (!empty($d->detail_skema_pembayaran_id)) {
+                    $fallback = DetailSkemaPembayaran::find($d->detail_skema_pembayaran_id);
+                    if ($fallback) {
+                        $d->nama = $d->nama && trim((string) $d->nama) !== '' ? $d->nama : $fallback->nama;
+                        $d->persentase = ($d->persentase !== null && $d->persentase !== '') ? $d->persentase : $fallback->persentase;
+                    }
+                }
+
+                return $d;
+            });
+
+            // Replace the relation collection with the mapped one so JSON output reflects our precedence rules
+            $data->setRelation('detailPembayaran', $mapped);
         }
+
         return response()->json($data);
     }
 
@@ -244,6 +285,8 @@ class TransaksiController extends Controller {
             'detail_pembayaran.*.skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.detail_skema_pembayaran_id' => 'required|integer',
             'detail_pembayaran.*.tanggal' => 'required|date',
+            'detail_pembayaran.*.nama' => 'required|string',
+            'detail_pembayaran.*.persentase' => 'required|numeric',
             'catatan' => 'nullable|string',
         ]);
 
