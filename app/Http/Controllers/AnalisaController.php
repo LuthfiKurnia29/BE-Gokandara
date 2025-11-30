@@ -61,9 +61,18 @@ class AnalisaController extends Controller {
             });
         }
 
-        $data = $query->orderBy('created_at', 'desc')->get()->take(4);
+        $data = $query->orderBy('created_at', 'desc')->get()->take(5);
 
-        return response()->json($data);
+        return response()->json(
+            [
+                'message' => 'successfully retrieved new konsumens',
+                'status' => 'success',
+                'data' => $data,
+                'count' => $data->count(),
+            ],
+            200,
+        );
+        //return response()->json($data);
     }
 
     public function getFollowup(Request $request) {
