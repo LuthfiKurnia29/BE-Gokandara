@@ -211,9 +211,11 @@ class DashboardController extends Controller {
             $query->whereIn('created_id', $subordinateIds);
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
-            $assignedKonsumenIds = $user->getAssignedKonsumenIds();
-            $assignedKonsumenIds[] = $user->id;
-            $query->whereIn('id', $assignedKonsumenIds);
+            //$assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            //$assignedKonsumenIds[] = $user->id;
+            //$query->whereIn('id', $assignedKonsumenIds);
+            $query->where('created_id', Auth::id())
+                ->orWhere('added_by', Auth::id());
         } else {
             $query->where('created_id', Auth::id());
         }

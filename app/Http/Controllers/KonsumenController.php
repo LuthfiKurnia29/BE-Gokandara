@@ -35,43 +35,33 @@ class KonsumenController extends Controller {
         $userRole = UserRole::with('role', 'user')->where('user_id', $user->id)->first();
 
         $data = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
-                ->where(function ($query) use ($search, $created_id, $user, $userRole, $dateStart, $dateEnd, $prospek_id, $status) {
-                if ($userRole->role->name === 'Admin' && !$created_id) {
-                    // Get All Sales under Admin
-                    $query->orWhere('status_delete', 'pending');
-                    if ($search) {
-                    $query
-                            ->where('name', 'like', "%$search%")
-                            ->orWhere('address', 'like', "%$search%")
-                            ->orWhere('ktp_number', 'like', "%$search%")
-                            ->orWhere('phone', 'like', "%$search%")
-                            ->orWhere('email', 'like', "%$search%");
+            ->where(function ($query) use ($created_id, $user, $userRole) {
+                $query->where(function ($scopedQuery) use ($created_id, $user) {
+                    if ($created_id) {
+                        $scopedQuery->where(function ($inner) use ($created_id) {
+                            $inner->where('created_id', $created_id)
+                                ->orWhere('added_by', $created_id);
+                        });
+                    } else {
+                        $scopedQuery->where(function ($inner) use ($user) {
+                            $inner->where('created_id', $user->id)
+                                ->orWhere('added_by', $user->id);
+                        });
                     }
-                }
-                if ($created_id) {
-                    $query->where('created_id', $created_id);
-                    $query->orWhere('added_by', $created_id);
-                    if ($search) {
-                    $query
-                            ->where('name', 'like', "$search")
-                            ->orWhere('address', 'like', "%$search%")
-                            ->orWhere('ktp_number', 'like', "%$search%")
-                            ->orWhere('phone', 'like', "%$search%")
-                            ->orWhere('email', 'like', "%$search%");
-                    }
-                } else {
-                    $query->where('created_id', auth()->id());
-                    $query->orWhere('added_by', auth()->id());
-                }
+                });
 
-                if ($search) {
-                    $query
-                        ->where('name', 'like', "%$search%")
+                if ($userRole->role->name === 'Admin' && !$created_id) {
+                    $query->orWhere('status_delete', 'pending');
+                }
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('name', 'like', "%$search%")
                         ->orWhere('address', 'like', "%$search%")
                         ->orWhere('ktp_number', 'like', "%$search%")
                         ->orWhere('phone', 'like', "%$search%")
                         ->orWhere('email', 'like', "%$search%");
-                }
+                });
             })
             ->when($dateStart && $dateEnd, function ($query) use ($dateStart, $dateEnd) {
                 $query->whereBetween('created_at', [$dateStart, $dateEnd]);
@@ -278,7 +268,7 @@ class KonsumenController extends Controller {
      * Display the specified resource.
      */
     public function show(string $id) {
-        $data = Konsumen::with(['projek', 'prospek'])
+        $data = Konsumen::with(['projek', 'prospek', 'createdBy'])
             ->where('id', $id)
             ->first();
         return response()->json($data);
@@ -486,13 +476,19 @@ class KonsumenController extends Controller {
                 // Build base query
                 $baseQuery = Konsumen::with(['projek', 'prospek', 'createdBy', 'latestTransaksi'])
                     ->where(function ($query) use ($search, $created_id, $user, $userRole) {
-                        if ($created_id) {
-                            $query->where('created_id', $created_id);
-                            $query->orWhere('added_by', $created_id);
-                        } else {
-                            $query->where('created_id', $user->id);
-                            $query->orWhere('added_by', $user->id);
-                        }
+                        $query->where(function ($scopedQuery) use ($created_id, $user) {
+                            if ($created_id) {
+                                $scopedQuery->where(function ($inner) use ($created_id) {
+                                    $inner->where('created_id', $created_id)
+                                        ->orWhere('added_by', $created_id);
+                                });
+                            } else {
+                                $scopedQuery->where(function ($inner) use ($user) {
+                                    $inner->where('created_id', $user->id)
+                                        ->orWhere('added_by', $user->id);
+                                });
+                            }
+                        });
 
                         if ($userRole->role->name === 'Admin' && !$created_id) {
                             // Get All Sales under Admin
@@ -629,13 +625,19 @@ class KonsumenController extends Controller {
                     'updated_at'
                 )
                     ->where(function ($query) use ($search, $created_id, $user, $userRole) {
-                        if ($created_id) {
-                            $query->where('created_id', $created_id);
-                            $query->orWhere('added_by', $created_id);
-                        } else {
-                            $query->where('created_id', $user->id);
-                            $query->orWhere('added_by', $user->id);
-                        }
+                        $query->where(function ($scopedQuery) use ($created_id, $user) {
+                            if ($created_id) {
+                                $scopedQuery->where(function ($inner) use ($created_id) {
+                                    $inner->where('created_id', $created_id)
+                                        ->orWhere('added_by', $created_id);
+                                });
+                            } else {
+                                $scopedQuery->where(function ($inner) use ($user) {
+                                    $inner->where('created_id', $user->id)
+                                        ->orWhere('added_by', $user->id);
+                                });
+                            }
+                        });
 
                         if ($userRole->role->name === 'Admin' && !$created_id) {
                             $query->orWhere('status_delete', 'pending');
