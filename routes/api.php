@@ -27,6 +27,9 @@ use App\Http\Controllers\AnalisaController;
 use Illuminate\Support\Facades\Mail;
 
 // Authentication & Authorization
+Route::get('/test', function () {
+    return "Api is working";
+});
 Route::post('login', [LoginController::class, 'authenticate']);
 Route::middleware('auth:sanctum')->post('logout', [LoginController::class, 'logout']);
 Route::middleware('auth:sanctum')->post('me', [UserController::class, 'me']);
