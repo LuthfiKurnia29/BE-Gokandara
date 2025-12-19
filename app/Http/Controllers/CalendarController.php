@@ -16,7 +16,7 @@ class CalendarController extends Controller
         $sales = $request->sales_id;
 
         if (auth()->user()->hasRole('Admin')) {
-            $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek'])
+            $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek', 'sales'])
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('sales_id', $sales);
@@ -24,7 +24,7 @@ class CalendarController extends Controller
                 })
                 ->whereBetween('followup_date', [$request->startDay, $request->endDay]);
         } else {
-            $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek'])
+            $query = FollowupMonitoring::with(['konsumen.followups.prospek', 'prospek', 'sales'])
                 ->where(function ($query) use ($sales) {
                     if ($sales) {
                         $query->where('sales_id', $sales);
