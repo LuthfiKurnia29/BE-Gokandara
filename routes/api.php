@@ -199,6 +199,7 @@ Route::middleware('auth:sanctum')->delete('delete-calendar/{id}', [CalendarContr
 Route::middleware('auth:sanctum')->get('get-new-konsumen', [AnalisaController::class, 'getNewKonsumen']);
 Route::middleware('auth:sanctum')->get('get-followup', [AnalisaController::class, 'getFollowup']);
 Route::middleware('auth:sanctum')->get('get-statistik-penjualan', [AnalisaController::class, 'getStatistikPenjualan']);
+Route::middleware('auth:sanctum')->get('get-statistik-konsumen', [AnalisaController::class, 'getStatistikKonsumen']);
 Route::middleware('auth:sanctum')->get('get-statistik-pemesanan', [AnalisaController::class, 'getStatistikPemesanan']);
 Route::middleware('auth:sanctum')->get('get-realisasi', [AnalisaController::class, 'getRealisasi']);
 Route::middleware('auth:sanctum')->get('get-ringkasan-penjualan', [AnalisaController::class, 'getRingkasanPenjualan']);

@@ -20,7 +20,7 @@ class AnalisaController extends Controller {
         $prospek_id = $request->prospek_id;
         $status = $request->status;
 
-        $query = Konsumen::query();
+        $query = Konsumen::with('createdBy');
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
@@ -570,6 +570,122 @@ class AnalisaController extends Controller {
                     'periode' => $period,
                     'total_pemesanan' => 0,
                     'transaksis' => [],
+                ];
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    public function getStatistikKonsumen(Request $request) {
+        $sales = $request->created_id;
+        $filter = $request->filter; // harian, mingguan, bulanan
+        $user = Auth::user();
+        $dateStart = $request->dateStart;
+        $dateEnd = $request->dateEnd;
+        $prospek_id = $request->prospek_id;
+        $status = $request->status;
+
+        $query = Konsumen::query();
+
+        if ($user->hasRole('Admin')) {
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
+        } elseif ($user->hasRole('Supervisor')) {
+            // Get subordinate sales IDs
+            $subordinateIds = $user->getSubordinateIds();
+            $subordinateIds[] = $user->id;
+            $query->whereIn('created_id', $subordinateIds);
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
+        } elseif ($user->hasRole('Telemarketing')) {
+            // Get konsumen IDs assigned by this telemarketing user
+            $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            $assignedKonsumenIds[] = $user->id;
+            $query->whereIn('id', $assignedKonsumenIds);
+        } else {
+            $query->where('created_id', Auth::id());
+            if ($sales) {
+                $query->where('created_id', $sales);
+            }
+        }
+
+        if ($filter == 'harian') {
+            $query->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()]);
+        } elseif ($filter == 'mingguan') {
+            $query->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()]);
+        } else {
+            $query->whereBetween('created_at', [now()->subYear()->startOfDay(), now()->endOfDay()]);
+        }
+
+        // Apply additional filters
+        if ($dateStart && $dateEnd) {
+            $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+        }
+
+        if ($prospek_id) {
+            $query->where('prospek_id', $prospek_id);
+        }
+
+        if ($status) {
+            $query->whereHas('latestTransaksi', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->get();
+
+        // Grouping berdasarkan filter
+        if ($filter == 'harian') {
+            $grouped = $data->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d');
+            });
+
+            // Generate all dates in the last 7 days
+            $periods = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
+        } elseif ($filter == 'mingguan') {
+            $grouped = $data->groupBy(function ($item) {
+                return $item->created_at->format('Y-m-d');
+            });
+
+            // Generate all dates in the last 30 days
+            $periods = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $periods[] = now()->subDays($i)->format('Y-m-d');
+            }
+        } else {
+            // bulanan
+            $grouped = $data->groupBy(function ($item) {
+                return $item->created_at->format('Y-m');
+            });
+
+            // Generate all months in the last 12 months
+            $periods = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $periods[] = now()->subMonths($i)->format('Y-m');
+            }
+        }
+
+        // Format hasil with placeholders
+        $result = [];
+        foreach ($periods as $period) {
+            if (isset($grouped[$period])) {
+                $result[] = [
+                    'periode' => $period,
+                    'total_konsumen' => $grouped[$period]->count(),
+                    'konsumens' => $grouped[$period],
+                ];
+            } else {
+                // Placeholder for missing data
+                $result[] = [
+                    'periode' => $period,
+                    'total_konsumen' => 0,
+                    'konsumens' => [],
                 ];
             }
         }
