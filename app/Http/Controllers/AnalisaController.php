@@ -22,28 +22,65 @@ class AnalisaController extends Controller {
 
         $query = Konsumen::with('createdBy');
 
+//        if ($user->hasRole('Admin')) {
+//            if ($sales) {
+//                $query->where('created_id', $sales);
+//            }
+//        } elseif ($user->hasRole('Supervisor')) {
+//            // Get subordinate sales IDs
+//            $subordinateIds = $user->getSubordinateIds();
+//            $subordinateIds[] = $user->id;
+//            $query->whereIn('created_id', $subordinateIds);
+//            if ($sales) {
+//                $query->where('created_id', $sales);
+//            }
+//        } elseif ($user->hasRole('Telemarketing')) {
+//            // Get konsumen IDs assigned by this telemarketing user
+//            $assignedKonsumenIds = $user->getAssignedKonsumenIds();
+//            $assignedKonsumenIds[] = $user->id;
+//            $query->whereIn('id', $assignedKonsumenIds);
+//        } else {
+//            $query->where('created_id', Auth::id());
+//            if ($sales) {
+//                $query->where('created_id', $sales);
+//            }
+//        }
+
         if ($user->hasRole('Admin')) {
+            // Admin sees all
             if ($sales) {
-                $query->where('created_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                }elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('id', $assignedKonsumenIds);
+                } else {
+                    $query->where('created_id', $sales);
+                }
             }
-        } elseif ($user->hasRole('Supervisor')) {
+        } else if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
             if ($sales) {
                 $query->where('created_id', $sales);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
+        } else if ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query->whereIn('id', $assignedKonsumenIds);
+
+            $query->WhereIn('id', $assignedKonsumenIds);
         } else {
-            $query->where('created_id', Auth::id());
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
+            $query->where('created_id', $user->id);
         }
 
         // Apply additional filters
@@ -88,26 +125,35 @@ class AnalisaController extends Controller {
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
-                $query->where('sales_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+                    $query->whereIn('sales_id', $subordinateIds);
+                }elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                }else{
+                    $query->where('sales_id', $sales);
+                }
             }
         } elseif ($user->hasRole('Supervisor')) {
-            // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('sales_id', $subordinateIds);
             if ($sales) {
                 $query->where('sales_id', $sales);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+
+                $query->WhereIn('sales_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
-            // Get konsumen IDs assigned by this telemarketing user
+        }elseif ($user->hasRole('Telemarketing')) {
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query->whereIn('konsumen_id', $assignedKonsumenIds);
-        } else {
-            $query->where('sales_id', Auth::id());
-            if ($sales) {
-                $query->where('sales_id', $sales);
-            }
+            $query->WhereIn('konsumen_id', $assignedKonsumenIds);
+        }else{
+            $query->where('sales_id', $user->id);
         }
 
         if ($waktu == 'today') {
@@ -155,26 +201,36 @@ class AnalisaController extends Controller {
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
-                $query->where('created_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                } elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                } else {
+                    $query->where('created_id', $sales);
+                }
             }
-        } elseif ($user->hasRole('Supervisor')) {
-            // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
+        }elseif ($user->hasRole('Supervisor')) {
             if ($sales) {
                 $query->where('created_id', $sales);
+            } else {
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
-            // Get konsumen IDs assigned by this telemarketing user
+        }elseif ($user->hasRole('Telemarketing')) {
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
             $query->whereIn('konsumen_id', $assignedKonsumenIds);
         } else {
             $query->where('created_id', Auth::id());
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
         }
 
         if ($filter == 'harian') {
@@ -386,26 +442,38 @@ class AnalisaController extends Controller {
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
-                $query->where('created_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                }elseif($targetUser && $targetUser->hasRole('Telemarketing')){
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                }else{
+                    $query->where('created_id', $sales);
+                }
             }
         } elseif ($user->hasRole('Supervisor')) {
-            // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
             if ($sales) {
                 $query->where('created_id', $sales);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+
+                $query->WhereIn('created_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
-            // Get konsumen IDs assigned by this telemarketing user
+        }elseif ($user->hasRole('Telemarketing')){
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
+
             $query->whereIn('konsumen_id', $assignedKonsumenIds);
-        } else {
+        }else{
             $query->where('created_id', Auth::id());
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
         }
 
         if ($filter == 'harian') {
@@ -474,26 +542,38 @@ class AnalisaController extends Controller {
 
         if ($user->hasRole('Admin')) {
             if ($sales) {
-                $query->where('created_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                }elseif($targetUser && $targetUser->hasRole('Telemarketing')){
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                }else{
+                    $query->where('created_id', $sales);
+                }
             }
         } elseif ($user->hasRole('Supervisor')) {
-            // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
             if ($sales) {
                 $query->where('created_id', $sales);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+
+                $query->WhereIn('created_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
-            // Get konsumen IDs assigned by this telemarketing user
+        }elseif ($user->hasRole('Telemarketing')){
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
+
             $query->whereIn('konsumen_id', $assignedKonsumenIds);
-        } else {
+        }else{
             $query->where('created_id', Auth::id());
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
         }
 
         if ($filter == 'harian') {
@@ -589,27 +669,40 @@ class AnalisaController extends Controller {
         $query = Konsumen::query();
 
         if ($user->hasRole('Admin')) {
+            // Admin sees all
             if ($sales) {
-                $query->where('created_id', $sales);
+                $targetUser = User::find($sales);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                }elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('id', $assignedKonsumenIds);
+                } else {
+                    $query->where('created_id', $sales);
+                }
             }
-        } elseif ($user->hasRole('Supervisor')) {
+        } else if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
             if ($sales) {
                 $query->where('created_id', $sales);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
             }
-        } elseif ($user->hasRole('Telemarketing')) {
+        } else if ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
             $assignedKonsumenIds[] = $user->id;
-            $query->whereIn('id', $assignedKonsumenIds);
+
+            $query->WhereIn('id', $assignedKonsumenIds);
         } else {
-            $query->where('created_id', Auth::id());
-            if ($sales) {
-                $query->where('created_id', $sales);
-            }
+            $query->where('created_id', $user->id);
         }
 
         if ($filter == 'harian') {

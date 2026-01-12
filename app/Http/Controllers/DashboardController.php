@@ -9,6 +9,7 @@ use App\Models\Projek;
 use App\Models\Properti;
 use App\Models\Prospek;
 use App\Models\Transaksi;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,15 +26,35 @@ class DashboardController extends Controller {
 
         $query = FollowupMonitoring::query();
 
-        if (isset($request->created_id)) {
-            $query->where('sales_id', $request->created_id);
-        } else if ($user->hasRole('Admin')) {
+        if ($user->hasRole('Admin')) {
             // Admin sees all
+            if (isset($request->created_id)) {
+                $targetUser = User::find($request->created_id);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('sales_id', $subordinateIds);
+                } elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                }else{
+                    $query->where(function ($q) use ($request) {
+                        $q->where('sales_id', $request->created_id);
+                    });
+                }
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('sales_id', $subordinateIds);
+            if (isset($request->created_id)) {
+                $query->where('sales_id', $request->created_id);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('sales_id', $subordinateIds);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
@@ -85,15 +106,35 @@ class DashboardController extends Controller {
 
         $query = FollowupMonitoring::query();
 
-        if (isset($request->created_id)) {
-            $query->where('sales_id', $request->created_id);
-        } else if ($user->hasRole('Admin')) {
+        if ($user->hasRole('Admin')) {
             // Admin sees all
+            if (isset($request->created_id)) {
+                $targetUser = User::find($request->created_id);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('sales_id', $subordinateIds);
+                } elseif ($targetUser && $targetUser->hasRole('Telemarketing')) {
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                }else{
+                    $query->where(function ($q) use ($request) {
+                        $q->where('sales_id', $request->created_id);
+                    });
+                }
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('sales_id', $subordinateIds);
+            if (isset($request->created_id)) {
+                $query->where('sales_id', $request->created_id);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('sales_id', $subordinateIds);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();
@@ -143,22 +184,40 @@ class DashboardController extends Controller {
 
         $query = Konsumen::query();
 
-        if (isset($request->created_id)) {
-            $query->where('created_id', $request->created_id);
-        } else if ($user->hasRole('Admin')) {
+        if ($user->hasRole('Admin')) {
             // Admin sees all
-        } elseif ($user->hasRole('Supervisor')) {
+            if (isset($request->created_id)) {
+                $targetUser = User::find($request->created_id);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                } else {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('created_id', $request->created_id)
+                            ->orWhere('added_by', $request->created_id);
+                    });
+                }
+            }
+        } else if ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
-        } elseif ($user->hasRole('Telemarketing')) {
+            if (isset($request->created_id)) {
+                $query->where('created_id', $request->created_id);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
+            }
+        } else if ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
-            $assignedKonsumenIds = $user->getAssignedKonsumenIds();
-            $assignedKonsumenIds[] = $user->id;
-            $query->whereIn('id', $assignedKonsumenIds);
+            //$assignedKonsumenIds = $user->getAssignedKonsumenIds();
+            //$assignedKonsumenIds[] = $user->id;
+            $query->where('created_id', $user->id)
+                ->orWhere('added_by', $user->id);
         } else {
-            $query->where('created_id', Auth::id());
+            $query->where('created_id', $user->id);
         }
 
         $query->whereDate('created_at', Carbon::today());
@@ -200,15 +259,32 @@ class DashboardController extends Controller {
         $query = Konsumen::select('prospek_id', DB::raw('count(*) as total'));
 
         // Get count of konsumen grouped by prospek_id
-        if (isset($request->created_id)) {
-            $query->where('created_id', $request->created_id);
-        } else if ($user->hasRole('Admin')) {
+        if ($user->hasRole('Admin')) {
             // Admin sees all
+            if (isset($request->created_id)) {
+                $targetUser = User::find($request->created_id);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                } else {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('created_id', $request->created_id)
+                            ->orWhere('added_by', $request->created_id);
+                    });
+                }
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Get subordinate sales IDs
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
+            if (isset($request->created_id)) {
+                $query->where('created_id', $request->created_id);
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Get konsumen IDs assigned by this telemarketing user
             //$assignedKonsumenIds = $user->getAssignedKonsumenIds();
@@ -325,17 +401,38 @@ class DashboardController extends Controller {
                 ->whereMonth('created_at', $monthNumber);
 
             // Apply role-based filtering
-            if (isset($request->created_id)) {
-                $terjualQuery->where('created_id', $request->created_id);
-                $dipesanQuery->where('created_id', $request->created_id);
-            } else if ($user->hasRole('Admin')) {
+            if ($user->hasRole('Admin')) {
                 // Admin: tampilkan semua data
+                if (isset($request->created_id)) {
+                    $targetUser = User::find($request->created_id);
+
+                    if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                        $subordinateIds = $targetUser->getSubordinateIds();
+                        $subordinateIds[] = $targetUser->id;
+
+                        $terjualQuery->whereIn('created_id', $subordinateIds);
+                        $dipesanQuery->whereIn('created_id', $subordinateIds);
+                    }elseif($targetUser && $targetUser->hasRole('Telemarketing')){
+                        $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                        $assignedKonsumenIds[] = $targetUser->id;
+                        $terjualQuery->whereIn('konsumen_id', $assignedKonsumenIds);
+                        $dipesanQuery->whereIn('konsumen_id', $assignedKonsumenIds);
+                    } else {
+                        $terjualQuery->where('created_id', $request->created_id);
+                        $dipesanQuery->where('created_id', $request->created_id);
+                    }
+                }
             } elseif ($user->hasRole('Supervisor')) {
                 // Supervisor: tampilkan data dari subordinate sales
-                $subordinateIds = $user->getSubordinateIds();
-                $subordinateIds[] = $user->id;
-                $terjualQuery->whereIn('created_id', $subordinateIds);
-                $dipesanQuery->whereIn('created_id', $subordinateIds);
+                if(isset($request->created_id)){
+                    $terjualQuery->where('created_id', $request->created_id);
+                    $dipesanQuery->where('created_id', $request->created_id);
+                }else{
+                    $subordinateIds = $user->getSubordinateIds();
+                    $subordinateIds[] = $user->id;
+                    $terjualQuery->whereIn('created_id', $subordinateIds);
+                    $dipesanQuery->whereIn('created_id', $subordinateIds);
+                }
             } elseif ($user->hasRole('Telemarketing')) {
                 // Telemarketing: tampilkan data dari konsumen yang di-assign
                 $assignedKonsumenIds = $user->getAssignedKonsumenIds();
@@ -424,15 +521,37 @@ class DashboardController extends Controller {
         $query = Transaksi::select('projeks_id', DB::raw('count(*) as total'));
 
         // Get count of transaksi grouped by projeks_id
-        if (isset($request->created_id)) {
-            $query->where('created_id', $request->created_id);
-        } else if ($user->hasRole('Admin')) {
+        if ($user->hasRole('Admin')) {
             // Admin: tampilkan semua data
+            if (isset($request->created_id)) {
+                $targetUser = User::find($request->created_id);
+
+                if ($targetUser && $targetUser->hasRole('Supervisor')) {
+                    $subordinateIds = $targetUser->getSubordinateIds();
+                    $subordinateIds[] = $targetUser->id;
+
+                    $query->whereIn('created_id', $subordinateIds);
+                }elseif($targetUser && $targetUser->hasRole('Telemarketing')){
+                    $assignedKonsumenIds = $targetUser->getAssignedKonsumenIds();
+                    $assignedKonsumenIds[] = $targetUser->id;
+                    $query->whereIn('konsumen_id', $assignedKonsumenIds);
+                } else {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('created_id', $request->created_id);
+                    });
+                }
+            }
         } elseif ($user->hasRole('Supervisor')) {
             // Supervisor: tampilkan data dari subordinate sales
-            $subordinateIds = $user->getSubordinateIds();
-            $subordinateIds[] = $user->id;
-            $query->whereIn('created_id', $subordinateIds);
+            if(isset($request->created_id)){
+                $query->where(function ($q) use ($request) {
+                    $q->where('created_id', $request->created_id);
+                });
+            }else{
+                $subordinateIds = $user->getSubordinateIds();
+                $subordinateIds[] = $user->id;
+                $query->whereIn('created_id', $subordinateIds);
+            }
         } elseif ($user->hasRole('Telemarketing')) {
             // Telemarketing: tampilkan data dari konsumen yang di-assign
             $assignedKonsumenIds = $user->getAssignedKonsumenIds();

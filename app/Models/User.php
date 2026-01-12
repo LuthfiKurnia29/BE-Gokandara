@@ -99,4 +99,45 @@ class User extends Authenticatable {
         }
         return [];
     }
+
+    /**
+     * Get subordinate users (for Supervisor role)
+     */
+    public function getSubordinateIdsbyId(int $id) {
+        if ($this->hasRole('Supervisor')) {
+            return User::where('parent_id', $id)->pluck('id')->toArray();
+        }
+        return [];
+    }
+
+    /**
+     * Get konsumen IDs assigned by this telemarketing user
+     */
+    public function getAssignedKonsumenIdsbyId(int $id) {
+        if ($this->hasRole('Telemarketing')) {
+            return Konsumen::where('added_by', $id)->pluck('id')->toArray();
+        }
+        return [];
+    }
+
+    /**
+     * Get roles based on user ID.
+     *
+     * @param int $id
+     * @return array
+     */
+    public static function getRolesByUserId($id)
+    {
+        $user = self::find($id);
+
+        if (!$user) {
+            return [];
+        }
+
+        return $user->roles()
+            ->with('role')
+            ->get()
+            ->pluck('role.name')
+            ->toArray();
+    }
 }
