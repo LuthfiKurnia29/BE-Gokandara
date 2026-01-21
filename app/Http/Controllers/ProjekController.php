@@ -226,38 +226,99 @@ class ProjekController extends Controller {
         ]);
 
         if ($request['tipe']) {
-            Tipe::where('project_id', $projek->id)->delete();
-            PembayaranProjeks::where('projek_id', $projek->id)->delete();
+            // Get existing tipe IDs from the request
+            $requestTipeIds = collect($request['tipe'])
+                ->filter(function ($tipe) {
+                    return isset($tipe['id']);
+                })
+                ->pluck('id')
+                ->toArray();
 
+            // Delete tipes that are not in the request
+            $tipesToDelete = Tipe::where('project_id', $projek->id)
+                ->when(!empty($requestTipeIds), function ($query) use ($requestTipeIds) {
+                    $query->whereNotIn('id', $requestTipeIds);
+                })
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($tipesToDelete)) {
+                PembayaranProjeks::where('projek_id', $projek->id)
+                    ->whereIn('tipe_id', $tipesToDelete)
+                    ->delete();
+                Tipe::whereIn('id', $tipesToDelete)->delete();
+            }
+
+            // Update or create each tipe
             foreach ($request['tipe'] as $tipe) {
-                $tipeModel = Tipe::create([
-                    'name' => $tipe['name'],
-                    'luas_tanah' => $tipe['luas_tanah'],
-                    'luas_bangunan' => $tipe['luas_bangunan'],
-                    'jumlah_unit' => $tipe['jumlah_unit'],
-                    'project_id' => $projek->id,
-                    'harga' => $tipe['harga'] ?? null,
-                ]);
+                if (isset($tipe['id'])) {
+                    // Update existing tipe
+                    $tipeModel = Tipe::find($tipe['id']);
+                    if ($tipeModel && $tipeModel->project_id == $projek->id) {
+                        $tipeModel->update([
+                            'name' => $tipe['name'],
+                            'luas_tanah' => $tipe['luas_tanah'],
+                            'luas_bangunan' => $tipe['luas_bangunan'],
+                            'jumlah_unit' => $tipe['jumlah_unit'],
+                            'harga' => $tipe['harga'] ?? null,
+                        ]);
+                    } else {
+                        continue; // Skip if tipe doesn't exist or doesn't belong to this project
+                    }
+                } else {
+                    // Create new tipe
+                    $tipeModel = Tipe::create([
+                        'name' => $tipe['name'],
+                        'luas_tanah' => $tipe['luas_tanah'],
+                        'luas_bangunan' => $tipe['luas_bangunan'],
+                        'jumlah_unit' => $tipe['jumlah_unit'],
+                        'project_id' => $projek->id,
+                        'harga' => $tipe['harga'] ?? null,
+                    ]);
+                }
 
-                // Support harga per jenis pembayaran
+                // Handle PembayaranProjeks for this tipe
+                $requestPembayaranIds = [];
+                $pembayaranData = [];
+
                 if (isset($tipe['jenis_pembayaran']) && is_array($tipe['jenis_pembayaran'])) {
                     foreach ($tipe['jenis_pembayaran'] as $jp) {
-                        PembayaranProjeks::create([
-                            'projek_id' => $projek->id,
-                            'tipe_id' => $tipeModel->id,
-                            'skema_pembayaran_id' => $jp['id'] ?? null,
-                            'harga' => $jp['harga'] ?? null,
-                        ]);
+                        $skemaId = $jp['id'] ?? null;
+                        if ($skemaId) {
+                            $requestPembayaranIds[] = $skemaId;
+                            $pembayaranData[$skemaId] = $jp['harga'] ?? null;
+                        }
                     }
                 } elseif (isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])) {
                     foreach ($tipe['jenis_pembayaran_ids'] as $pembayaranId) {
-                        PembayaranProjeks::create([
+                        $requestPembayaranIds[] = $pembayaranId;
+                        $pembayaranData[$pembayaranId] = null;
+                    }
+                }
+
+                // Delete pembayaran projeks that are not in the request for this tipe
+                PembayaranProjeks::where('projek_id', $projek->id)
+                    ->where('tipe_id', $tipeModel->id)
+                    ->when(!empty($requestPembayaranIds), function ($query) use ($requestPembayaranIds) {
+                        $query->whereNotIn('skema_pembayaran_id', $requestPembayaranIds);
+                    }, function ($query) {
+                        // If no pembayaran in request, delete all
+                        $query->whereNotNull('skema_pembayaran_id');
+                    })
+                    ->delete();
+
+                // Update or create pembayaran projeks
+                foreach ($pembayaranData as $skemaId => $harga) {
+                    PembayaranProjeks::updateOrCreate(
+                        [
                             'projek_id' => $projek->id,
                             'tipe_id' => $tipeModel->id,
-                            'skema_pembayaran_id' => $pembayaranId,
-                            'harga' => null,
-                        ]);
-                    }
+                            'skema_pembayaran_id' => $skemaId,
+                        ],
+                        [
+                            'harga' => $harga,
+                        ]
+                    );
                 }
             }
         }
