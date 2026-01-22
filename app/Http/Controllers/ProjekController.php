@@ -174,6 +174,7 @@ class ProjekController extends Controller {
 
         $fasilitas = \App\Models\Fasilitas::where('projeks_id', $projek->id)->get()->map(function ($f) {
             return [
+                'id' => $f->id,
                 'name' => $f->nama_fasilitas,
                 'luas' => $f->luas_fasilitas,
             ];
@@ -234,14 +235,49 @@ class ProjekController extends Controller {
                 ->pluck('id')
                 ->toArray();
 
-            // Delete tipes that are not in the request
-            $tipesToDelete = Tipe::where('project_id', $projek->id)
+            // Get new tipes from request (without id)
+            $newTipes = collect($request['tipe'])
+                ->filter(function ($tipe) {
+                    return !isset($tipe['id']);
+                })
+                ->values();
+
+            // Get tipes that are candidates for deletion
+            $tipesToDeleteCandidates = Tipe::where('project_id', $projek->id)
                 ->when(!empty($requestTipeIds), function ($query) use ($requestTipeIds) {
                     $query->whereNotIn('id', $requestTipeIds);
                 })
-                ->pluck('id')
-                ->toArray();
+                ->get();
 
+            $tipesToDelete = [];
+            $tipesToMerge = []; // [oldTipeId => newTipeData]
+
+            foreach ($tipesToDeleteCandidates as $tipeCandidate) {
+                // Check if this tipe has transactions
+                $hasTransactions = \App\Models\Transaksi::where('tipe_id', $tipeCandidate->id)->exists();
+
+                if ($hasTransactions) {
+                    // Check if there's a new tipe with same name and project_id
+                    $matchingNewTipe = $newTipes->first(function ($newTipe) use ($tipeCandidate) {
+                        return strtolower(trim($newTipe['name'])) === strtolower(trim($tipeCandidate->name));
+                    });
+
+                    if ($matchingNewTipe) {
+                        // Don't delete, mark for update/merge instead
+                        $tipesToMerge[$tipeCandidate->id] = $matchingNewTipe;
+                        // Remove from newTipes so it won't be created as new
+                        $newTipes = $newTipes->filter(function ($t) use ($matchingNewTipe) {
+                            return $t !== $matchingNewTipe;
+                        })->values();
+                    }
+                    // If no matching new tipe, don't delete (has transactions, skip deletion)
+                } else {
+                    // No transactions, safe to delete
+                    $tipesToDelete[] = $tipeCandidate->id;
+                }
+            }
+
+            // Delete tipes that have no transactions
             if (!empty($tipesToDelete)) {
                 PembayaranProjeks::where('projek_id', $projek->id)
                     ->whereIn('tipe_id', $tipesToDelete)
@@ -249,7 +285,39 @@ class ProjekController extends Controller {
                 Tipe::whereIn('id', $tipesToDelete)->delete();
             }
 
-            // Update or create each tipe
+            // Update tipes that were matched (merge scenario)
+            foreach ($tipesToMerge as $oldTipeId => $newTipeData) {
+                $tipeModel = Tipe::find($oldTipeId);
+                if ($tipeModel) {
+                    $tipeModel->update([
+                        'name' => $newTipeData['name'],
+                        'luas_tanah' => $newTipeData['luas_tanah'],
+                        'luas_bangunan' => $newTipeData['luas_bangunan'],
+                        'jumlah_unit' => $newTipeData['jumlah_unit'],
+                        'harga' => $newTipeData['harga'] ?? null,
+                    ]);
+
+                    // Handle PembayaranProjeks for merged tipe
+                    $this->updatePembayaranProjeks($projek->id, $tipeModel, $newTipeData);
+                }
+            }
+
+            // Create remaining new tipes
+            foreach ($newTipes as $newTipe) {
+                $tipeModel = Tipe::create([
+                    'name' => $newTipe['name'],
+                    'luas_tanah' => $newTipe['luas_tanah'],
+                    'luas_bangunan' => $newTipe['luas_bangunan'],
+                    'jumlah_unit' => $newTipe['jumlah_unit'],
+                    'project_id' => $projek->id,
+                    'harga' => $newTipe['harga'] ?? null,
+                ]);
+
+                // Handle PembayaranProjeks for new tipe
+                $this->updatePembayaranProjeks($projek->id, $tipeModel, $newTipe);
+            }
+
+            // Update or create each tipe (only for tipes with id - existing ones)
             foreach ($request['tipe'] as $tipe) {
                 if (isset($tipe['id'])) {
                     // Update existing tipe
@@ -262,75 +330,50 @@ class ProjekController extends Controller {
                             'jumlah_unit' => $tipe['jumlah_unit'],
                             'harga' => $tipe['harga'] ?? null,
                         ]);
-                    } else {
-                        continue; // Skip if tipe doesn't exist or doesn't belong to this project
-                    }
-                } else {
-                    // Create new tipe
-                    $tipeModel = Tipe::create([
-                        'name' => $tipe['name'],
-                        'luas_tanah' => $tipe['luas_tanah'],
-                        'luas_bangunan' => $tipe['luas_bangunan'],
-                        'jumlah_unit' => $tipe['jumlah_unit'],
-                        'project_id' => $projek->id,
-                        'harga' => $tipe['harga'] ?? null,
-                    ]);
-                }
 
-                // Handle PembayaranProjeks for this tipe
-                $requestPembayaranIds = [];
-                $pembayaranData = [];
-
-                if (isset($tipe['jenis_pembayaran']) && is_array($tipe['jenis_pembayaran'])) {
-                    foreach ($tipe['jenis_pembayaran'] as $jp) {
-                        $skemaId = $jp['id'] ?? null;
-                        if ($skemaId) {
-                            $requestPembayaranIds[] = $skemaId;
-                            $pembayaranData[$skemaId] = $jp['harga'] ?? null;
-                        }
-                    }
-                } elseif (isset($tipe['jenis_pembayaran_ids']) && is_array($tipe['jenis_pembayaran_ids'])) {
-                    foreach ($tipe['jenis_pembayaran_ids'] as $pembayaranId) {
-                        $requestPembayaranIds[] = $pembayaranId;
-                        $pembayaranData[$pembayaranId] = null;
+                        // Handle PembayaranProjeks for this tipe
+                        $this->updatePembayaranProjeks($projek->id, $tipeModel, $tipe);
                     }
                 }
-
-                // Delete pembayaran projeks that are not in the request for this tipe
-                PembayaranProjeks::where('projek_id', $projek->id)
-                    ->where('tipe_id', $tipeModel->id)
-                    ->when(!empty($requestPembayaranIds), function ($query) use ($requestPembayaranIds) {
-                        $query->whereNotIn('skema_pembayaran_id', $requestPembayaranIds);
-                    }, function ($query) {
-                        // If no pembayaran in request, delete all
-                        $query->whereNotNull('skema_pembayaran_id');
-                    })
-                    ->delete();
-
-                // Update or create pembayaran projeks
-                foreach ($pembayaranData as $skemaId => $harga) {
-                    PembayaranProjeks::updateOrCreate(
-                        [
-                            'projek_id' => $projek->id,
-                            'tipe_id' => $tipeModel->id,
-                            'skema_pembayaran_id' => $skemaId,
-                        ],
-                        [
-                            'harga' => $harga,
-                        ]
-                    );
-                }
+                // New tipes without id are already handled above
             }
         }
 
         if ($request['fasilitas']) {
-            \App\Models\Fasilitas::where('projeks_id', $projek->id)->delete();
+            // Get existing fasilitas IDs from the request
+            $requestFasilitasIds = collect($request['fasilitas'])
+                ->filter(function ($fasilitas) {
+                    return isset($fasilitas['id']);
+                })
+                ->pluck('id')
+                ->toArray();
+
+            // Delete fasilitas that are not in the request
+            \App\Models\Fasilitas::where('projeks_id', $projek->id)
+                ->when(!empty($requestFasilitasIds), function ($query) use ($requestFasilitasIds) {
+                    $query->whereNotIn('id', $requestFasilitasIds);
+                })
+                ->delete();
+
+            // Update or create each fasilitas
             foreach ($request['fasilitas'] as $fasilitas) {
-                \App\Models\Fasilitas::create([
-                    'nama_fasilitas' => $fasilitas['name'],
-                    'luas_fasilitas' => $fasilitas['luas'],
-                    'projeks_id' => $projek->id,
-                ]);
+                if (isset($fasilitas['id'])) {
+                    // Update existing fasilitas
+                    $fasilitasModel = \App\Models\Fasilitas::find($fasilitas['id']);
+                    if ($fasilitasModel && $fasilitasModel->projeks_id == $projek->id) {
+                        $fasilitasModel->update([
+                            'nama_fasilitas' => $fasilitas['name'],
+                            'luas_fasilitas' => $fasilitas['luas'],
+                        ]);
+                    }
+                } else {
+                    // Create new fasilitas
+                    \App\Models\Fasilitas::create([
+                        'nama_fasilitas' => $fasilitas['name'],
+                        'luas_fasilitas' => $fasilitas['luas'],
+                        'projeks_id' => $projek->id,
+                    ]);
+                }
             }
         }
 
@@ -534,5 +577,53 @@ class ProjekController extends Controller {
             ->get();
 
         return response()->json($items);
+    }
+
+    /**
+     * Helper method to update PembayaranProjeks for a tipe
+     */
+    private function updatePembayaranProjeks($projekId, $tipeModel, $tipeData) {
+        $requestPembayaranIds = [];
+        $pembayaranData = [];
+
+        if (isset($tipeData['jenis_pembayaran']) && is_array($tipeData['jenis_pembayaran'])) {
+            foreach ($tipeData['jenis_pembayaran'] as $jp) {
+                $skemaId = $jp['id'] ?? null;
+                if ($skemaId) {
+                    $requestPembayaranIds[] = $skemaId;
+                    $pembayaranData[$skemaId] = $jp['harga'] ?? null;
+                }
+            }
+        } elseif (isset($tipeData['jenis_pembayaran_ids']) && is_array($tipeData['jenis_pembayaran_ids'])) {
+            foreach ($tipeData['jenis_pembayaran_ids'] as $pembayaranId) {
+                $requestPembayaranIds[] = $pembayaranId;
+                $pembayaranData[$pembayaranId] = null;
+            }
+        }
+
+        // Delete pembayaran projeks that are not in the request for this tipe
+        PembayaranProjeks::where('projek_id', $projekId)
+            ->where('tipe_id', $tipeModel->id)
+            ->when(!empty($requestPembayaranIds), function ($query) use ($requestPembayaranIds) {
+                $query->whereNotIn('skema_pembayaran_id', $requestPembayaranIds);
+            }, function ($query) {
+                // If no pembayaran in request, delete all
+                $query->whereNotNull('skema_pembayaran_id');
+            })
+            ->delete();
+
+        // Update or create pembayaran projeks
+        foreach ($pembayaranData as $skemaId => $harga) {
+            PembayaranProjeks::updateOrCreate(
+                [
+                    'projek_id' => $projekId,
+                    'tipe_id' => $tipeModel->id,
+                    'skema_pembayaran_id' => $skemaId,
+                ],
+                [
+                    'harga' => $harga,
+                ]
+            );
+        }
     }
 }
